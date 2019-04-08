@@ -1,11 +1,13 @@
 {
 	"autodeskProduct":	"Fusion360",
 	"type":	"addin",
-	"author":	"",
+	"id":	"03eb8013-e029-4d3e-96bb-4ae9c4b0bbde",
+	"author":	"D. L. Ehnebuske",
 	"description":	{
-		"":	"Autodesk Fusion 360 script used for generating different types of finger-jointed boxes."
+		"":	"Fusion 360 add-in to generate finger-joint tabs along a rectangular edge"
 	},
-    "version": "1.0",
+	"version":	"0.01",
+	"runOnStartup":	false,
 	"supportedOS":	"windows|mac",
 	"editEnabled":	true
 }
