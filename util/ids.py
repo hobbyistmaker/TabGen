@@ -1,0 +1,7 @@
+errorMsgInputId = 'errorMsgCommandInput'
+mtlThickInputId = 'mtlThickValueCommandInput'
+selectedFaceInputId = 'selectedFaceCommandInput'
+startWithTabInputId = 'startWithTabCommandInput'
+tabGenCommandId = 'tabGenCommandButton'
+tabWidthInputId = 'tabWidthValueCommandInput'
+fingerTypeId = 'fingerTypeInput'
