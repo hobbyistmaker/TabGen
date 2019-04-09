@@ -29,25 +29,17 @@ class CommandExecuteHandler(adsk.core.CommandEventHandler):
             faces = [selInput.selection(j).entity
                      for j in range(selInput.selectionCount)]
 
-            fingerType = commandInputs.itemById(fingerTypeId).selectedItem.name
-            tabWidthInput = commandInputs.itemById(tabWidthInputId)
-            tabWidth = tabWidthInput.value
-            tabWidthExpression = tabWidthInput.expression if tabWidthInput.isValidExpression else None
+            finger_type = commandInputs.itemById(fingerTypeId).selectedItem.name
+            tab_width = commandInputs.itemById(tabWidthInputId).value
+            material_thickness = commandInputs.itemById(mtlThickInputId).value
+            start_tab = commandInputs.itemById(startWithTabInputId).value
 
-            mtlThickInput = commandInputs.itemById(mtlThickInputId)
-            mtlThick = mtlThickInput.value
-            mtlThickExpression = mtlThickInput.expression if mtlThickInput.isValidExpression else None
+            # uimessage(self.ui, 'tab_width: {}'.format(tab_width))
 
-            startWithTab = commandInputs.itemById(startWithTabInputId).value
-
-            uimessage(self.ui, 'tabWidth: {}'.format(tabWidth))
-
-            createfingers.create_fingers(fingerType,
-                                         tabWidth,
-                                         tabWidthExpression,
-                                         mtlThick,
-                                         mtlThickExpression,
-                                         startWithTab,
+            createfingers.create_fingers(finger_type,
+                                         tab_width,
+                                         material_thickness,
+                                         start_tab,
                                          faces,
                                          self.app,
                                          self.ui)

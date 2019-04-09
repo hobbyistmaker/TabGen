@@ -1,12 +1,13 @@
 import adsk.core
 import traceback
 
-from ..util import d, selectedFaceInputId, tolerance, uimessage
+from ..util import d, selectedFaceInputId, uimessage
 
 # Constants
 
 eventFailedMsg = 'TabGen input changed event failed: {}'
 
+tolerance = 0.001
 
 class InputChangedHandler(adsk.core.InputChangedEventHandler):
 
