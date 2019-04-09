@@ -1,5 +1,7 @@
 import math
 
+from collections import namedtuple
+
 import adsk.core
 import traceback
 
@@ -28,44 +30,65 @@ design = Design.cast(product)
 root = design.rootComponent
 
 
-def create_fingers(finger_type, tab_width, mtlThick, start_tab, faces, app, ui=None):
-    try:
-        face_length = []
-        face_width = []
-        vert = []
-        sketch = []
-        face_count = len(faces)
+Face = namedtuple('Face', ['length', 'width', 'vertical', 'bface'])
 
+
+def get_faces(bfaces):
+    faces = []
+
+    for face in bfaces:
+        pRange = face.evaluator.parametricRange()
+        length = pRange.maxPoint.x - pRange.minPoint.x
+        width = pRange.maxPoint.y - pRange.minPoint.x
+
+        if (pRange.maxPoint.y > pRange.maxPoint.x):
+            faces.append(Face(width, length, True, face))
+        else:
+            faces.append(Face(length, width, False, face))
+
+    return faces
+
+
+def first_point(face):
+    # Hard-won knowledge: When a sketch is made on a rectangular face,
+    # (0,0) and the endpoints of the edges of the face are projected
+    # into the sketchPoints. This is not documented that I can find,
+    # but it's true.
+    o = sketch.sketchPoints.item(1).geometry
+    xdir = 1
+    ydir = 1
+
+    for j in range(1, sketch.sketchPoints.count):
+        item = sketch.sketchPoints.item(j)
+        ix = item.geometry.x
+        iy = item.geometry.y
+
+        if ((ix < o.x and ix >= 0)
+           or (ix > o.x and ix <= 0)):
+            xdir = -1 if (ix > o.x and ix <= 0) else 1
+            o.x = ix
+
+        if ((iy < o.y and iy >= 0)
+           or (iy > o.y and iy <= 0)):
+            ydir = -1 if (iy > o.y and iy <= 0) else 1
+            o.y = iy
+
+
+def create_fingers(finger_type, tab_width, mtlThick, start_tab, bfaces, app, ui=None):
+    try:
         # For each selected face, determine face length, width, orientation,
         # origin, margin and number of tabs
-        for i in range(face_count):
-            pRange = faces[i].evaluator.parametricRange()
+        faces = get_faces(bfaces)
 
-            vert.append(False)
-            face_length.append(pRange.maxPoint.x - pRange.minPoint.x)
-            face_width.append(pRange.maxPoint.y - pRange.minPoint.y)
-            if (pRange.maxPoint.y > pRange.maxPoint.x):
-                vert[i] = True
-                t = face_length[i]
-                face_length[i] = face_width[i]
-                face_width[i] = t
+        for face in faces:
+            sketch = face.bface.body.parentComponent.sketches.add(face.bface)
 
-        # Create a sketch on each selected face that creates the profiles we
-        # need to cut the gaps between the tabs
-        for i in range(face_count):
-            # Create a new sketch on face[i].
-            sketch.append(faces[i].body.parentComponent.sketches.add(faces[i]))
-
-            # Hard-won knowledge: When a sketch is made on a rectangular face,
-            # (0,0) and the endpoints of the edges of the face are projected
-            # into the sketchPoints. This is not documented that I can find,
-            # but it's true.
-            o = sketch[i].sketchPoints.item(1).geometry
+            o = sketch.sketchPoints.item(1).geometry
             xdir = 1
             ydir = 1
 
-            for j in range(1, sketch[i].sketchPoints.count):
-                item = sketch[i].sketchPoints.item(j)
+            for j in range(1, sketch.sketchPoints.count):
+                item = sketch.sketchPoints.item(j)
                 ix = item.geometry.x
                 iy = item.geometry.y
 
@@ -81,13 +104,13 @@ def create_fingers(finger_type, tab_width, mtlThick, start_tab, faces, app, ui=N
 
             xLen = 0
             if finger_type == 'User-Defined Width':
-                default_tab_count = int(face_length[i] // (2 * tab_width))
-                margin = (face_length[i] - 2 * tab_width * default_tab_count + tab_width) / 2
-                xLen = face_length[i] - margin*2 - tab_width
+                default_tab_count = int(face.length // (2 * tab_width))
+                margin = (face.length - 2 * tab_width * default_tab_count + tab_width) / 2
+                xLen = face.length - margin*2 - tab_width
                 extrude_count = default_tab_count
             elif finger_type == 'Automatic Width':
-                default_finger_count = max(3, math.floor(face_length[i] / tab_width))
-                default_tab_width = face_length[i] / default_finger_count
+                default_finger_count = max(3, math.floor(face.length / tab_width))
+                default_tab_width = face.length / default_finger_count
                 default_notch_count = math.floor(default_finger_count/2)
 
                 if start_tab:
@@ -100,30 +123,28 @@ def create_fingers(finger_type, tab_width, mtlThick, start_tab, faces, app, ui=N
                 tab_width = default_tab_width
                 margin = tab_width
 
-            if vert[i]:
+            if face.vertical:
                 o.y += (margin * ydir)
             else:
                 o.x += (margin * xdir)
 
             # Get the collection of lines in the sketch
-            lines = sketch[i].sketchCurves.sketchLines
+            lines = sketch.sketchCurves.sketchLines
 
             # Define the extrusion extent to be -tabDepth.
             distance = adsk.core.ValueInput.createByReal(-mtlThick)
 
             lines.addTwoPointRectangle(o, adsk.core.Point3D.create(
-                o.x + (mtlThick if vert[i] else tab_width)*xdir,
-                o.y + (tab_width if vert[i] else mtlThick)*ydir,
+                o.x + (mtlThick if face.vertical else tab_width)*xdir,
+                o.y + (tab_width if face.vertical else mtlThick)*ydir,
                 o.z
                 )
             )
 
-        # Cut the notches between tabs on each selected face
-        for i in range(face_count):
             # Collect and then sort all the profiles we created
-            pList = [sketch[i].profiles.item(j)
-                     for j in range(sketch[i].profiles.count)]
-            if vert[i]:
+            pList = [sketch.profiles.item(j)
+                     for j in range(sketch.profiles.count)]
+            if face.vertical:
                 pList.sort(key=lambda profile: profile.boundingBox.minPoint.y,
                            reverse=True)
             else:
@@ -134,9 +155,9 @@ def create_fingers(finger_type, tab_width, mtlThick, start_tab, faces, app, ui=N
             profs = adsk.core.ObjectCollection.create()
             profs.add(pList[1 if start_tab else 0])
 
-            parent = faces[i].body.parentComponent
+            parent = face.bface.body.parentComponent
             # Cut the notches. Do it in one operation to keep the timeline neat
-            extrudes = faces[i].body.parentComponent.features.extrudeFeatures
+            extrudes = face.bface.body.parentComponent.features.extrudeFeatures
             finger = extrudes.addSimple(
                 profs,
                 distance,
@@ -148,7 +169,7 @@ def create_fingers(finger_type, tab_width, mtlThick, start_tab, faces, app, ui=N
             xQuantity = adsk.core.ValueInput.createByReal(extrude_count)
             xDistance = adsk.core.ValueInput.createByReal(xLen)
 
-            rectangularPatterns = faces[i].body.parentComponent.features.rectangularPatternFeatures
+            rectangularPatterns = face.bface.body.parentComponent.features.rectangularPatternFeatures
             if xDistance:
                 rectangularPatternInput = rectangularPatterns.createInput(inputEntities,
                                                                           parent.xConstructionAxis,
