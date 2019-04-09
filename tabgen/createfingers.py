@@ -38,6 +38,8 @@ Face = namedtuple('Face', ['length',
                            'extrudes',
                            'patterns'])
 
+Point = namedtuple('Point', ['origin', 'xdir', 'ydir'])
+
 
 def get_faces(bfaces):
     faces = []
@@ -71,7 +73,7 @@ def get_faces(bfaces):
     return faces
 
 
-def first_point(face):
+def first_point(sketch, vertical, margin):
     # Hard-won knowledge: When a sketch is made on a rectangular face,
     # (0,0) and the endpoints of the edges of the face are projected
     # into the sketchPoints. This is not documented that I can find,
@@ -95,6 +97,21 @@ def first_point(face):
             ydir = -1 if (iy > o.y and iy <= 0) else 1
             o.y = iy
 
+    if vertical:
+        o.y += (margin * ydir)
+    else:
+        o.x += (margin * xdir)
+
+    return Point(o, xdir, ydir)
+
+
+def second_point(point, vertical, thickness, width):
+    return adsk.core.Point3D.create(
+                point.origin.x + (thickness if vertical else width)*point.xdir,
+                point.origin.y + (width if vertical else thickness)*point.ydir,
+                point.origin.z
+            )
+
 
 def create_fingers(finger_type, tab_width, mtlThick, start_tab, bfaces, app, ui=None):
     try:
@@ -103,33 +120,13 @@ def create_fingers(finger_type, tab_width, mtlThick, start_tab, bfaces, app, ui=
         faces = get_faces(bfaces)
 
         for face in faces:
-            sketch = face.bface.body.parentComponent.sketches.add(face.bface)
-
-            o = sketch.sketchPoints.item(1).geometry
-            xdir = 1
-            ydir = 1
-
-            for j in range(1, sketch.sketchPoints.count):
-                item = sketch.sketchPoints.item(j)
-                ix = item.geometry.x
-                iy = item.geometry.y
-
-                if ((ix < o.x and ix >= 0)
-                   or (ix > o.x and ix <= 0)):
-                    xdir = -1 if (ix > o.x and ix <= 0) else 1
-                    o.x = ix
-
-                if ((iy < o.y and iy >= 0)
-                   or (iy > o.y and iy <= 0)):
-                    ydir = -1 if (iy > o.y and iy <= 0) else 1
-                    o.y = iy
-
-            xLen = 0
             if finger_type == 'User-Defined Width':
                 default_tab_count = int(face.length // (2 * tab_width))
-                margin = (face.length - 2 * tab_width * default_tab_count + tab_width) / 2
-                xLen = face.length - margin*2 - tab_width
+                tab_length = 2 * tab_width * default_tab_count
+                margin = (face.length - tab_length + tab_width) / 2
+                xLen = face.length - margin * 2 - tab_width
                 extrude_count = default_tab_count
+
             elif finger_type == 'Automatic Width':
                 default_finger_count = max(3, math.floor(face.length / tab_width))
                 default_tab_width = face.length / default_finger_count
@@ -137,31 +134,24 @@ def create_fingers(finger_type, tab_width, mtlThick, start_tab, bfaces, app, ui=
 
                 if start_tab:
                     extrude_count = default_notch_count
-                    xLen = (default_finger_count - 3)*default_tab_width
+                    xLen = (default_finger_count - 3) * default_tab_width
                 else:
                     extrude_count = default_finger_count - default_notch_count
-                    xLen = (default_finger_count - 1)*default_tab_width
+                    xLen = (default_finger_count - 1) * default_tab_width
 
                 tab_width = default_tab_width
                 margin = tab_width
 
-            if face.vertical:
-                o.y += (margin * ydir)
-            else:
-                o.x += (margin * xdir)
+            sketch = face.parent.sketches.add(face.bface)
+            fpoint = first_point(sketch, face.vertical, margin)
 
             # Get the collection of lines in the sketch
             lines = sketch.sketchCurves.sketchLines
-
-            # Define the extrusion extent to be -tabDepth.
-            distance = adsk.core.ValueInput.createByReal(-mtlThick)
-
-            lines.addTwoPointRectangle(o, adsk.core.Point3D.create(
-                o.x + (mtlThick if face.vertical else tab_width)*xdir,
-                o.y + (tab_width if face.vertical else mtlThick)*ydir,
-                o.z
-                )
-            )
+            lines.addTwoPointRectangle(fpoint.origin,
+                                       second_point(fpoint,
+                                                    face.vertical,
+                                                    mtlThick,
+                                                    tab_width))
 
             # Collect and then sort all the profiles we created
             pList = [sketch.profiles.item(j)
@@ -177,6 +167,9 @@ def create_fingers(finger_type, tab_width, mtlThick, start_tab, bfaces, app, ui=
             profs = adsk.core.ObjectCollection.create()
             profs.add(pList[1 if start_tab else 0])
 
+            # Define the extrusion extent to be -tabDepth.
+            distance = adsk.core.ValueInput.createByReal(-mtlThick)
+
             # Cut the notches. Do it in one operation to keep the timeline neat
             finger = face.extrudes.addSimple(
                 profs,
@@ -188,16 +181,26 @@ def create_fingers(finger_type, tab_width, mtlThick, start_tab, bfaces, app, ui=
 
             xQuantity = adsk.core.ValueInput.createByReal(extrude_count)
             xDistance = adsk.core.ValueInput.createByReal(xLen)
+            patterns = face.patterns
 
-            rectangularPatterns = face.patterns
-            if xDistance:
-                rectangularPatternInput = rectangularPatterns.createInput(inputEntities,
-                                                                          face.parent.xConstructionAxis,
-                                                                          xQuantity,
-                                                                          xDistance,
-                                                                          adsk.fusion.PatternDistanceType.ExtentPatternDistanceType)
+            if not face.vertical:
+                if xDistance:
+                    patternInput = patterns.createInput(inputEntities,
+                                                        face.parent.xConstructionAxis,
+                                                        xQuantity,
+                                                        xDistance,
+                                                        adsk.fusion.PatternDistanceType.ExtentPatternDistanceType)
+            else:
+                ### BREAKS FOR VERTICAL
+                if xDistance:
+                    patternInput = patterns.createInput(inputEntities,
+                                                        face.parent.yConstructionAxis,
+                                                        xQuantity,
+                                                        xDistance,
+                                                        adsk.fusion.PatternDistanceType.ExtentPatternDistanceType)
 
-            pattern = rectangularPatterns.add(rectangularPatternInput)
+
+            pattern = patterns.add(patternInput)
 
         return True
 
