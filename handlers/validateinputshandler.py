@@ -28,8 +28,8 @@ class ValidateInputsHandler(adsk.core.ValidateInputsEventHandler):
             faces = [selInput.selection(j).entity
                      for j in range(selInput.selectionCount)]
 
-            tabWidth = float(commandInputs.itemById(tabWidthInputId).value)/10
-            mtlThick = float(commandInputs.itemById(mtlThickInputId).value)/10
+            tabWidth = commandInputs.itemById(tabWidthInputId).value
+            mtlThick = commandInputs.itemById(mtlThickInputId).value
             errMsg = commandInputs.itemById(errorMsgInputId)
             e1 = ''
             e2 = ''

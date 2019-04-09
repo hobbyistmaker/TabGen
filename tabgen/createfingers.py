@@ -28,7 +28,7 @@ design = Design.cast(product)
 root = design.rootComponent
 
 
-def create_fingers(fingerType, tabWidth, mtlThick, startWithTab, faces, app, ui=None):
+def create_fingers(fingerType, tabWidth, tabWidthEx, mtlThick, mtlThickEx, startWithTab, faces, app, ui=None):
     try:
         faceLen = []
         faceWid = []

@@ -30,15 +30,23 @@ class CommandExecuteHandler(adsk.core.CommandEventHandler):
                      for j in range(selInput.selectionCount)]
 
             fingerType = commandInputs.itemById(fingerTypeId).selectedItem.name
-            tabWidth = commandInputs.itemById(tabWidthInputId).value
-            mtlThick = commandInputs.itemById(mtlThickInputId).value
+            tabWidthInput = commandInputs.itemById(tabWidthInputId)
+            tabWidth = tabWidthInput.value
+            tabWidthExpression = tabWidthInput.expression if tabWidthInput.isValidExpression else None
+
+            mtlThickInput = commandInputs.itemById(mtlThickInputId)
+            mtlThick = mtlThickInput.value
+            mtlThickExpression = mtlThickInput.expression if mtlThickInput.isValidExpression else None
+
             startWithTab = commandInputs.itemById(startWithTabInputId).value
 
             uimessage(self.ui, 'tabWidth: {}'.format(tabWidth))
 
             createfingers.create_fingers(fingerType,
-                                         float(tabWidth)/10,
-                                         float(mtlThick)/10,
+                                         tabWidth,
+                                         tabWidthExpression,
+                                         mtlThick,
+                                         mtlThickExpression,
                                          startWithTab,
                                          faces,
                                          self.app,

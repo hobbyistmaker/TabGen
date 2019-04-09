@@ -56,10 +56,8 @@ class CommandCreatedEventHandlerPanel(adsk.core.CommandCreatedEventHandler):
             boxtypedropdownitems.add('User-Defined Width', True, '')
             boxtypedropdownitems.add('Automatic Width', False, '')
 
-            # commandInputs.addFloatSpinnerCommandInput(tabWidthInputId, 'Tab Width: ', 'mm', 2.0, 20.0, 0.1, 8.0)
-            # commandInputs.addFloatSpinnerCommandInput(mtlThickInputId, 'Material Thickness: ', 'mm', 0.5, 6.0, 0.1, 3.0)
-            commandInputs.addStringValueInput(tabWidthInputId, 'Tab Width: ', '8.0')
-            commandInputs.addStringValueInput(mtlThickInputId, 'Material Thickness: ', '3.0')
+            commandInputs.addFloatSpinnerCommandInput(tabWidthInputId, 'Tab Width: ', 'mm', 2.0, 20.0, 0.1, 8.0)
+            commandInputs.addFloatSpinnerCommandInput(mtlThickInputId, 'Material Thickness: ', 'mm', 0.5, 6.0, 0.1, 3.0)
             commandInputs.addBoolValueInput(startWithTabInputId, 'Start with tab: ', True)
             commandInputs.addTextBoxCommandInput(errorMsgInputId, '', '', 2, True)
 
