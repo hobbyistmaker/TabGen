@@ -30,7 +30,13 @@ design = Design.cast(product)
 root = design.rootComponent
 
 
-Face = namedtuple('Face', ['length', 'width', 'vertical', 'bface'])
+Face = namedtuple('Face', ['length',
+                           'width',
+                           'vertical',
+                           'bface',
+                           'parent',
+                           'extrudes',
+                           'patterns'])
 
 
 def get_faces(bfaces):
@@ -40,11 +46,27 @@ def get_faces(bfaces):
         pRange = face.evaluator.parametricRange()
         length = pRange.maxPoint.x - pRange.minPoint.x
         width = pRange.maxPoint.y - pRange.minPoint.x
+        parent = face.body.parentComponent
+        extrudes = parent.features.extrudeFeatures
+        patterns = parent.features.rectangularPatternFeatures
 
         if (pRange.maxPoint.y > pRange.maxPoint.x):
-            faces.append(Face(width, length, True, face))
+            faces.append(Face(width,
+                              length,
+                              True,
+                              face,
+                              parent,
+                              extrudes,
+                              patterns
+                              ))
         else:
-            faces.append(Face(length, width, False, face))
+            faces.append(Face(length,
+                              width,
+                              False,
+                              face,
+                              parent,
+                              extrudes,
+                              patterns))
 
     return faces
 
@@ -155,10 +177,8 @@ def create_fingers(finger_type, tab_width, mtlThick, start_tab, bfaces, app, ui=
             profs = adsk.core.ObjectCollection.create()
             profs.add(pList[1 if start_tab else 0])
 
-            parent = face.bface.body.parentComponent
             # Cut the notches. Do it in one operation to keep the timeline neat
-            extrudes = face.bface.body.parentComponent.features.extrudeFeatures
-            finger = extrudes.addSimple(
+            finger = face.extrudes.addSimple(
                 profs,
                 distance,
                 adsk.fusion.FeatureOperations.CutFeatureOperation)
@@ -169,10 +189,10 @@ def create_fingers(finger_type, tab_width, mtlThick, start_tab, bfaces, app, ui=
             xQuantity = adsk.core.ValueInput.createByReal(extrude_count)
             xDistance = adsk.core.ValueInput.createByReal(xLen)
 
-            rectangularPatterns = face.bface.body.parentComponent.features.rectangularPatternFeatures
+            rectangularPatterns = face.patterns
             if xDistance:
                 rectangularPatternInput = rectangularPatterns.createInput(inputEntities,
-                                                                          parent.xConstructionAxis,
+                                                                          face.parent.xConstructionAxis,
                                                                           xQuantity,
                                                                           xDistance,
                                                                           adsk.fusion.PatternDistanceType.ExtentPatternDistanceType)
