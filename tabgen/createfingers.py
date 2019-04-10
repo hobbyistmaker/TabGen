@@ -37,13 +37,12 @@ root = design.rootComponent
 Face = namedtuple('Face', ['length',
                            'width',
                            'vertical',
-                           'saxis',
-                           'edir',
                            'bface',
                            'evaluator',
                            'parent',
                            'extrudes',
-                           'patterns'])
+                           'patterns',
+                           'axis'])
 
 Point = namedtuple('Point', ['origin', 'xdir', 'ydir'])
 Axes = namedtuple('Axes', ['x', 'y', 'z'])
@@ -81,34 +80,18 @@ def extrude_profiles(sketch, mtlThick, face, extrude_count, xLen, start_tab, ydi
     inputEntities.add(finger)
 
     xQuantity = createByReal(extrude_count)
-    xDistance = createByReal(xLen*face.edir)
+    xDistance = createByReal(xLen)
     patterns = face.patterns
 
-    if not face.saxis:
-        if xDistance:
-            patternInput = patterns.createInput(inputEntities,
-                                                face.parent.xConstructionAxis,
-                                                xQuantity,
-                                                xDistance,
-                                                EDT)
-    else:
-        # BREAKS FOR VERTICAL
-        if xDistance:
-            patternInput = patterns.createInput(inputEntities,
-                                                face.parent.xConstructionAxis,
-                                                createByReal(1),
-                                                createByReal(0),
-                                                EDT)
-            patternInput.distanceTwo = xDistance
-            patternInput.quantityTwo = xQuantity
+    if xDistance:
+        patternInput = patterns.createInput(inputEntities,
+                                            face.parent.xConstructionAxis,
+                                            xQuantity,
+                                            xDistance,
+                                            EDT)
+        patternInput.directionOneEntity = face.axis
 
     patterns.add(patternInput)
-
-    uimessage(ui, 'xdir: {}\nydir: {}\nedir: {}'.format(xdir, ydir, face.edir))
-    # ydir = 1 and xdir = 1 and edir : -1
-    # xdir = -1 and ydir = 1 and edir : 1
-
-
 
 
 def get_faces(bfaces, ui=None):
@@ -140,47 +123,35 @@ def get_faces(bfaces, ui=None):
                 ylen = max(ylen, vertex.y)
                 zlen = max(zlen, vertex.z)
 
-        uimessage(ui, 'Vertex\nx: {}\ny: {}\nz: {}\nAxes\nx: {}\ny: {}\nz: {}\nxlen: {}\nylen: {}\nzlen: {}'.format(vertex.x, vertex.y, vertex.z, axes.x, axes.y, axes.z, xlen, ylen, zlen))
-        if xlen == width or (zlen == width and axes.y) or (ylen == width and axes.z):
-            edir = -1 if ((xlen == width and axes.z) or (ylen == width and axes.z)) else 1
-            saxes = True
-        else:
-            edir = -1 if (ylen == width and axes.z) else 1
-            saxes = False
-
-                # (z and y) and y=width -- (0,0,0) and (0,0,4) and (0, 0.32, 4) and (0, .32, 0) -- saxes = true
-                # (x and y) and y=width -- (0,0,0) and (0, .32, 0) and (28.5, .32, 0) and (28.5, .32, 0) -- saxes = false
-                # (x and z) and z=width -- (0,0,0) and (28.5, 0, 0) and (28.5, 0, .32) and (0,0,.32) -- saxes = false
-                # (y and z) and z=width -- (0,0,0) and (0,0,.32) and (0, 14.25, .32) and (0, 14.25, .32) -- saxes = true
-                # (z and x) and x=width --saxes = true
-                # (y and x) and x=width -- saxes = true
-
-
-            # uimessage(ui, 'Axes\nx: {}\ny: {}\nz: {}'.format(axes.x, axes.y, axes.z))
+        if (zlen == width or xlen == width) and axes.y:
+            axis = face.body.parentComponent.yConstructionAxis
+        elif (zlen == width or ylen == width) and axes.x:
+            axis = face.body.parentComponent.xConstructionAxis
+        elif (ylen == width or xlen == width) and axes.z:
+            axis = face.body.parentComponent.zConstructionAxis
 
         if (pRange.maxPoint.y > pRange.maxPoint.x):
             faces.append(Face(width,
                               length,
                               True,
-                              saxes,
-                              edir,
                               face,
                               evaluator,
                               parent,
                               extrudes,
-                              patterns
+                              patterns,
+                              axis
                               ))
         else:
             faces.append(Face(length,
                               width,
                               False,
-                              saxes,
-                              edir,
                               face,
                               evaluator,
                               parent,
                               extrudes,
-                              patterns))
+                              patterns,
+                              axis
+                              ))
 
     return faces
 
