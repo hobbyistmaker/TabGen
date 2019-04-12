@@ -5,3 +5,6 @@ startWithTabInputId = 'startWithTabCommandInput'
 tabGenCommandId = 'tabGenCommandButton'
 tabWidthInputId = 'tabWidthValueCommandInput'
 fingerTypeId = 'fingerTypeInput'
+
+userDefinedWidthId = 'User-Defined Width'
+automaticWidthId = 'Automatic Width'

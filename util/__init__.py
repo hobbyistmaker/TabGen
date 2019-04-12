@@ -3,8 +3,10 @@ from .uimessage import uimessage
 from .ids import errorMsgInputId, fingerTypeId, mtlThickInputId
 from .ids import selectedFaceInputId, startWithTabInputId
 from .ids import tabGenCommandId, tabWidthInputId
+from .ids import automaticWidthId, userDefinedWidthId
 
 __all__ = [d,
+           automaticWidthId,
            errorMsgInputId,
            fingerTypeId,
            mtlThickInputId,
@@ -12,4 +14,6 @@ __all__ = [d,
            startWithTabInputId,
            tabGenCommandId,
            tabWidthInputId,
-           uimessage]
+           uimessage,
+           userDefinedWidthId
+           ]

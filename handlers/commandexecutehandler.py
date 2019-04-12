@@ -34,8 +34,6 @@ class CommandExecuteHandler(adsk.core.CommandEventHandler):
             material_thickness = commandInputs.itemById(mtlThickInputId).value
             start_tab = commandInputs.itemById(startWithTabInputId).value
 
-            # uimessage(self.ui, 'tab_width: {}'.format(tab_width))
-
             createfingers.create_fingers(finger_type,
                                          tab_width,
                                          material_thickness,

@@ -2,7 +2,7 @@ import adsk.core
 import traceback
 
 from ..util import uimessage
-from ..util import errorMsgInputId, mtlThickInputId
+from ..util import errorMsgInputId  # , mtlThickInputId
 from ..util import selectedFaceInputId, tabWidthInputId
 
 validateFailedMsg = 'TabGen validate inputs failed: {}'
@@ -29,7 +29,7 @@ class ValidateInputsHandler(adsk.core.ValidateInputsEventHandler):
                      for j in range(selInput.selectionCount)]
 
             tabWidth = commandInputs.itemById(tabWidthInputId).value
-            mtlThick = commandInputs.itemById(mtlThickInputId).value
+            # mtlThick = commandInputs.itemById(mtlThickInputId).value
             errMsg = commandInputs.itemById(errorMsgInputId)
             e1 = ''
             e2 = ''
@@ -39,10 +39,18 @@ class ValidateInputsHandler(adsk.core.ValidateInputsEventHandler):
                 dimA = abs(pRange.maxPoint.x - pRange.minPoint.x)
                 dimB = abs(pRange.maxPoint.y - pRange.minPoint.y)
 
-                if (abs(dimA - mtlThick) > tolerance
-                        and abs(dimB - mtlThick) > tolerance):
-                    e1 = 'Can only cut tabs on the edge of material.'
-                    args.areInputsValid = False
+                # Disabled the edge check for now. It's not valid.
+                # This should be checking the dimensions of the body,
+                # not comparing the user-entered material thickness to the
+                # dimensions
+
+                # if (abs(dimA - mtlThick) > tolerance
+                #         and abs(dimB - mtlThick) > tolerance):
+                #     e1 = 'Can only cut tabs on the edge of material.'
+                #     args.areInputsValid = False
+
+                # This check will eventually need to be made more
+                # robust.
 
                 if dimA < 2 * tabWidth and dimB < 2 * tabWidth:
                     e2 = 'Edges must be at least 2 * the tab width.'
