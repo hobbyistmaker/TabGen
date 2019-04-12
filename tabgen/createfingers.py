@@ -59,8 +59,6 @@ def find_profile(sketch, distance, ui):
         if (round(length, 5) == round(distance, 5)
            or round(width, 5) == round(distance, 5)):
             profiles.append(profile)
-        else:
-            uimessage(ui, 'Profile not found for extrusion: l({}) w({}) d({})'.format(length, width, distance))
     return profiles
 
 
@@ -200,7 +198,7 @@ def create_fingers(finger_type, tab_width, mtlThick,
                 margin = tab_width
 
             sketch = face.parent.sketches.add(face.bface)
-            sketch2 = face.parent.sketches.add(face.bface) if not start_tab else None
+            sketch2 = face.parent.sketches.add(face.bface) if not start_tab and finger_type != automaticWidthId else None
 
             fpoint = first_point(sketch, face.vertical, margin, start_tab, ui)
             spoint = second_point(fpoint,
@@ -216,7 +214,11 @@ def create_fingers(finger_type, tab_width, mtlThick,
             sketch.sketchDimensions.addDistanceDimension(rectangle.item(0).startSketchPoint,
                                                          rectangle.item(0).endSketchPoint,
                                                          adsk.fusion.DimensionOrientations.HorizontalDimensionOrientation,
-                                                         adsk.core.Point3D.create(5.5, -1, 0))
+                                                         adsk.core.Point3D.create(2, -1, 0))
+            sketch.sketchDimensions.addDistanceDimension(rectangle.item(1).startSketchPoint,
+                                                         rectangle.item(1).endSketchPoint,
+                                                         adsk.fusion.DimensionOrientations.VerticalDimensionOrientation,
+                                                         adsk.core.Point3D.create(2, -1, 0))
 
             extrude_profiles(sketch, mtlThick, face, extrude_count, xLen,
                              start_tab, fpoint.ydir, fpoint.xdir, tab_width, margin,
@@ -224,7 +226,7 @@ def create_fingers(finger_type, tab_width, mtlThick,
 
             # Create the inner notches if the fingers are not starting at the end
             # of the face
-            if not start_tab and finger_type != automaticWidthId:
+            if not start_tab and finger_type != automaticWidthId and sketch2 is not None:
                 fpoint = first_point(sketch2, face.vertical, margin+tab_width, True, ui)
                 spoint = second_point(fpoint,
                                       face.vertical,
