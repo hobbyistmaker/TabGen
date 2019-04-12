@@ -76,10 +76,6 @@ def extrude_profiles(sketch, mtlThick, face, extrude_count, xLen,
 
     profiles = find_profile(sketch, tab_width if start_tab else margin, ui)
     profs.add(profiles[1 if start_tab and len(profiles) > 1 else 0])
-    uimessage(ui, 'xz: {}\nxy: {}\nyz: {}\nvertical: {}'.format(face.xz,
-                                                                face.xy,
-                                                                face.yz,
-                                                                face.vertical))
 
     # Define the extrusion extent to be -tabDepth.
     depth = createByReal(-mtlThick)
@@ -159,8 +155,6 @@ def first_point(sketch, vertical, margin, start_tab, ui):
         else:
             o.x += (margin * xdir)
 
-    uimessage(ui, 'First Point: {}, {}, {}'.format(o.x, o.y, o.z))
-
     return Point(o, xdir, ydir)
 
 
@@ -218,7 +212,11 @@ def create_fingers(finger_type, tab_width, mtlThick,
 
             # Get the collection of lines in the sketch
             lines = sketch.sketchCurves.sketchLines
-            lines.addTwoPointRectangle(fpoint.origin, spoint)
+            rectangle = lines.addTwoPointRectangle(fpoint.origin, spoint)
+            sketch.sketchDimensions.addDistanceDimension(rectangle.item(0).startSketchPoint,
+                                                         rectangle.item(0).endSketchPoint,
+                                                         adsk.fusion.DimensionOrientations.HorizontalDimensionOrientation,
+                                                         adsk.core.Point3D.create(5.5, -1, 0))
 
             extrude_profiles(sketch, mtlThick, face, extrude_count, xLen,
                              start_tab, fpoint.ydir, fpoint.xdir, tab_width, margin,
