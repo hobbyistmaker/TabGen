@@ -29,6 +29,7 @@ class CommandExecuteHandler(adsk.core.CommandEventHandler):
             faces = [selInput.selection(j).entity
                      for j in range(selInput.selectionCount)]
 
+
             finger_type = commandInputs.itemById(fingerTypeId).selectedItem.name
             tab_width = commandInputs.itemById(tabWidthInputId).value
             material_thickness = commandInputs.itemById(mtlThickInputId).value

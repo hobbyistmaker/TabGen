@@ -236,7 +236,6 @@ def create_fingers(finger_type, tab_width, mtlThick,
                 extrude_profiles(sketch2, mtlThick, face, extrude_count, xLen,
                                  True, fpoint.ydir, fpoint.xdir, tab_width, margin, ui=ui)
 
-
         return True
 
     except:
