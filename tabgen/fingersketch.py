@@ -8,12 +8,13 @@ from adsk.fusion import PatternDistanceType
 from adsk.fusion import SketchPoint
 
 from ..util import axis_dir
-from ..util import automaticWidthId
 from ..util import check_param
 from ..util import clean_param
 from ..util import uimessage
+from ..util import automaticWidthId
 from ..util import userDefinedWidthId
 
+from .parameters import Parameters
 
 # some function aliases
 CFO = FeatureOperations.CutFeatureOperation
@@ -81,13 +82,12 @@ class FingerSketch:
         self.__max_point = profile.boundingBox.maxPoint
         self.__min_point = profile.boundingBox.minPoint
 
-        self.__xparam = '{}_{}'.format(clean_param(face.name),
-                                       axis_dir(self.__sketch.xDirection))
-        self.__yparam = '{}_{}'.format(clean_param(face.name),
-                                       axis_dir(self.__sketch.yDirection))
-
         if tab_params.parametric:
-            self.create_params(tab_params)
+            self._parameters = Parameters(self, face.name, self.vertical,
+                                          tab_params,
+                                          axis_dir(self.__sketch.xDirection),
+                                          axis_dir(self.__sketch.yDirection))
+
         # ui.messageBox('X Length: {}\nY Length: {}\n'.format(self.x_length,
         #                                                     self.y_length))
 
@@ -169,58 +169,6 @@ class FingerSketch:
         end = self.__max_point.y
         return end - start
 
-    def create_params(self, tab_params):
-        check_param('{}_length'.format(self.__xparam), self.x_length)
-        check_param('{}_length'.format(self.__yparam), self.y_length)
-
-        if self.vertical:
-            prefix = self.__yparam
-        else:
-            prefix = self.__xparam
-
-        check_param('{0}_dfingerw'.format(prefix),
-                    '{0}_dfingerw'.format(clean_param(self.__face.name)))
-
-        funcs = {
-            automaticWidthId: self.create_auto_params,
-            userDefinedWidthId: self.create_defined_params
-        }
-        func = funcs[tab_params.finger_type]
-        func(tab_params, prefix)
-
-    def create_defined_params(self, tab_params, prefix):
-        check_param('{0}_fingers'.format(prefix),
-                    'floor({0}_length / {0}_dfingerw)'.format(prefix),
-                    units='')
-        check_param('{0}_notches'.format(prefix),
-                    'floor({0}_length / (2 * {0}_dfingerw))'.format(prefix),
-                    units='')
-        check_param('{0}_notch_length'.format(prefix),
-                    '2 * {0}_dfingerw * {0}_notches'.format(prefix))
-        check_param('{0}_foffset'.format(prefix),
-                    '({0}_length - {0}_notch_length + {0}_dfingerw)/2'.format(prefix))
-        check_param('{0}_extrude_count'.format(prefix),
-                    '{0}_notches - 1'.format(prefix),
-                    units='')
-        check_param('{0}_fdistance'.format(prefix),
-                    '{0}_length - {0}_foffset*2 - {0}_dfingerw'.format(prefix))
-
-    def create_auto_params(self, tab_params, prefix):
-        check_param('{0}_fingers'.format(prefix),
-                    'max(3; (ceil(floor({0}_length/{0}_dfingerw)/2)*2)-1)'.format(prefix),
-                    units='')
-        check_param('{0}_fingerw'.format(prefix),
-                    '{0}_length / {0}_fingers'.format(prefix))
-        check_param('{0}_foffset'.format(prefix),
-                    '{0}_fingerw'.format(prefix))
-        check_param('{0}_notches'.format(prefix),
-                    'floor({0}_fingers/2)'.format(prefix), units='')
-        check_param('{0}_extrude_count'.format(prefix),
-                    '{0}_notches'.format(prefix),
-                    units='')
-        check_param('{0}_fdistance'.format(prefix),
-                    '({0}_fingers - 3)*{0}_fingerw'.format(prefix))
-
     def draw_finger(self):
         params = self.__tab_params
         width = params.width
@@ -272,16 +220,22 @@ class FingerSketch:
                 self.geometricConstraints.addCoincident(
                     rectangle.item(2).startSketchPoint,
                     self.lines.item(lline2))
-                self.dimensions.addDistanceDimension(
+
+                tabdim = self.dimensions.addDistanceDimension(
                     rectangle.item(0).startSketchPoint,
                     rectangle.item(0).endSketchPoint,
                     HorizontalDimension,
                     Point3D.create(2, -1, 0))
-                self.dimensions.addDistanceDimension(
+                if self.__tab_params.parametric:
+                    tabdim.parameter.expression = self._parameters.fingerw.expression
+
+                margindim = self.dimensions.addDistanceDimension(
                     rectangle.item(0).startSketchPoint,
                     mark,
                     HorizontalDimension,
                     Point3D.create(3, -1, 0))
+                if self.__tab_params.parametric:
+                    margindim.parameter.expression = self._parameters.foffset.expression
 
                 self.geometricConstraints.addHorizontal(rectangle.item(0))
                 self.geometricConstraints.addHorizontal(rectangle.item(2))
