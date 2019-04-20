@@ -9,6 +9,7 @@ eventFailedMsg = 'TabGen input changed event failed: {}'
 
 tolerance = 0.001
 
+
 class InputChangedHandler(adsk.core.InputChangedEventHandler):
 
     def __init__(self, app, ui):
