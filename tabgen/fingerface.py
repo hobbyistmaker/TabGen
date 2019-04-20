@@ -32,7 +32,8 @@ FingerParams = namedtuple('FingerParams', ['finger_type',
                                            'depth',
                                            'notches',
                                            'distance',
-                                           'offset'])
+                                           'offset',
+                                           'parametric'])
 Point = namedtuple('Point', ['origin', 'xdir', 'ydir'])
 
 
@@ -82,7 +83,8 @@ class FingerFace:
                               tc.depth,
                               extrude_count,
                               distance,
-                              tab_width)
+                              tab_width,
+                              tc.parametric)
         sketch = FingerSketch(self, params, self.__ui)
         profiles = sketch.draw_finger()
 
@@ -110,7 +112,8 @@ class FingerFace:
                               tc.depth,
                               extrude_count,
                               distance,
-                              margin)
+                              margin,
+                              tc.parametric)
         sketch = FingerSketch(self, params, self.__ui)
         profiles = sketch.draw_finger()
 
@@ -243,8 +246,9 @@ class FingerFace:
                 userDefinedWidthId: self.__create_defined
             }
 
-            check_param('{}_dfingerw'.format(clean_param(self.name)),
-                        tab_config.default_width)
+            if tab_config.parametric:
+                check_param('{}_dfingerw'.format(clean_param(self.name)),
+                            tab_config.default_width)
 
             func = funcs[tab_config.finger_type]
             func(tab_config)

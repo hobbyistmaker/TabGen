@@ -86,7 +86,8 @@ class FingerSketch:
         self.__yparam = '{}_{}'.format(clean_param(face.name),
                                        axis_dir(self.__sketch.yDirection))
 
-        self.create_params(tab_params)
+        if tab_params.parametric:
+            self.create_params(tab_params)
         # ui.messageBox('X Length: {}\nY Length: {}\n'.format(self.x_length,
         #                                                     self.y_length))
 

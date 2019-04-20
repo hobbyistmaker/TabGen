@@ -6,6 +6,7 @@ from adsk.core import DropDownStyles as dds
 from ..util import errorMsgInputId, fingerTypeId, mtlThickInputId
 from ..util import selectedFaceInputId, startWithTabInputId
 from ..util import tabWidthInputId, dualEdgeSelectId
+from ..util import parametricInputId
 from ..util import uimessage
 from .commandexecutehandler import CommandExecuteHandler
 from .inputchangedhandler import InputChangedHandler
@@ -68,6 +69,7 @@ class CommandCreatedEventHandlerPanel(adsk.core.CommandCreatedEventHandler):
             commandInputs.addFloatSpinnerCommandInput(mtlThickInputId, 'Material Thickness: ', 'mm', 0.5, 6.0, 0.1, 3.0)
             # Disable start with tab due to bugs
             # commandInputs.addBoolValueInput(startWithTabInputId, 'Start with tab: ', True, '', True)
+            commandInputs.addBoolValueInput(parametricInputId, 'Make Parametric: ', True, '', True)
             commandInputs.addTextBoxCommandInput(errorMsgInputId, '', '', 2, True)
 
         except:

@@ -6,6 +6,7 @@ from ..util import uimessage
 from ..util import errorMsgInputId, fingerTypeId, mtlThickInputId
 from ..util import selectedFaceInputId, startWithTabInputId, tabWidthInputId
 from ..util import userDefinedWidthId, dualSidesInputId, dualEdgeSelectId
+from ..util import parametricInputId
 
 from ..tabgen import FingerFace
 
@@ -58,6 +59,7 @@ class ValidateInputsHandler(adsk.core.ValidateInputsEventHandler):
 
             finger_type = commandInputs.itemById(fingerTypeId).selectedItem.name
             tab_width = commandInputs.itemById(tabWidthInputId).value
+            parametric = commandInputs.itemById(parametricInputId).value
             # start_tab = commandInputs.itemById(startWithTabInputId).value
             start_tab = True
             depth = commandInputs.itemById(mtlThickInputId).value
@@ -67,7 +69,8 @@ class ValidateInputsHandler(adsk.core.ValidateInputsEventHandler):
             edgeInput = commandInputs.itemById(dualEdgeSelectId)
 
             tab_config = TabConfig(finger_type, tab_width,
-                                   depth, start_tab, edgeInput)
+                                   depth, start_tab, edgeInput,
+                                   parametric)
 
             e1 = ''
             e2 = ''

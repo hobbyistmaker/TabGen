@@ -13,6 +13,7 @@ tabWidthInputId = 'tabWidthValueCommandInput'
 fingerTypeId = 'fingerTypeInput'
 dualSidesInputId = 'dualSidesCommandInput'
 dualEdgeSelectId = 'dualEdgeSelectInput'
+parametricInputId = 'parametricInput'
 
 userDefinedWidthId = 'User-Defined Width'
 automaticWidthId = 'Automatic Width'

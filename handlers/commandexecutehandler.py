@@ -10,7 +10,8 @@ from ..util import (fingerTypeId,
                     startWithTabInputId,
                     tabWidthInputId,
                     dualSidesInputId,
-                    dualEdgeSelectId)
+                    dualEdgeSelectId,
+                    parametricInputId)
 
 
 # Constants
@@ -42,13 +43,14 @@ class CommandExecuteHandler(adsk.core.CommandEventHandler):
             edge_input = commandInputs.itemById(dualEdgeSelectId)
 
             edge = get_edge(edge_input, self.ui)
+            parametric = commandInputs.itemById(parametricInputId).value
             # start_tab = commandInputs.itemById(startWithTabInputId).value
             # Starting without a tab opens up multiple bugs that need to be solved
             # Disable for now
             start_tab = True
 
             tab_config = TabConfig(finger_type, tab_width, depth,
-                                   start_tab, edge)
+                                   start_tab, edge, parametric)
 
             faces = [FingerFace(selInput.selection(j).entity, self.ui)
                      for j in range(selInput.selectionCount)]
