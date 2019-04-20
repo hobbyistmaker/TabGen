@@ -57,9 +57,17 @@ class FingerEdge:
     def start(self):
         return self.__edge.startVertex.geometry
 
-    def distance(self, vertices, depth):
+    def distance(self, vertices, depth=0):
         start_point = geometry_in(self.start, self.end, vertices)
         end_point = changed_axis(vertices, start_point)
         length = distance(start_point, end_point)
 
         return length - (depth if length > 0 else -depth)
+
+    def distance_expr(self, vertices, param1, param2, depth=0):
+        start_point = geometry_in(self.start, self.end, vertices)
+        end_point = changed_axis(vertices, start_point)
+        length = distance(start_point, end_point)
+
+        return '{} - {}'.format(param1,
+                                '-{}'.format(param2) if length > 0 else param2)

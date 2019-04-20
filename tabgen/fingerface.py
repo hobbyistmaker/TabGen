@@ -9,6 +9,8 @@ from adsk.core import Point3D
 from adsk.core import ValueInput
 from adsk.fusion import FeatureOperations
 from adsk.fusion import PatternDistanceType
+from adsk.fusion import DistanceExtentDefinition
+from adsk.fusion import ModelParameter
 
 from ..util import check_param
 from ..util import clean_param
@@ -92,8 +94,8 @@ class FingerFace:
         profs.add(profiles[1])
 
         if len(profiles) > 0:
-            finger = self.__extrude_finger(tc.depth, profs)
-            self.__duplicate_fingers(params, finger, tc.edge)
+            finger = self.__extrude_finger(tc.depth, profs, sketch.parameters)
+            self.__duplicate_fingers(params, finger, tc.edge, sketch.parameters)
 
     def __create_defined(self, tc):
         default_finger_count = int(self.length // tc.default_width)
@@ -123,22 +125,29 @@ class FingerFace:
         else:
             profs.add(profiles[0])
             profs.add(profiles[4])
-            self.__extrude_finger(tc.depth, profs)
+            self.__extrude_finger(tc.depth, profs, sketch.parameters)
             profs.clear()
             profs.add(profiles[2])
 
         if len(profiles) > 0:
-            finger = self.__extrude_finger(tc.depth, profs)
-            self.__duplicate_fingers(params, finger, tc.edge)
+            finger = self.__extrude_finger(tc.depth, profs, sketch.parameters)
+            self.__duplicate_fingers(params, finger, tc.edge, sketch.parameters)
 
-    def __extrude_finger(self, depth, profs):
+    def __extrude_finger(self, depth, profs, parameters=None):
         # Define the extrusion extent to be -tabDepth.
         d = createByReal(-depth)
 
         # Cut the first notch.
-        return self.extrudes.addSimple(profs, d, CFO)
+        finger = self.extrudes.addSimple(profs, d, CFO)
 
-    def __duplicate_fingers(self, params, finger, edge=None):
+        if parameters is not None:
+            disDef = DistanceExtentDefinition.cast(finger.extentOne)
+            disMP = ModelParameter.cast(disDef.distance)
+            disMP.expression = parameters.fingerd.name
+
+        return finger
+
+    def __duplicate_fingers(self, params, finger, edge=None, parameters=None):
         quantity = createByReal(params.notches)
         distance = createByReal(params.distance)
         inputEntities = ObjectCollection.create()
@@ -161,7 +170,21 @@ class FingerFace:
                                          parallel_distance)
 
         try:
-            self.patterns.add(patternInput)
+            pattern = self.patterns.add(patternInput)
+
+            if parameters is not None:
+                patdMP = pattern.distanceOne
+                patdMP.expression = parameters.fdistance.name
+                patqMP = pattern.quantityOne
+                patqMP.expression = parameters.extrude_count.name
+
+                if edge is not None:
+                    parameters.add_far_length(selected.distance(self.__vertices))
+                    parameters.add_distance_two(selected.distance_expr(self.__vertices, parameters.far_length.name, parameters.fingerd.name))
+
+                    patd2MP = pattern.distanceTwo
+                    patd2MP.expression = parameters.distance_two.name
+            return pattern
         except:
             uimessage(self.__ui, traceback.format_exc(1))
 

@@ -1,3 +1,5 @@
+from adsk.core import ValueInput
+
 from .parameter import Parameter
 
 from ..util import automaticWidthId
@@ -13,15 +15,27 @@ class Parameters:
         self.prefix = '{}_{}'.format(self.name,
                                      dirname)
 
+        self.x, self.y, self.z = (False, False, False)
+
+        if (xdir == 'x' or ydir == 'x'):
+            self.x = True
+        if (xdir == 'y' or ydir == 'y'):
+            self.y = True
+        if (xdir == 'z' or ydir == 'z'):
+            self.z = True
+
         self._xlength = Parameter(name,
                                   '{}_length'.format(xdir),
-                                  parent.x_length)
+                                  round(parent.x_length, 5))
         self._ylength = Parameter(name,
                                   '{}_length'.format(ydir),
-                                  parent.y_length)
+                                  round(parent.y_length, 5))
         self._dfingerw = Parameter(self.prefix,
                                    'dfingerw',
                                    '{}_dfingerw'.format(self.name))
+        self._fingerd = Parameter(self.prefix,
+                                  'fingerd',
+                                  -round(tab_params.depth, 5))
 
         self.create_params(tab_params)
 
@@ -82,6 +96,27 @@ class Parameters:
                                    'fdistance',
                                    '{0}_length - {0}_foffset*2 - {0}_fingerw')
 
+    def add_distance_two(self, expression, units='cm'):
+        setattr(self, 'distance_two', Parameter(self.name,
+                                                '{}_distance2'.format(self._alternate_axis),
+                                                expression,
+                                                units=units))
+
+    def add_far_length(self, expression, units='cm'):
+        setattr(self, 'far_length', Parameter(self.name,
+                                                '{}_length'.format(self._alternate_axis),
+                                                expression,
+                                                units=units))
+
+    @property
+    def _alternate_axis(self):
+        if not self.x:
+            return 'x'
+        if not self.y:
+            return 'y'
+        if not self.z:
+            return 'z'
+
     @property
     def xlength(self):
         return self._xlength
@@ -89,3 +124,11 @@ class Parameters:
     @property
     def ylength(self):
         return self._ylength
+
+    @property
+    def fingerd(self):
+        return self._fingerd
+
+    @property
+    def dfingerw(self):
+        return self._dfingerw

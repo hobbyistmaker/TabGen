@@ -17,7 +17,7 @@ class Parameter:
 
     @property
     def expression(self):
-        return self._expression
+        return str(self._expression)
 
     @property
     def units(self):

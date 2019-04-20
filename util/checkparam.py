@@ -12,11 +12,12 @@ all_params = des.allParameters
 user_params = des.userParameters
 
 createByReal = ValueInput.createByReal
+createByString = ValueInput.createByString
 
 
 def set_value(itemParam, name, value, units='cm'):
     inputValue = str(value)
-    itemParam = user_params.add(name, createByReal(0), units, 'Auto-generated Parameter')
+    itemParam = user_params.add(name, createByString(inputValue), units, 'Auto-generated Parameter')
     itemParam.expression = inputValue
     return itemParam
 

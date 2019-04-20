@@ -83,10 +83,12 @@ class FingerSketch:
         self.__min_point = profile.boundingBox.minPoint
 
         if tab_params.parametric:
-            self._parameters = Parameters(self, face.name, self.vertical,
-                                          tab_params,
-                                          axis_dir(self.__sketch.xDirection),
-                                          axis_dir(self.__sketch.yDirection))
+            self.parameters = Parameters(self, face.name, self.vertical,
+                                         tab_params,
+                                         axis_dir(self.__sketch.xDirection),
+                                         axis_dir(self.__sketch.yDirection))
+        else:
+            self.parameters = None
 
         # ui.messageBox('X Length: {}\nY Length: {}\n'.format(self.x_length,
         #                                                     self.y_length))
@@ -227,7 +229,7 @@ class FingerSketch:
                     HorizontalDimension,
                     Point3D.create(2, -1, 0))
                 if self.__tab_params.parametric:
-                    tabdim.parameter.expression = self._parameters.fingerw.expression
+                    tabdim.parameter.expression = self.parameters.fingerw.expression
 
                 margindim = self.dimensions.addDistanceDimension(
                     rectangle.item(0).startSketchPoint,
@@ -235,7 +237,7 @@ class FingerSketch:
                     HorizontalDimension,
                     Point3D.create(3, -1, 0))
                 if self.__tab_params.parametric:
-                    margindim.parameter.expression = self._parameters.foffset.expression
+                    margindim.parameter.expression = self.parameters.foffset.expression
 
                 self.geometricConstraints.addHorizontal(rectangle.item(0))
                 self.geometricConstraints.addHorizontal(rectangle.item(2))
