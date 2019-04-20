@@ -11,6 +11,11 @@ from adsk.fusion import SketchPoint
 from ..util import uimessage
 from ..util import userDefinedWidthId
 
+from adsk.core import Application
+
+app = Application.get()
+ui = app.userInterface
+
 # some function aliases
 CFO = FeatureOperations.CutFeatureOperation
 EDT = PatternDistanceType.ExtentPatternDistanceType
@@ -26,12 +31,38 @@ def offset(point, offset=0, is_flipped=False, vertical=False):
     else:
         o = point
 
+    ui.messageBox('Offset: {}\nFlipped: {}\nVertical: {}\n'.format(offset, is_flipped, vertical))
+
     if vertical:
         o.y += offset if is_flipped is False else -offset
     else:
         o.x += offset if is_flipped is False else -offset
 
     return o
+
+
+def min_x(line):
+    ssp = line.startSketchPoint.geometry
+    esp = line.endSketchPoint.geometry
+    return ssp if ssp.x < esp.x else esp
+
+
+def max_x(line):
+    ssp = line.startSketchPoint.geometry
+    esp = line.endSketchPoint.geometry
+    return esp if esp.x > ssp.x else ssp
+
+
+def min_y(line):
+    ssp = line.startSketchPoint.geometry
+    esp = line.endSketchPoint.geometry
+    return ssp if ssp.y < esp.y else esp
+
+
+def max_y(line):
+    ssp = line.startSketchPoint.geometry
+    esp = line.endSketchPoint.geometry
+    return esp if esp.y > ssp.y else ssp
 
 
 class FingerSketch:
@@ -51,6 +82,8 @@ class FingerSketch:
         profile = self.__sketch.profiles.item(0)
         self.__max_point = profile.boundingBox.maxPoint
         self.__min_point = profile.boundingBox.minPoint
+
+        ui.messageBox('X Length: {}\nY Length: {}\n'.format(self.x_length, self.y_length))
 
     @property
     def curves(self):
@@ -100,7 +133,7 @@ class FingerSketch:
 
     @property
     def vertical(self):
-        return self.y_length == self.length
+        return self.y_length > self.x_length
 
     @property
     def width(self):
@@ -110,13 +143,13 @@ class FingerSketch:
     def x_length(self):
         start = self.__min_point.x
         end = self.__max_point.x
-        return abs(end - start)
+        return end - start
 
     @property
     def y_length(self):
         start = self.__min_point.y
         end = self.__max_point.y
-        return abs(end - start)
+        return end - start
 
     def draw_finger(self):
         params = self.__tab_params
@@ -164,21 +197,6 @@ class FingerSketch:
             lline2 = lline1 + 2
             wline2 = wline1 + 2
 
-            # if self.vertical:
-            #     if self.__tab_params.start_with_tab is True:
-            #         self.geometricConstraints.addCoincident(rectangle.item(0).startSketchPoint,
-            #                                                 self.lines.item(3))
-            #         self.geometricConstraints.addCoincident(rectangle.item(2).endSketchPoint,
-            #                                                 self.lines.item(1))
-            #         self.dimensions.addDistanceDimension(rectangle.item(1).startSketchPoint,
-            #                                              rectangle.item(1).endSketchPoint,
-            #                                              VerticalDimension,
-            #                                              Point3D.create(2, -1, 0))
-            #         self.dimensions.addDistanceDimension(rectangle.item(1).startSketchPoint,
-            #                                              mark,
-            #                                              VerticalDimension,
-            #                                              Point3D.create(2, -1, 0))
-            # else:
             if self.__tab_params.start_with_tab is True:
                 self.geometricConstraints.addCoincident(rectangle.item(0).startSketchPoint,
                                                         self.lines.item(lline1))
@@ -193,10 +211,10 @@ class FingerSketch:
                                                      HorizontalDimension,
                                                      Point3D.create(3, -1, 0))
 
-            # self.geometricConstraints.addHorizontal(rectangle.item(0))
-            # self.geometricConstraints.addHorizontal(rectangle.item(2))
-            # self.geometricConstraints.addVertical(rectangle.item(1))
-            # self.geometricConstraints.addVertical(rectangle.item(3))
+                self.geometricConstraints.addHorizontal(rectangle.item(0))
+                self.geometricConstraints.addHorizontal(rectangle.item(2))
+                self.geometricConstraints.addVertical(rectangle.item(1))
+                self.geometricConstraints.addVertical(rectangle.item(3))
 
             return rectangle
 
@@ -234,27 +252,28 @@ class FingerSketch:
             if (sspg.x < 0) and (sspg.x < espg.x):
                 return esp
             return ssp
-        # return self.lines.item(3).startSketchPoint
 
     @property
     def flipped_x(self):
-        ssp = self.lines.item(3).endSketchPoint
-        esp = self.lines.item(1).startSketchPoint
-        sspg = ssp.geometry
-        espg = esp.geometry
+        line = self.lines.item(0)
+        lline1 = 0 if line.length == self.length else 1
 
-        if (sspg.x < 0) and (sspg.x < espg.x):
+        ssp = min_x(self.lines.item(lline1))
+        esp = max_x(self.lines.item(lline1 + 2))
+
+        if (ssp.x < 0) and (ssp.x < esp.x):
             return True
         return False
 
     @property
     def flipped_y(self):
-        ssp = self.lines.item(3).endSketchPoint
-        esp = self.lines.item(1).startSketchPoint
-        sspg = ssp.geometry
-        espg = esp.geometry
+        line = self.lines.item(0)
+        lline1 = 0 if line.length == self.length else 1
 
-        if (sspg.y < 0) and (sspg.y < espg.y):
+        ssp = min_y(self.lines.item(lline1))
+        esp = max_y(self.lines.item(lline1 + 2))
+
+        if (ssp.y < 0) and (ssp.y < esp.y):
             return True
         return False
 
