@@ -41,6 +41,22 @@ def offset(point, offset=0, is_flipped=False, vertical=False):
     return o
 
 
+def min_point_x(point1, point2):
+    return point1 if point1.x < point2.x else point2
+
+
+def max_point_x(point1, point2):
+    return point2 if point2.x > point1.x else point1
+
+
+def max_point_y(point1, point2):
+    return point2 if point2.y > point1.y else point1
+
+
+def min_point_y(point1, point2):
+    return point1 if point1.y < point2.y else point2
+
+
 def min_x(line):
     ssp = line.startSketchPoint.geometry
     esp = line.endSketchPoint.geometry
@@ -83,7 +99,8 @@ class FingerSketch:
         self.__max_point = profile.boundingBox.maxPoint
         self.__min_point = profile.boundingBox.minPoint
 
-        ui.messageBox('X Length: {}\nY Length: {}\n'.format(self.x_length, self.y_length))
+        ui.messageBox('X Length: {}\nY Length: {}\n'.format(self.x_length,
+                                                            self.y_length))
 
     @property
     def curves(self):
@@ -160,26 +177,26 @@ class FingerSketch:
             fsp = self.start_point
 
             if params.finger_type == userDefinedWidthId:
-                fep = self.__next_point(fsp, ofs, (self.flipped_x or self.flipped_y))
+                fep = self.__next_point(fsp, ofs, self.flipped)
                 self.__draw_rectangle(self.start_point, fsp, fep)
 
                 ssp = self.end_point
-                sep = self.__next_point(ssp, -ofs, (self.flipped_x or self.flipped_y))
+                sep = self.__next_point(ssp, -ofs, self.flipped)
                 self.__draw_rectangle(self.start_point, ssp, sep)
 
                 start_point = offset(self.start_point,
                                      ofs + width,
-                                     (self.flipped_x or self.flipped_y),
+                                     self.flipped,
                                      ref_point=fsp)
             else:
                 start_point = fsp
         else:
             start_point = offset(self.start_point,
                                  ofs,
-                                 (self.flipped_x or self.flipped_y),
+                                 self.flipped,
                                  self.vertical)
 
-        end_point = self.__next_point(start_point, width, (self.flipped_x or self.flipped_y))
+        end_point = self.__next_point(start_point, width, self.flipped)
         self.__draw_rectangle(self.start_point, start_point, end_point)
 
         self.__sketch.isVisible = False
@@ -195,7 +212,7 @@ class FingerSketch:
             lline1 = 0 if line.length == self.length else 1
             wline1 = 1 if line.length == self.width else 0
             lline2 = lline1 + 2
-            wline2 = wline1 + 2
+            # wline2 = wline1 + 2
 
             if self.__tab_params.start_with_tab is True:
                 self.geometricConstraints.addCoincident(rectangle.item(0).startSketchPoint,
@@ -301,3 +318,7 @@ class FingerSketch:
     @property
     def end_point(self):
         return self.__last_point.geometry
+
+    @property
+    def flipped(self):
+        return self.flipped_x or self.flipped_y
