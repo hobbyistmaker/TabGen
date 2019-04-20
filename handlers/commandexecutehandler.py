@@ -1,16 +1,26 @@
 import adsk.core
 import traceback
 
-from ..tabgen import createfingers
+from ..tabgen import TabConfig
+from ..tabgen import FingerFace
 from ..util import uimessage
 from ..util import mtlThickInputId
 from ..util import (fingerTypeId,
                     selectedFaceInputId,
                     startWithTabInputId,
-                    tabWidthInputId)
+                    tabWidthInputId,
+                    dualSidesInputId,
+                    dualEdgeSelectId)
+
 
 # Constants
 executionFailedMsg = 'TabGen executon failed: {}'
+
+
+def get_edge(selection, ui=None):
+    if selection is None or selection.selectionCount == 0:
+        return None
+    return selection.selection(0).entity
 
 
 class CommandExecuteHandler(adsk.core.CommandEventHandler):
@@ -26,31 +36,25 @@ class CommandExecuteHandler(adsk.core.CommandEventHandler):
             commandInputs = command.commandInputs
             selInput = commandInputs.itemById(selectedFaceInputId)
 
-            faces = [selInput.selection(j).entity
+            finger_type = commandInputs.itemById(fingerTypeId).selectedItem.name
+            tab_width = commandInputs.itemById(tabWidthInputId).value
+            depth = commandInputs.itemById(mtlThickInputId).value
+            edge_input = commandInputs.itemById(dualEdgeSelectId)
+
+            edge = get_edge(edge_input, self.ui)
+            # start_tab = commandInputs.itemById(startWithTabInputId).value
+            # Starting without a tab opens up multiple bugs that need to be solved
+            # Disable for now
+            start_tab = True
+
+            tab_config = TabConfig(finger_type, tab_width, depth,
+                                   start_tab, edge)
+
+            faces = [FingerFace(selInput.selection(j).entity, self.ui)
                      for j in range(selInput.selectionCount)]
 
-            fingerType = commandInputs.itemById(fingerTypeId).selectedItem.name
-            tabWidthInput = commandInputs.itemById(tabWidthInputId)
-            tabWidth = tabWidthInput.value
-            tabWidthExpression = tabWidthInput.expression if tabWidthInput.isValidExpression else None
-
-            mtlThickInput = commandInputs.itemById(mtlThickInputId)
-            mtlThick = mtlThickInput.value
-            mtlThickExpression = mtlThickInput.expression if mtlThickInput.isValidExpression else None
-
-            startWithTab = commandInputs.itemById(startWithTabInputId).value
-
-            uimessage(self.ui, 'tabWidth: {}'.format(tabWidth))
-
-            createfingers.create_fingers(fingerType,
-                                         tabWidth,
-                                         tabWidthExpression,
-                                         mtlThick,
-                                         mtlThickExpression,
-                                         startWithTab,
-                                         faces,
-                                         self.app,
-                                         self.ui)
+            for face in faces:
+                face.create_fingers(tab_config)
 
         except:
             uimessage(self.ui, executionFailedMsg, traceback.format_exc())

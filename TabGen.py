@@ -6,8 +6,8 @@ import adsk.core
 import adsk.fusion
 import traceback
 
-from .tabgen import handlers
-from .tabgen import CommandCreatedEventHandlerPanel
+from .handlers import handlers
+from .handlers import CommandCreatedEventHandlerPanel
 from .util import tabGenCommandId
 
 point3d = adsk.core.Point3D
@@ -19,12 +19,13 @@ def run(context):
         app = adsk.core.Application.get()
         ui = app.userInterface
 
-        # Create the command definition and add a button to the MODIFY panel.
+        # Create the command definition and add a button to the Add-ins panel
+        # per Autodesk UI guidance.
         cmdDef = ui.commandDefinitions.addButtonDefinition(
             tabGenCommandId,
             'Generate Tabs',
             'Creates finger-joint tabs and gaps on rectangular faces')
-        createPanel = ui.allToolbarPanels.itemById('SolidModifyPanel')
+        createPanel = ui.allToolbarPanels.itemById('SolidScriptsAddinsPanel')
         createPanel.controls.addCommand(cmdDef)
 
         # Set up the command created event handler
@@ -33,8 +34,8 @@ def run(context):
         handlers.append(onCommandCreated)
 
         # If the command is being manually started let the user know it's done
-        if context['IsApplicationStartup'] is False:
-            ui.messageBox('The "Generate Tabs" command has been added\nto the MODIFY panel of the MODEL workspace.')
+        # if context['IsApplicationStartup'] is False:
+        #     ui.messageBox('The "Generate Tabs" command has been added\nto the MODIFY panel of the MODEL workspace.')
 
     except:
         if ui:
@@ -47,7 +48,7 @@ def stop(context):
         app = adsk.core.Application.get()
         ui = app.userInterface
 
-        modifyPanel = ui.allToolbarPanels.itemById('SolidModifyPanel')
+        modifyPanel = ui.allToolbarPanels.itemById('SolidScriptsAddinsPanel')
         tabGenButton = modifyPanel.controls.itemById(tabGenCommandId)
         if tabGenButton:
             tabGenButton.deleteMe()
