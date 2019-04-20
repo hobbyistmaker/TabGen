@@ -158,39 +158,46 @@ class FingerSketch:
 
             rectangle = self.lines.addTwoPointRectangle(fp, sp)
 
-            self.geometricConstraints.addHorizontal(rectangle.item(0))
-            self.geometricConstraints.addHorizontal(rectangle.item(2))
-            self.geometricConstraints.addVertical(rectangle.item(1))
-            self.geometricConstraints.addVertical(rectangle.item(3))
+            line = self.lines.item(0)
+            lline1 = 0 if line.length == self.length else 1
+            wline1 = 1 if line.length == self.width else 0
+            lline2 = lline1 + 2
+            wline2 = wline1 + 2
 
-            if self.vertical:
-                if self.__tab_params.start_with_tab is True:
-                    self.geometricConstraints.addCoincident(rectangle.item(0).startSketchPoint,
-                                                            self.lines.item(3))
-                    self.geometricConstraints.addCoincident(rectangle.item(2).endSketchPoint,
-                                                            self.lines.item(1))
-                    self.dimensions.addDistanceDimension(rectangle.item(1).startSketchPoint,
-                                                         rectangle.item(1).endSketchPoint,
-                                                         VerticalDimension,
-                                                         Point3D.create(2, -1, 0))
-                    self.dimensions.addDistanceDimension(rectangle.item(1).startSketchPoint,
-                                                         mark,
-                                                         VerticalDimension,
-                                                         Point3D.create(2, -1, 0))
-            else:
-                if self.__tab_params.start_with_tab is True:
-                    self.geometricConstraints.addCoincident(rectangle.item(0).startSketchPoint,
-                                                            self.lines.item(0))
-                    self.geometricConstraints.addCoincident(rectangle.item(2).startSketchPoint,
-                                                            self.lines.item(2))
-                    self.dimensions.addDistanceDimension(rectangle.item(0).startSketchPoint,
-                                                         rectangle.item(0).endSketchPoint,
-                                                         HorizontalDimension,
-                                                         Point3D.create(2, -1, 0))
-                    self.dimensions.addDistanceDimension(rectangle.item(0).startSketchPoint,
-                                                         mark,
-                                                         HorizontalDimension,
-                                                         Point3D.create(3, -1, 0))
+            # if self.vertical:
+            #     if self.__tab_params.start_with_tab is True:
+            #         self.geometricConstraints.addCoincident(rectangle.item(0).startSketchPoint,
+            #                                                 self.lines.item(3))
+            #         self.geometricConstraints.addCoincident(rectangle.item(2).endSketchPoint,
+            #                                                 self.lines.item(1))
+            #         self.dimensions.addDistanceDimension(rectangle.item(1).startSketchPoint,
+            #                                              rectangle.item(1).endSketchPoint,
+            #                                              VerticalDimension,
+            #                                              Point3D.create(2, -1, 0))
+            #         self.dimensions.addDistanceDimension(rectangle.item(1).startSketchPoint,
+            #                                              mark,
+            #                                              VerticalDimension,
+            #                                              Point3D.create(2, -1, 0))
+            # else:
+            if self.__tab_params.start_with_tab is True:
+                self.geometricConstraints.addCoincident(rectangle.item(0).startSketchPoint,
+                                                        self.lines.item(lline1))
+                self.geometricConstraints.addCoincident(rectangle.item(2).startSketchPoint,
+                                                        self.lines.item(lline2))
+                self.dimensions.addDistanceDimension(rectangle.item(0).startSketchPoint,
+                                                     rectangle.item(0).endSketchPoint,
+                                                     HorizontalDimension,
+                                                     Point3D.create(2, -1, 0))
+                self.dimensions.addDistanceDimension(rectangle.item(0).startSketchPoint,
+                                                     mark,
+                                                     HorizontalDimension,
+                                                     Point3D.create(3, -1, 0))
+
+            # self.geometricConstraints.addHorizontal(rectangle.item(0))
+            # self.geometricConstraints.addHorizontal(rectangle.item(2))
+            # self.geometricConstraints.addVertical(rectangle.item(1))
+            # self.geometricConstraints.addVertical(rectangle.item(3))
+
             return rectangle
 
         except:

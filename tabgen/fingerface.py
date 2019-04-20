@@ -58,7 +58,7 @@ class FingerFace:
 
     def __create_automatic(self, tc):
         default_finger_count = max(3,
-                                   math.floor(self.length / tc.default_width))
+                                   (math.ceil(math.floor(self.length / tc.default_width)/2)*2)-1)
         default_tab_width = self.length / default_finger_count
         default_notch_count = math.floor(default_finger_count/2)
 
@@ -147,8 +147,8 @@ class FingerFace:
 
         if edge is not None:
             selected = FingerEdge(edge)
-            distance = selected.distance(self.__vertices, params.depth)
-            parallel_distance = createByReal(distance)
+            sdistance = selected.distance(self.__vertices, params.depth)
+            parallel_distance = createByReal(sdistance)
             # parallel_distance = 4
             patternInput.setDirectionTwo(self.__find_secondary_axis,
                                          createByReal(2),
