@@ -10,6 +10,8 @@ from adsk.core import ValueInput
 from adsk.fusion import FeatureOperations
 from adsk.fusion import PatternDistanceType
 
+from ..util import check_param
+from ..util import clean_param
 from ..util import uimessage
 from ..util import automaticWidthId, userDefinedWidthId
 from .fingersketch import FingerSketch
@@ -45,7 +47,8 @@ class FingerFace:
         self.__xlen = pRange.maxPoint.x - pRange.minPoint.x
         self.__ylen = pRange.maxPoint.y - pRange.minPoint.y
 
-        self.__vertices = [bface.vertices.item(j).geometry for j in range(bface.vertices.count)]
+        self.__vertices = [bface.vertices.item(j).geometry
+                           for j in range(bface.vertices.count)]
 
         self.__width = min(self.__xlen, self.__ylen)
         self.__length = max(self.__xlen, self.__ylen)
@@ -232,13 +235,16 @@ class FingerFace:
         for j in range(0, bodies.count):
             body = bodies.item(j)
             body.isVisible = False
-        bodies.itemByName(self.body_name).isVisible = True
+        bodies.itemByName(self.name).isVisible = True
 
         if self.bface.isValid:
             funcs = {
                 automaticWidthId: self.__create_automatic,
                 userDefinedWidthId: self.__create_defined
             }
+
+            check_param('{}_dfingerw'.format(clean_param(self.name)),
+                        tab_config.default_width)
 
             func = funcs[tab_config.finger_type]
             func(tab_config)
@@ -250,7 +256,7 @@ class FingerFace:
             body.isVisible = True
 
     @property
-    def body_name(self):
+    def name(self):
         return self.__bface.body.name
 
     @property

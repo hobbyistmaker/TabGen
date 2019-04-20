@@ -1,5 +1,9 @@
 import math
 
+from .axisdir import axis_dir
+from .checkparam import check_param
+from .cleanparam import clean_param
+
 errorMsgInputId = 'errorMsgCommandInput'
 mtlThickInputId = 'mtlThickValueCommandInput'
 selectedFaceInputId = 'selectedFaceCommandInput'
@@ -28,6 +32,9 @@ def uimessage(ui, msg, value=None):
 
 __all__ = [d,
            automaticWidthId,
+           axis_dir,
+           check_param,
+           clean_param,
            dualSidesInputId,
            dualEdgeSelectId,
            errorMsgInputId,
