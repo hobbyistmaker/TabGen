@@ -1,5 +1,9 @@
 from collections import namedtuple
 
+from adsk.core import Application
+
+app = Application.get()
+ui = app.userInterface
 
 AxisChange = namedtuple('AxisChange', ['x', 'y', 'z'])
 
@@ -27,6 +31,15 @@ def changed_axis(vertices, second):
     return second
 
 
+def geometry_in(first, second, geometries):
+    # If one of the provided geometries is in the list
+    # return the other, otherwise return the first
+    for g in geometries:
+        if first.isEqualTo(g):
+            return second
+    return first
+
+
 class FingerEdge:
 
     def __init__(self, edge):
@@ -38,14 +51,14 @@ class FingerEdge:
 
     @property
     def end(self):
-        return self.__edge.endVertex
+        return self.__edge.endVertex.geometry
 
     @property
     def start(self):
-        return self.__edge.startVertex
+        return self.__edge.startVertex.geometry
 
     def distance(self, vertices, depth):
-        start_point = self.start.geometry
+        start_point = geometry_in(self.start, self.end, vertices)
         end_point = changed_axis(vertices, start_point)
         length = distance(start_point, end_point)
 
