@@ -1,9 +1,5 @@
-from .commandcreatedeventhandlerpanel import handlers
-from .commandcreatedeventhandlerpanel import CommandCreatedEventHandlerPanel
-from . import createfingers
+from .tabconfig import TabConfig
+from .fingerface import FingerFace
 
-create_fingers = createfingers.create_fingers
-
-__all__ = [CommandCreatedEventHandlerPanel,
-           create_fingers,
-           handlers]
+__all__ = [TabConfig,
+           FingerFace]
