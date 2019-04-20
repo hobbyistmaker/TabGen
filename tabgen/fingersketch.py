@@ -1,6 +1,5 @@
 import traceback
 
-from adsk.core import ObjectCollection
 from adsk.core import Point3D
 from adsk.core import ValueInput
 from adsk.fusion import DimensionOrientations
@@ -31,7 +30,7 @@ def offset(point, offset=0, is_flipped=False, vertical=False):
     else:
         o = point
 
-    ui.messageBox('Offset: {}\nFlipped: {}\nVertical: {}\n'.format(offset, is_flipped, vertical))
+    # ui.messageBox('Offset: {}\nFlipped: {}\nVertical: {}\n'.format(offset, is_flipped, vertical))
 
     if vertical:
         o.y += offset if is_flipped is False else -offset
@@ -41,44 +40,26 @@ def offset(point, offset=0, is_flipped=False, vertical=False):
     return o
 
 
-def min_point_x(point1, point2):
-    return point1 if point1.x < point2.x else point2
-
-
-def max_point_x(point1, point2):
-    return point2 if point2.x > point1.x else point1
-
-
-def max_point_y(point1, point2):
-    return point2 if point2.y > point1.y else point1
-
-
-def min_point_y(point1, point2):
-    return point1 if point1.y < point2.y else point2
+def compare_xy(line, func):
+    ssp = line.startSketchPoint.geometry
+    esp = line.endSketchPoint.geometry
+    return func(ssp, esp)
 
 
 def min_x(line):
-    ssp = line.startSketchPoint.geometry
-    esp = line.endSketchPoint.geometry
-    return ssp if ssp.x < esp.x else esp
+    return compare_xy(line, lambda s, e: s if s.x < e.x else e)
 
 
 def max_x(line):
-    ssp = line.startSketchPoint.geometry
-    esp = line.endSketchPoint.geometry
-    return esp if esp.x > ssp.x else ssp
-
-
-def min_y(line):
-    ssp = line.startSketchPoint.geometry
-    esp = line.endSketchPoint.geometry
-    return ssp if ssp.y < esp.y else esp
+    return compare_xy(line, lambda s, e: s if s.x > e.x else e)
 
 
 def max_y(line):
-    ssp = line.startSketchPoint.geometry
-    esp = line.endSketchPoint.geometry
-    return esp if esp.y > ssp.y else ssp
+    return compare_xy(line, lambda s, e: s if s.y > e.y else e)
+
+
+def min_y(line):
+    return compare_xy(line, lambda s, e: s if s.y < e.y else e)
 
 
 class FingerSketch:
@@ -99,8 +80,8 @@ class FingerSketch:
         self.__max_point = profile.boundingBox.maxPoint
         self.__min_point = profile.boundingBox.minPoint
 
-        ui.messageBox('X Length: {}\nY Length: {}\n'.format(self.x_length,
-                                                            self.y_length))
+        # ui.messageBox('X Length: {}\nY Length: {}\n'.format(self.x_length,
+        #                                                     self.y_length))
 
     @property
     def curves(self):
@@ -128,23 +109,35 @@ class FingerSketch:
 
     @property
     def profiles(self):
+        def maxpoint_x(profile):
+            return profile.boundingBox.maxPoint.x
+
+        def maxpoint_y(profile):
+            return profile.boundingBox.maxPoint.y
+
+        def minpoint_x(profile):
+            return profile.boundingBox.minPoint.x
+
+        def minpoint_y(profile):
+            return profile.boundingBox.minPoint.y
+
         profiles = [self.__sketch.profiles.item(j)
                     for j in range(self.__sketch.profiles.count)]
 
         if self.vertical:
             if self.flipped_y:
-                profiles.sort(key=lambda profile: profile.boundingBox.maxPoint.x)
-                profiles.sort(key=lambda profile: profile.boundingBox.maxPoint.y)
+                profiles.sort(key=maxpoint_x)
+                profiles.sort(key=maxpoint_y)
             else:
-                profiles.sort(key=lambda profile: profile.boundingBox.minPoint.x)
-                profiles.sort(key=lambda profile: profile.boundingBox.minPoint.y)
+                profiles.sort(key=minpoint_x)
+                profiles.sort(key=minpoint_y)
         else:
             if self.flipped_x:
-                profiles.sort(key=lambda profile: profile.boundingBox.maxPoint.y)
-                profiles.sort(key=lambda profile: profile.boundingBox.maxPoint.x)
+                profiles.sort(key=maxpoint_y)
+                profiles.sort(key=maxpoint_x)
             else:
-                profiles.sort(key=lambda profile: profile.boundingBox.minPoint.y)
-                profiles.sort(key=lambda profile: profile.boundingBox.minPoint.x)
+                profiles.sort(key=minpoint_y)
+                profiles.sort(key=minpoint_x)
 
         return profiles
 
@@ -210,9 +203,7 @@ class FingerSketch:
 
             line = self.lines.item(0)
             lline1 = 0 if line.length == self.length else 1
-            wline1 = 1 if line.length == self.width else 0
             lline2 = lline1 + 2
-            # wline2 = wline1 + 2
 
             if self.__tab_params.start_with_tab is True:
                 self.geometricConstraints.addCoincident(rectangle.item(0).startSketchPoint,
@@ -296,7 +287,6 @@ class FingerSketch:
 
     @property
     def __last_point(self):
-        # return self.lines.item(1).endSketchPoint
         ssp = self.lines.item(3).endSketchPoint
         esp = self.lines.item(1).startSketchPoint
         sspg = ssp.geometry
