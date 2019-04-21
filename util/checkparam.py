@@ -15,7 +15,7 @@ createByReal = ValueInput.createByReal
 createByString = ValueInput.createByString
 
 
-def set_value(itemParam, name, value, units='cm'):
+def set_value(name, value, units='cm'):
     inputValue = str(value)
     itemParam = user_params.add(name, createByString(inputValue), units, 'Auto-generated Parameter')
     itemParam.expression = inputValue
@@ -26,6 +26,6 @@ def check_param(name, value, units='cm'):
     try:
         itemParam = user_params.itemByName(name)
         if not itemParam:
-            set_value(itemParam, name, value, units)
+            set_value(name, value, units)
     except:
         ui.messageBox(traceback.format_exc(1))

@@ -12,8 +12,6 @@ from adsk.fusion import PatternDistanceType
 from adsk.fusion import DistanceExtentDefinition
 from adsk.fusion import ModelParameter
 
-from ..util import check_param
-from ..util import clean_param
 from ..util import uimessage
 from ..util import automaticWidthId, userDefinedWidthId
 from .fingersketch import FingerSketch
@@ -30,6 +28,7 @@ FingerParams = namedtuple('FingerParams', ['finger_type',
                                            'start_with_tab',
                                            'edge',
                                            'fingers',
+                                           'default_width',
                                            'width',
                                            'depth',
                                            'notches',
@@ -81,6 +80,7 @@ class FingerFace:
                               tc.start_with_tab,
                               tc.edge,
                               default_finger_count,
+                              tc.default_width,
                               default_tab_width,
                               tc.depth,
                               extrude_count,
@@ -110,6 +110,7 @@ class FingerFace:
                               tc.start_with_tab,
                               tc.edge,
                               default_finger_count,
+                              tc.default_width,
                               tab_width,
                               tc.depth,
                               extrude_count,
@@ -180,7 +181,6 @@ class FingerFace:
 
                 if edge is not None:
                     parameters.add_far_length(selected.distance(self.__vertices))
-                    parameters.add_distance_two(selected.distance_expr(self.__vertices, parameters.far_length.name, parameters.fingerd.name))
 
                     patd2MP = pattern.distanceTwo
                     patd2MP.expression = parameters.distance_two.name
@@ -269,9 +269,9 @@ class FingerFace:
                 userDefinedWidthId: self.__create_defined
             }
 
-            if tab_config.parametric:
-                check_param('{}_dfingerw'.format(clean_param(self.name)),
-                            tab_config.default_width)
+            # if tab_config.parametric:
+            #     check_param('{}_dfingerw'.format(clean_param(self.name)),
+            #                 tab_config.default_width)
 
             func = funcs[tab_config.finger_type]
             func(tab_config)

@@ -3,8 +3,11 @@ from adsk.core import ValueInput
 from .parameter import Parameter
 
 from ..util import automaticWidthId
-from ..util import clean_param
 from ..util import userDefinedWidthId
+
+
+def clean_param(param):
+    return param.replace(' ', '_').replace('(', '').replace(')', '').lower()
 
 
 class Parameters:
@@ -24,12 +27,18 @@ class Parameters:
         if (xdir == 'z' or ydir == 'z'):
             self.z = True
 
+            #     check_param('{}_dfingerw'.format(clean_param(self.name)),
+            #                 tab_config.default_width)
+
+        self._pdfingerw = Parameter(parent.face.name,
+                                    'dfingerw',
+                                    abs(round(tab_params.width, 5)))
         self._xlength = Parameter(name,
                                   '{}_length'.format(xdir),
-                                  round(parent.x_length, 5))
+                                  abs(round(parent.x_length, 5)))
         self._ylength = Parameter(name,
                                   '{}_length'.format(ydir),
-                                  round(parent.y_length, 5))
+                                  abs(round(parent.y_length, 5)))
         self._dfingerw = Parameter(self.prefix,
                                    'dfingerw',
                                    '{}_dfingerw'.format(self.name))
@@ -96,17 +105,27 @@ class Parameters:
                                    'fdistance',
                                    '{0}_length - {0}_foffset*2 - {0}_fingerw')
 
-    def add_distance_two(self, expression, units='cm'):
-        setattr(self, 'distance_two', Parameter(self.name,
-                                                '{}_distance2'.format(self._alternate_axis),
-                                                expression,
-                                                units=units))
-
     def add_far_length(self, expression, units='cm'):
-        setattr(self, 'far_length', Parameter(self.name,
-                                                '{}_length'.format(self._alternate_axis),
-                                                expression,
-                                                units=units))
+        self.far_length = Parameter(self.name,
+                                    '{}_length'.format(self._alternate_axis),
+                                    abs(expression),
+                                    units=units)
+
+        if expression < 0:
+            self.far_distance = Parameter(self.name,
+                                          '{}_distance'.format(self._alternate_axis),
+                                          '-{}'.format(self.far_length.name),
+                                          units=units)
+            fingerdstr = 'abs({})'.format(self.fingerd.name) if self.fingerd.value < 0 else self.fingerd.name
+            d2expr = '-(abs({}) - {})'.format(self.far_length.name, fingerdstr)
+        else:
+            self.far_distance = self.far_length
+            fingerdstr = 'abs({})'.format(self.fingerd.name) if self.fingerd.value < 0 else self.fingerd.name
+            d2expr = '{} - {}'.format(self.far_length.name, fingerdstr)
+
+        self.distance_two = Parameter(self.name,
+                                      '{}_distance2'.format(self._alternate_axis),
+                                      d2expr)
 
     @property
     def _alternate_axis(self):

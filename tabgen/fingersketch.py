@@ -8,8 +8,6 @@ from adsk.fusion import PatternDistanceType
 from adsk.fusion import SketchPoint
 
 from ..util import axis_dir
-from ..util import check_param
-from ..util import clean_param
 from ..util import uimessage
 from ..util import automaticWidthId
 from ..util import userDefinedWidthId
@@ -76,6 +74,7 @@ class FingerSketch:
 
         self.__tab_params = tab_params
         self.__face = face
+        self.face = self.__face
         self.__ui = ui
 
         profile = self.__sketch.profiles.item(0)
