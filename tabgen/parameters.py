@@ -35,7 +35,7 @@ class Parameters:
 
         self._pdfingerw = Parameter(parent.face.name,
                                     'dfingerw',
-                                    abs(round(tab_params.default_width, 5)),
+                                    tab_params.default_width.expression if tab_params.parametric else tab_params.default_width.value,
                                     favorite=True,
                                     comment='Auto: change to desired target width for fingers')
         if vertical:
@@ -55,7 +55,7 @@ class Parameters:
                                    '{}_dfingerw'.format(self._clean_name))
         self._fingerd = Parameter(self.prefix,
                                   'fingerd',
-                                  -round(tab_params.depth, 5),
+                                  '-{}'.format(tab_params.depth.expression) if tab_params.parametric else -abs(round(tab_params.depth.value, 5)),
                                   favorite=True,
                                   comment='Auto: change to proper depth of fingers')
 

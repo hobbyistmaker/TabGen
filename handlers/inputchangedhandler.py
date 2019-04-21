@@ -87,7 +87,9 @@ class InputChangedHandler(adsk.core.InputChangedEventHandler):
                         for c in selections:
                             cmdInput.addSelection(c)
 
-            if cmdInput.id == selectedFaceInputId or cmdInput.id == dualEdgeSelectId or cmdInput.id == fingerPlaceId:
+            if (cmdInput.id in [selectedFaceInputId,
+                                dualEdgeSelectId,
+                                fingerPlaceId]):
                 if faceInput.selectionCount > 0:
                     if edgeInput and edgeInput.isVisible:
                         edgeInput.hasFocus = True

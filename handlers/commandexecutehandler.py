@@ -39,8 +39,8 @@ class CommandExecuteHandler(adsk.core.CommandEventHandler):
             selInput = commandInputs.itemById(selectedFaceInputId)
 
             finger_type = commandInputs.itemById(fingerTypeId).selectedItem.name
-            tab_width = commandInputs.itemById(tabWidthInputId).value
-            depth = commandInputs.itemById(mtlThickInputId).value
+            tab_width = commandInputs.itemById(tabWidthInputId)
+            depth = commandInputs.itemById(mtlThickInputId)
             edge_input = commandInputs.itemById(dualEdgeSelectId)
 
             edge = get_edge(edge_input, self.ui)

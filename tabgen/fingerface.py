@@ -61,7 +61,7 @@ class FingerFace:
 
     def __create_automatic(self, tc):
         default_finger_count = max(3,
-                                   (math.ceil(math.floor(self.length / tc.default_width)/2)*2)-1)
+                                   (math.ceil(math.floor(self.length / tc.default_width.value)/2)*2)-1)
         default_tab_width = self.length / default_finger_count
         default_notch_count = math.floor(default_finger_count/2)
 
@@ -96,13 +96,13 @@ class FingerFace:
             self.__duplicate_fingers(params, finger, tc.edge, sketch.parameters)
 
     def __create_defined(self, tc):
-        default_finger_count = int(self.length // tc.default_width)
-        default_tab_count = int(self.length // (2 * tc.default_width))
-        tab_length = 2 * tc.default_width * default_tab_count
-        margin = (self.length - tab_length + tc.default_width) / 2
-        distance = self.length - margin * 2 - tc.default_width
+        default_finger_count = int(self.length // tc.default_width.value)
+        default_tab_count = int(self.length // (2 * tc.default_width.value))
+        tab_length = 2 * tc.default_width.value * default_tab_count
+        margin = (self.length - tab_length + tc.default_width.value) / 2
+        distance = self.length - margin * 2 - tc.default_width.value
         extrude_count = default_tab_count - 1
-        tab_width = tc.default_width
+        tab_width = tc.default_width.value
 
         params = FingerParams(tc.finger_type,
                               tc.start_with_tab,
@@ -134,16 +134,16 @@ class FingerFace:
 
     def __extrude_finger(self, depth, profs, parameters=None):
         # Define the extrusion extent to be -tabDepth.
-        d = createByString(str(-depth))
+        d = createByString(str(-(depth.value*10)))
 
         # Cut the first notch.
         finger = self.extrudes.addSimple(profs, d, CFO)
-        finger.name = '{} Extrude'.format(parameters.name)
         # Manually set the extrude expression -- for some reason
         # F360 takes the value of a ValueInput.createByString
         # instead of the expression
         if parameters is not None:
             finger.extentOne.distance.expression = parameters.fingerd.name
+            finger.name = '{} Extrude'.format(parameters.name)
 
         return finger
 
@@ -167,7 +167,7 @@ class FingerFace:
 
         if edge is not None:
             selected = FingerEdge(edge)
-            sdistance = selected.distance(self.__vertices, params.depth)
+            sdistance = selected.distance(self.__vertices, params.depth.value)
 
             if parameters is not None:
                 parameters.add_far_length(selected.distance(self.__vertices))
@@ -181,7 +181,8 @@ class FingerFace:
 
         try:
             pattern = self.patterns.add(patternInput)
-            pattern.name = '{} Rectangle Pattern'.format(parameters.name)
+            if parameters is not None:
+                pattern.name = '{} Rectangle Pattern'.format(parameters.name)
             return pattern
         except:
             uimessage(self.__ui, traceback.format_exc(1))
