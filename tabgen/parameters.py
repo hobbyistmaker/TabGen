@@ -1,9 +1,14 @@
+from adsk.core import Application
 from adsk.core import ValueInput
 
 from .parameter import Parameter
 
 from ..util import automaticWidthId
 from ..util import userDefinedWidthId
+
+
+app = Application.get()
+ui = app.userInterface
 
 
 def clean_param(param):
@@ -13,6 +18,9 @@ def clean_param(param):
 class Parameters:
 
     def __init__(self, parent, name, vertical, tab_params, xdir, ydir):
+        self.pd = ui.createProgressDialog()
+        self.pd.show('Creating Finger Joint', 'Percent complete: %p', 0, 100, 5)
+
         dirname = ydir if vertical else xdir
         self.name = clean_param(name)
         self.prefix = '{}_{}'.format(self.name,
@@ -27,26 +35,36 @@ class Parameters:
         if (xdir == 'z' or ydir == 'z'):
             self.z = True
 
-            #     check_param('{}_dfingerw'.format(clean_param(self.name)),
-            #                 tab_config.default_width)
+        self.pd.progressValue = 8
 
         self._pdfingerw = Parameter(parent.face.name,
                                     'dfingerw',
-                                    abs(round(tab_params.width, 5)))
+                                    abs(round(tab_params.default_width, 5)),
+                                    favorite=True)
+        self.pd.progressValue = 16
         self._xlength = Parameter(name,
                                   '{}_length'.format(xdir),
-                                  abs(round(parent.x_length, 5)))
+                                  abs(round(parent.x_length, 5)),
+                                  favorite=True)
+        self.pd.progressValue = 24
         self._ylength = Parameter(name,
                                   '{}_length'.format(ydir),
-                                  abs(round(parent.y_length, 5)))
+                                  abs(round(parent.y_length, 5)),
+                                  favorite=True)
+        self.pd.progressValue = 32
         self._dfingerw = Parameter(self.prefix,
                                    'dfingerw',
                                    '{}_dfingerw'.format(self.name))
+        self.pd.progressValue = 40
         self._fingerd = Parameter(self.prefix,
                                   'fingerd',
-                                  -round(tab_params.depth, 5))
+                                  -round(tab_params.depth, 5),
+                                  favorite=True)
+        self.pd.progressValue = 48
 
         self.create_params(tab_params)
+        self.pd.progressValue = 100
+        self.pd.hide()
 
     def create_params(self, tab_params):
         funcs = {
@@ -61,55 +79,69 @@ class Parameters:
                                  'fingers',
                                  'max(3; (ceil(floor({0}_length/{0}_dfingerw)/2)*2)-1)',
                                  units='')
+        self.pd.progressValue = 56
         self.fingerw = Parameter(self.prefix,
                                  'fingerw',
                                  '{0}_length / {0}_fingers')
+        self.pd.progressValue = 64
         self.foffset = Parameter(self.prefix,
                                  'foffset',
                                  '{0}_fingerw')
+        self.pd.progressValue = 72
         self.notches = Parameter(self.prefix,
                                  'notches',
                                  'floor({0}_fingers/2)',
                                  units='')
+        self.pd.progressValue = 80
         self.extrude_count = Parameter(self.prefix,
                                        'extrude_count',
                                        '{0}_notches',
                                        units='')
+        self.pd.progressValue = 88
         self.fdistance = Parameter(self.prefix,
                                    'fdistance',
                                    '({0}_fingers - 3)*{0}_fingerw')
+        self.pd.progressValue = 96
 
     def create_defined_params(self, tab_params):
         self.fingers = Parameter(self.prefix,
                                  'fingers',
                                  'floor({0}_length / {0}_dfingerw)',
                                  units='')
+        self.pd.progressValue = 55
         self.fingerw = Parameter(self.prefix,
                                  'fingerw',
                                  '{0}_dfingerw')
+        self.pd.progressValue = 62
         self.notches = Parameter(self.prefix,
                                  'notches',
                                  'floor({0}_length / (2 * {0}_fingerw))',
                                  units='')
+        self.pd.progressValue = 69
         self.notch_length = Parameter(self.prefix,
                                       'notch_length',
                                       '2 * {0}_fingerw * {0}_notches')
+        self.pd.progressValue = 77
         self.foffset = Parameter(self.prefix,
                                  'foffset',
                                  '({0}_length - {0}_notch_length + {0}_fingerw)/2')
+        self.pd.progressValue = 84
         self.extrude_count = Parameter(self.prefix,
                                        'extrude_count',
                                        '{0}_notches - 1',
                                        units='')
+        self.pd.progressValue = 91
         self.fdistance = Parameter(self.prefix,
                                    'fdistance',
                                    '{0}_length - {0}_foffset*2 - {0}_fingerw')
+        self.pd.progressValue = 98
 
     def add_far_length(self, expression, units='cm'):
         self.far_length = Parameter(self.name,
                                     '{}_length'.format(self._alternate_axis),
                                     abs(expression),
-                                    units=units)
+                                    units=units,
+                                    favorite=True)
 
         if expression < 0:
             self.far_distance = Parameter(self.name,

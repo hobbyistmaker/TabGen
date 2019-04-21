@@ -17,22 +17,27 @@ def clean_param(param):
     return param.replace(' ', '_').replace('(', '').replace(')', '').lower()
 
 
-def set_value(name, value, units='cm'):
+def set_value(name, value, units='cm', favorite=False):
     inputValue = str(value)
-    itemParam = user_params.add(name, createByString(inputValue), units, 'Auto-generated Parameter')
+    itemParam = user_params.add(name,
+                                createByString(inputValue),
+                                units,
+                                'Auto-generated Parameter')
     itemParam.expression = inputValue
+    itemParam.isFavorite = favorite
     return itemParam
 
 
 class Parameter:
 
-    def __init__(self, prefix, name, expression, units='cm'):
+    def __init__(self, prefix, name, expression, units='cm', favorite=False):
         self.prefix = prefix if isinstance(prefix, str) else str(prefix)
         self._expression = expression.format(prefix) if isinstance(expression, str) else expression
-        self._name = clean_param(name if isinstance(name, str) else str(name))
+        self._name = name if isinstance(name, str) else str(name)
         self._units = units if isinstance(units, str) else ''
 
         self._param = user_params.itemByName(self.name)
+        self._favorite = favorite
         if not (self._param):
             self._param = self.create()
 
@@ -45,6 +50,10 @@ class Parameter:
         return str(self._expression)
 
     @property
+    def favorite(self):
+        return self._favorite
+
+    @property
     def value(self):
         return self._param.value
 
@@ -53,5 +62,4 @@ class Parameter:
         return self._units
 
     def create(self):
-        # ui.messageBox('Name: {}\nExpression: {}'.format(self.name, self.expression))
-        return set_value(self.name, self.expression, self.units)
+        return set_value(self.name, self.expression, self.units, self.favorite)

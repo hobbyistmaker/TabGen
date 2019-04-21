@@ -165,7 +165,6 @@ class FingerFace:
             selected = FingerEdge(edge)
             sdistance = selected.distance(self.__vertices, params.depth)
             parallel_distance = createByReal(sdistance)
-            # parallel_distance = 4
             patternInput.setDirectionTwo(self.__find_secondary_axis,
                                          createByReal(2),
                                          parallel_distance)
@@ -175,13 +174,13 @@ class FingerFace:
 
             if parameters is not None:
                 patdMP = pattern.distanceOne
-                patdMP.expression = parameters.fdistance.name
+                uimessage(self.__ui, 'fdistance: {}\nextrude_count: {}'.format(parameters.fdistance.name, parameters.extrude_count.name))
+                # patdMP.expression = parameters.fdistance.name
                 patqMP = pattern.quantityOne
-                patqMP.expression = parameters.extrude_count.name
+                # patqMP.expression = parameters.extrude_count.name
 
                 if edge is not None:
                     parameters.add_far_length(selected.distance(self.__vertices))
-
                     patd2MP = pattern.distanceTwo
                     patd2MP.expression = parameters.distance_two.name
             return pattern

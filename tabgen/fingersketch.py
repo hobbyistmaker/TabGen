@@ -66,7 +66,6 @@ class FingerSketch:
     def __init__(self, face, tab_params, ui=None):
         self.__sketch = face.parent.sketches.add(face.bface)
 
-        # ui.messageBox('Depth: {}\nWidth: {}\n'.format(tab_params.depth, tab_params.width))
         if tab_params.start_with_tab is False:
             intersectItems = []
             intersectItems.append(face.bface)
@@ -89,8 +88,8 @@ class FingerSketch:
         else:
             self.parameters = None
 
-        # ui.messageBox('X Length: {}\nY Length: {}\n'.format(self.x_length,
-        #                                                     self.y_length))
+        self.__sketch.name = '{} {}-Axis Finger Sketch'.format(self.face.name,
+                                                               (axis_dir(self.__sketch.yDirection) if self.vertical else axis_dir(self.__sketch.xDirection)).upper())
 
     @property
     def curves(self):
@@ -228,7 +227,7 @@ class FingerSketch:
                     HorizontalDimension,
                     Point3D.create(2, -1, 0))
                 if self.__tab_params.parametric:
-                    tabdim.parameter.expression = self.parameters.fingerw.expression
+                    tabdim.parameter.expression = self.parameters.fingerw.name
 
                 margindim = self.dimensions.addDistanceDimension(
                     rectangle.item(0).startSketchPoint,
@@ -236,7 +235,7 @@ class FingerSketch:
                     HorizontalDimension,
                     Point3D.create(3, -1, 0))
                 if self.__tab_params.parametric:
-                    margindim.parameter.expression = self.parameters.foffset.expression
+                    margindim.parameter.expression = self.parameters.foffset.name
 
                 self.geometricConstraints.addHorizontal(rectangle.item(0))
                 self.geometricConstraints.addHorizontal(rectangle.item(2))
