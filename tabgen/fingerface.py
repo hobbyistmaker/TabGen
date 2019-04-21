@@ -143,6 +143,13 @@ class FingerFace:
             finger = self.__extrude_finger(tc.depth, profs, sketch.parameters)
             self.__duplicate_fingers(params, finger, tc.edge, sketch.parameters)
 
+            if self.__timeline and self.__timeline.isValid:
+                mp = self.__timeline.markerPosition
+                tcount = self.__timeline.count - 1
+                pos = mp if mp <= tcount else tcount
+                tlgroup = self.__timeline.timelineGroups.add(pos-2, pos)
+                tlgroup.name = '{} Finger Group'.format(sketch.parameters.name)
+
     def __extrude_finger(self, depth, profs, parameters=None):
         # Define the extrusion extent to be -tabDepth.
         d = createByString(str(-(depth.value*10)))
