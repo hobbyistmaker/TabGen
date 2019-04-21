@@ -6,6 +6,7 @@ from collections import namedtuple
 from adsk.core import Application
 from adsk.core import ObjectCollection
 from adsk.core import ValueInput
+from adsk.fusion import Design
 from adsk.fusion import FeatureOperations
 from adsk.fusion import PatternDistanceType
 
@@ -15,6 +16,8 @@ from .fingersketch import FingerSketch
 from .fingeredge import FingerEdge
 
 app = Application.get()
+ui = app.userInterface
+design = Design.cast(app.activeProduct)
 
 # some function aliases
 CFO = FeatureOperations.CutFeatureOperation
@@ -56,6 +59,7 @@ class FingerFace:
         self.__xy = False
         self.__xz = False
         self.__yz = False
+        self.__timeline = design.timeline
 
         self.__connected = []
 
@@ -93,7 +97,13 @@ class FingerFace:
 
         if len(profiles) > 0:
             finger = self.__extrude_finger(tc.depth, profs, sketch.parameters)
-            self.__duplicate_fingers(params, finger, tc.edge, sketch.parameters)
+            pattern = self.__duplicate_fingers(params, finger, tc.edge, sketch.parameters)
+
+            if self.__timeline and self.__timeline.isValid:
+                mp = self.__timeline.markerPosition
+                tcount = self.__timeline.count - 1
+                pos = mp if mp <= tcount else tcount
+                self.__timeline.timelineGroups.add(pos-2, pos)
 
     def __create_defined(self, tc):
         default_finger_count = int(self.length // tc.default_width.value)
