@@ -1,7 +1,10 @@
 import adsk.core
 import traceback
 
-from ..util import d, selectedFaceInputId, uimessage
+from ..util import d
+from ..util import dualEdgeSelectId
+from ..util import selectedFaceInputId
+from ..util import uimessage
 
 # Constants
 
@@ -45,6 +48,12 @@ class InputChangedHandler(adsk.core.InputChangedEventHandler):
 
                         for c in selections:
                             cmdInput.addSelection(c)
+
+                if cmdInput.selectionCount > 0:
+                    edgeInput = args.inputs.itemById(dualEdgeSelectId)
+                    if edgeInput:
+                        edgeInput.hasFocus = True
+
 
         except:
             uimessage(self.ui, eventFailedMsg, traceback.format_exc())
