@@ -3,10 +3,19 @@ import traceback
 
 from adsk.core import DropDownStyles as dds
 
-from ..util import errorMsgInputId, fingerTypeId, mtlThickInputId
-from ..util import selectedFaceInputId, startWithTabInputId
-from ..util import tabWidthInputId, dualEdgeSelectId
+from ..util import distanceInputId
+from ..util import dualEdgeId
+from ..util import dualEdgeSelectId
+from ..util import errorMsgInputId
+from ..util import fingerTypeId
+from ..util import fingerPlaceId
+from ..util import lengthInputId
+from ..util import mtlThickInputId
 from ..util import parametricInputId
+from ..util import selectedFaceInputId
+from ..util import singleEdgeId
+# from ..util import startWithTabInputId
+from ..util import tabWidthInputId
 from ..util import uimessage
 from .commandexecutehandler import CommandExecuteHandler
 from .inputchangedhandler import InputChangedHandler
@@ -46,17 +55,23 @@ class CommandCreatedEventHandlerPanel(adsk.core.CommandCreatedEventHandler):
 
             # Set up the inputs
             commandInputs = cmd.commandInputs
+
+            boxtypedropdown = commandInputs.addDropDownCommandInput(fingerTypeId, 'Fingers Type', dds.TextListDropDownStyle)
+            boxtypedropdownitems = boxtypedropdown.listItems
+            boxtypedropdownitems.add('User-Defined Width', False, '')
+            boxtypedropdownitems.add('Automatic Width', True, '')
+
+            placedropdown = commandInputs.addDropDownCommandInput(fingerPlaceId, 'Placement', dds.TextListDropDownStyle)
+            placedropdownitems = placedropdown.listItems
+            placedropdownitems.add(singleEdgeId, False, '')
+            placedropdownitems.add(dualEdgeId, True, '')
+
             selComInput = commandInputs.addSelectionInput(
                 selectedFaceInputId,
                 'Face: ',
                 'Faces on which to cut tabs')
             selComInput.addSelectionFilter('PlanarFaces')
             selComInput.setSelectionLimits(1, 1)
-
-            boxtypedropdown = commandInputs.addDropDownCommandInput(fingerTypeId, 'Fingers Type', dds.TextListDropDownStyle)
-            boxtypedropdownitems = boxtypedropdown.listItems
-            boxtypedropdownitems.add('User-Defined Width', False, '')
-            boxtypedropdownitems.add('Automatic Width', True, '')
 
             edgeComInput = commandInputs.addSelectionInput(
                 dualEdgeSelectId,
@@ -70,6 +85,10 @@ class CommandCreatedEventHandlerPanel(adsk.core.CommandCreatedEventHandler):
             # Disable start with tab due to bugs
             # commandInputs.addBoolValueInput(startWithTabInputId, 'Start with tab: ', True, '', True)
             commandInputs.addBoolValueInput(parametricInputId, 'Make Parametric: ', True, '', True)
+            commandInputs.addFloatSpinnerCommandInput(lengthInputId, 'Length Parameter: ', 'mm', -2500.0, 2500.0, 0.1, 0.0)
+            commandInputs.addFloatSpinnerCommandInput(distanceInputId, 'Distance Parameter: ', 'mm', -2500.0, 2500.0, 0.1, 0.0)
+            # commandInputs.addFloatSpinnerCommandInput(distanceInputId, 'Distance Parameter: ', 'mm', 2.0, 20.0, 0.1, 1.0)
+
             commandInputs.addTextBoxCommandInput(errorMsgInputId, '', '', 2, True)
 
         except:

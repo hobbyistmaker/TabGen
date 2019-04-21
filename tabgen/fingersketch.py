@@ -18,7 +18,6 @@ CFO = FeatureOperations.CutFeatureOperation
 EDT = PatternDistanceType.ExtentPatternDistanceType
 HorizontalDimension = DimensionOrientations.HorizontalDimensionOrientation
 VerticalDimension = DimensionOrientations.VerticalDimensionOrientation
-createByReal = ValueInput.createByReal
 
 
 def offset(point, offset=0, is_flipped=False, vertical=False):

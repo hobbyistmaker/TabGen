@@ -134,7 +134,7 @@ class FingerFace:
 
     def __extrude_finger(self, depth, profs, parameters=None):
         # Define the extrusion extent to be -tabDepth.
-        d = createByReal(-depth)
+        d = createByString(str(-depth))
 
         # Cut the first notch.
         finger = self.extrudes.addSimple(profs, d, CFO)
@@ -370,3 +370,7 @@ class FingerFace:
     @property
     def yz(self):
         return self.__yz
+
+    @property
+    def vertices(self):
+        return self.__vertices

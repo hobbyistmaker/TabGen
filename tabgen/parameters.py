@@ -38,16 +38,18 @@ class Parameters:
                                     abs(round(tab_params.default_width, 5)),
                                     favorite=True,
                                     comment='Auto: change to desired target width for fingers')
-        self._xlength = Parameter(name,
-                                  '{}_length'.format(xdir),
-                                  abs(round(parent.x_length, 5)),
-                                  favorite=True,
-                                  comment='Auto: change to proper user parameter length')
-        self._ylength = Parameter(name,
-                                  '{}_length'.format(ydir),
-                                  abs(round(parent.y_length, 5)),
-                                  favorite=True,
-                                  comment='Auto: change to proper user parameter length')
+        if vertical:
+            self._ylength = Parameter(name,
+                                      '{}_length'.format(ydir),
+                                      abs(round(parent.y_length, 5)),
+                                      favorite=True,
+                                      comment='Auto: change to proper user parameter length')
+        else:
+            self._xlength = Parameter(name,
+                                      '{}_length'.format(xdir),
+                                      abs(round(parent.x_length, 5)),
+                                      favorite=True,
+                                      comment='Auto: change to proper user parameter length')
         self._dfingerw = Parameter(self.prefix,
                                    'dfingerw',
                                    '{}_dfingerw'.format(self._clean_name))

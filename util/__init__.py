@@ -9,12 +9,18 @@ startWithTabInputId = 'startWithTabCommandInput'
 tabGenCommandId = 'tabGenCommandButton'
 tabWidthInputId = 'tabWidthValueCommandInput'
 fingerTypeId = 'fingerTypeInput'
+fingerPlaceId = 'fingerPlaceInput'
 dualSidesInputId = 'dualSidesCommandInput'
 dualEdgeSelectId = 'dualEdgeSelectInput'
 parametricInputId = 'parametricInput'
+lengthInputId = 'lengthCommandInput'
+distanceInputId = 'distanceCommandInput'
 
 userDefinedWidthId = 'User-Defined Width'
 automaticWidthId = 'Automatic Width'
+
+singleEdgeId = 'Single Edge'
+dualEdgeId = 'Dual Edge'
 
 
 def d(a, b):

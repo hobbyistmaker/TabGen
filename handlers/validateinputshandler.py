@@ -2,10 +2,15 @@ import adsk.core
 import traceback
 
 from ..tabgen import TabConfig
+from ..util import distanceInputId
+from ..util import lengthInputId
 from ..util import uimessage
-from ..util import errorMsgInputId, fingerTypeId, mtlThickInputId
-from ..util import selectedFaceInputId, startWithTabInputId, tabWidthInputId
-from ..util import userDefinedWidthId, dualSidesInputId, dualEdgeSelectId
+from ..util import errorMsgInputId
+from ..util import fingerTypeId
+from ..util import mtlThickInputId
+from ..util import selectedFaceInputId
+from ..util import tabWidthInputId
+from ..util import dualEdgeSelectId
 from ..util import parametricInputId
 
 from ..tabgen import FingerFace
@@ -67,10 +72,12 @@ class ValidateInputsHandler(adsk.core.ValidateInputsEventHandler):
 
             selInput = commandInputs.itemById(selectedFaceInputId)
             edgeInput = commandInputs.itemById(dualEdgeSelectId)
+            length = commandInputs.itemById(lengthInputId)
+            distance = commandInputs.itemById(distanceInputId)
 
             tab_config = TabConfig(finger_type, tab_width,
                                    depth, start_tab, edgeInput,
-                                   parametric)
+                                   parametric, length, distance)
 
             e1 = ''
             e2 = ''
