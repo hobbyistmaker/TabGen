@@ -36,22 +36,26 @@ class Parameters:
         self._pdfingerw = Parameter(parent.face.name,
                                     'dfingerw',
                                     abs(round(tab_params.default_width, 5)),
-                                    favorite=True)
+                                    favorite=True,
+                                    comment='Auto: change to desired target width for fingers')
         self._xlength = Parameter(name,
                                   '{}_length'.format(xdir),
                                   abs(round(parent.x_length, 5)),
-                                  favorite=True)
+                                  favorite=True,
+                                  comment='Auto: change to proper user parameter length')
         self._ylength = Parameter(name,
                                   '{}_length'.format(ydir),
                                   abs(round(parent.y_length, 5)),
-                                  favorite=True)
+                                  favorite=True,
+                                  comment='Auto: change to proper user parameter length')
         self._dfingerw = Parameter(self.prefix,
                                    'dfingerw',
                                    '{}_dfingerw'.format(self._clean_name))
         self._fingerd = Parameter(self.prefix,
                                   'fingerd',
                                   -round(tab_params.depth, 5),
-                                  favorite=True)
+                                  favorite=True,
+                                  comment='Auto: change to proper depth of fingers')
 
         self.create_params(tab_params)
 
@@ -67,24 +71,30 @@ class Parameters:
         self.fingers = Parameter(self.prefix,
                                  'fingers',
                                  'max(3; (ceil(floor({0}_length/{0}_dfingerw)/2)*2)-1)',
-                                 units='')
+                                 units='',
+                                 comment='Auto: calculates the total number of fingers for axis')
         self.fingerw = Parameter(self.prefix,
                                  'fingerw',
-                                 '{0}_length / {0}_fingers')
+                                 '{0}_length / {0}_fingers',
+                                 comment='Auto: determines width of fingers to fit on axis')
         self.foffset = Parameter(self.prefix,
                                  'foffset',
-                                 '{0}_fingerw')
+                                 '{0}_fingerw',
+                                 comment='Auto: sets the offset from the edge for the first notch')
         self.notches = Parameter(self.prefix,
                                  'notches',
                                  'floor({0}_fingers/2)',
-                                 units='')
+                                 units='',
+                                 comment='Auto: determines the number of notches to cut along the axis')
         self.extrude_count = Parameter(self.prefix,
                                        'extrude_count',
                                        '{0}_notches',
-                                       units='')
+                                       units='',
+                                       comment='Auto: number of notches to extrude')
         self.fdistance = Parameter(self.prefix,
                                    'fdistance',
-                                   '({0}_fingers - 3)*{0}_fingerw')
+                                   '({0}_fingers - 3)*{0}_fingerw',
+                                   comment='Auto: distance over which notches should be placed')
 
     def create_defined_params(self, tab_params):
         self.fingers = Parameter(self.prefix,
