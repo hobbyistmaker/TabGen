@@ -53,5 +53,5 @@ class Parameter:
         return self._units
 
     def create(self):
-        ui.messageBox('Name: {}\nExpression: {}'.format(self.name, self.expression))
+        # ui.messageBox('Name: {}\nExpression: {}'.format(self.name, self.expression))
         return set_value(self.name, self.expression, self.units)
