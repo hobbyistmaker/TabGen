@@ -9,7 +9,6 @@ from adsk.fusion import SketchPoint
 
 from ..util import axis_dir
 from ..util import uimessage
-from ..util import automaticWidthId
 from ..util import userDefinedWidthId
 
 from .parameters import Parameters
@@ -88,8 +87,12 @@ class FingerSketch:
         else:
             self.parameters = None
 
-        self.__sketch.name = '{} {}-Axis Finger Sketch'.format(self.face.name,
-                                                               (axis_dir(self.__sketch.yDirection) if self.vertical else axis_dir(self.__sketch.xDirection)).upper())
+        self.name = '{} {}-Axis'.format(self.face.name,
+                                        (axis_dir(self.__sketch.yDirection)
+                                         if self.vertical else
+                                         axis_dir(self.__sketch.xDirection)
+                                         ).upper())
+        self.__sketch.name = '{} Finger Sketch'.format(self.name)
 
     @property
     def curves(self):

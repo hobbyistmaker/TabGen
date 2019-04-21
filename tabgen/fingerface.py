@@ -5,12 +5,9 @@ from collections import namedtuple
 
 from adsk.core import Application
 from adsk.core import ObjectCollection
-from adsk.core import Point3D
 from adsk.core import ValueInput
 from adsk.fusion import FeatureOperations
 from adsk.fusion import PatternDistanceType
-from adsk.fusion import DistanceExtentDefinition
-from adsk.fusion import ModelParameter
 
 from ..util import uimessage
 from ..util import automaticWidthId, userDefinedWidthId
@@ -23,6 +20,7 @@ app = Application.get()
 CFO = FeatureOperations.CutFeatureOperation
 EDT = PatternDistanceType.ExtentPatternDistanceType
 createByReal = ValueInput.createByReal
+createByString = ValueInput.createByString
 
 FingerParams = namedtuple('FingerParams', ['finger_type',
                                            'start_with_tab',
@@ -140,17 +138,23 @@ class FingerFace:
 
         # Cut the first notch.
         finger = self.extrudes.addSimple(profs, d, CFO)
-
+        finger.name = '{} Extrude'.format(parameters.name)
+        # Manually set the extrude expression -- for some reason
+        # F360 takes the value of a ValueInput.createByString
+        # instead of the expression
         if parameters is not None:
-            disDef = DistanceExtentDefinition.cast(finger.extentOne)
-            disMP = ModelParameter.cast(disDef.distance)
-            disMP.expression = parameters.fingerd.name
+            finger.extentOne.distance.expression = parameters.fingerd.name
 
         return finger
 
     def __duplicate_fingers(self, params, finger, edge=None, parameters=None):
-        quantity = createByReal(params.notches)
-        distance = createByReal(params.distance)
+        if parameters is None:
+            quantity = createByReal(params.notches)
+            distance = createByReal(params.distance)
+        else:
+            quantity = createByString(parameters.extrude_count.name)
+            distance = createByString(parameters.fdistance.name)
+
         inputEntities = ObjectCollection.create()
         inputEntities.add(finger)
 
@@ -164,25 +168,20 @@ class FingerFace:
         if edge is not None:
             selected = FingerEdge(edge)
             sdistance = selected.distance(self.__vertices, params.depth)
-            parallel_distance = createByReal(sdistance)
+
+            if parameters is not None:
+                parameters.add_far_length(selected.distance(self.__vertices))
+                parallel_distance = createByString(parameters.distance_two.name)
+            else:
+                parallel_distance = createByReal(sdistance)
+
             patternInput.setDirectionTwo(self.__find_secondary_axis,
                                          createByReal(2),
                                          parallel_distance)
 
         try:
             pattern = self.patterns.add(patternInput)
-
-            if parameters is not None:
-                patdMP = pattern.distanceOne
-                uimessage(self.__ui, 'fdistance: {}\nextrude_count: {}'.format(parameters.fdistance.name, parameters.extrude_count.name))
-                # patdMP.expression = parameters.fdistance.name
-                patqMP = pattern.quantityOne
-                # patqMP.expression = parameters.extrude_count.name
-
-                if edge is not None:
-                    parameters.add_far_length(selected.distance(self.__vertices))
-                    patd2MP = pattern.distanceTwo
-                    patd2MP.expression = parameters.distance_two.name
+            pattern.name = '{} Rectangle Pattern'.format(parameters.name)
             return pattern
         except:
             uimessage(self.__ui, traceback.format_exc(1))
