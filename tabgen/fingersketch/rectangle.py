@@ -1,5 +1,8 @@
 from ...util import vertical
 from .line import Line
+from adsk.core import Application
+app = Application.get()
+ui = app.userInterface
 
 
 def compare_lines(first, second, func, reverse):
@@ -56,6 +59,8 @@ class Rectangle:
         self.__set_width_length()
         self.__set_axes()
 
+        # ui.messageBox('Left Length: {}\nLength: {}\n'.format(self.left.length, self.length))
+
     def __set_axes(self):
         if vertical(self.__length_axes[0]) is True:
             tbaxes = self.__width_axes
@@ -106,10 +111,6 @@ class Rectangle:
 
     @property
     def bottom_dir(self):
-        return self.bottom.direction
-
-    @property
-    def direction(self):
         return self.bottom.direction
 
     @property

@@ -11,6 +11,9 @@ from ...util import uimessage
 
 from ..parameters import Parameters
 from .rectangle import Rectangle
+from adsk.core import Application
+app = Application.get()
+ui = app.userInterface
 
 # some function aliases
 CFO = FeatureOperations.CutFeatureOperation
@@ -60,10 +63,6 @@ class FingerSketch:
                                          axis_dir(self.__sketch.xDirection)
                                          ).upper())
         self.__sketch.name = '{} Finger Sketch'.format(self.name)
-
-    @property
-    def direction(self):
-        return self.rectangle.direction
 
     @property
     def params(self):
@@ -168,9 +167,11 @@ class FingerSketch:
 
     def _next_point(self, point, width, backwards=False):
         if self.rectangle.is_vertical:
+            # ui.messageBox('Face width is {}.\nFinger width is {}'.format(self.rectangle.width, width))
             xwidth = self.rectangle.width
             ywidth = width
         else:
+            # ui.messageBox('Face width is {}.\nFinger width is {}'.format(self.rectangle.width, width))
             ywidth = self.rectangle.width
             xwidth = width
 
