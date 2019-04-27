@@ -150,8 +150,8 @@ class DefinedFace(FingerFace):
 
         sdistance = abs(params.distance_two.value)
         if parameters is not None:
-            parameters.add_far_length(sdistance)
-            parallel_distance = createByString(parameters.distance_two.name)
+            # parameters.add_corner_length(sdistance)
+            parallel_distance = createByString('-({})'.format(parameters.distance_two.name))
         else:
             parallel_distance = createByReal(-(sdistance - params.depth.value))
 

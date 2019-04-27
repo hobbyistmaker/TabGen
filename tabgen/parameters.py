@@ -124,7 +124,7 @@ class Parameters:
                                    'fdistance',
                                    '-({0}_length - {0}_foffset*2 - {0}_fingerw)')
 
-    def add_far_length(self, expression, units='cm'):
+    def add_far_length(self, expression, units='cm', corner=False):
         self.far_length = Parameter(self._clean_name,
                                     '{}_length'.format(self._alternate_axis),
                                     abs(expression),
