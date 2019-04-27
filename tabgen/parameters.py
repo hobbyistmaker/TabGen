@@ -99,6 +99,13 @@ class Parameters:
                                    comment='Auto: distance over which notches should be placed')
 
     def create_defined_params(self, tab_params):
+        if tab_params.start_with_tab is True:
+            extrude_count = '{0}_notches'
+            fdistance = '-({0}_length - {0}_foffset*2 - {0}_fingerw)'
+        else:
+            extrude_count = '{0}_notches-1'
+            fdistance = '-({0}_length - {0}_foffset*2 - {0}_fingerw*3)'
+
         self.fingers = Parameter(self.prefix,
                                  'fingers',
                                  'floor({0}_length / {0}_dfingerw)',
@@ -118,11 +125,11 @@ class Parameters:
                                  '({0}_length - {0}_notch_length + {0}_fingerw)/2')
         self.extrude_count = Parameter(self.prefix,
                                        'extrude_count',
-                                       '{0}_notches',
+                                       extrude_count,
                                        units='')
         self.fdistance = Parameter(self.prefix,
                                    'fdistance',
-                                   '-({0}_length - {0}_foffset*2 - {0}_fingerw)')
+                                   fdistance)
 
     def add_far_length(self, expression, units='cm', corner=False):
         self.far_length = Parameter(self._clean_name,
@@ -131,14 +138,6 @@ class Parameters:
                                     units=units,
                                     favorite=True)
 
-        # if expression < 0:
-        #     self.far_distance = Parameter(self._clean_name,
-        #                                   '{}_distance'.format(self._alternate_axis),
-        #                                   '-{}'.format(self.far_length.name),
-        #                                   units=units)
-        #     fingerdstr = 'abs({})'.format(self.fingerd.name) if self.fingerd.value < 0 else self.fingerd.name
-        #     d2expr = '-(abs({}) - {})'.format(self.far_length.name, fingerdstr)
-        # else:
         self.far_distance = self.far_length
         fingerdstr = 'abs({})'.format(self.fingerd.name) if self.fingerd.value < 0 else self.fingerd.name
         d2expr = '{} - {}'.format(self.far_length.name, fingerdstr)
