@@ -27,10 +27,32 @@ class SelectionEventHandler(adsk.core.SelectionEventHandler):
 
             if activeSelectionInput.id == selectedFaceInputId:
                 face = eventArgs.selection.entity
+
                 if FingerFace.create(automaticWidthId, face).is_edge:
-                    eventArgs.isSelectable = True
+                    edgeSelect = adsk.core.SelectionCommandInput.cast(inputs.itemById(dualEdgeSelectId))
+                    if edgeSelect.selectionCount == 1:
+                        edge = adsk.core.Line3D.cast(edgeSelect.selection(0).entity.geometry)
+                        face = adsk.core.Plane.cast(eventArgs.selection.entity.geometry)
+
+                        if face.isParallelToLine(edge):
+                            eventArgs.isSelectable = True
+                        else:
+                            eventArgs.isSelectable = False
+                    else:
+                        eventArgs.isSelectable = True
                 else:
                     eventArgs.isSelectable = False
+
+            if activeSelectionInput.id == dualEdgeSelectId:
+                faceSelect = adsk.core.SelectionCommandInput.cast(inputs.itemById(selectedFaceInputId))
+                if faceSelect.selectionCount == 1:
+                    face = adsk.core.Plane.cast(faceSelect.selection(0).entity.geometry)
+                    edge = adsk.core.Line3D.cast(eventArgs.selection.entity.geometry)
+
+                    if face.isParallelToLine(edge):
+                        eventArgs.isSelectable = True
+                    else:
+                        eventArgs.isSelectable = False
 
         else:
             eventArgs.isSelectable = True
