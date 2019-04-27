@@ -44,8 +44,8 @@ class CommandExecuteHandler(adsk.core.CommandEventHandler):
             edge_input = commandInputs.itemById(dualEdgeSelectId)
 
             edge = get_edge(edge_input, self.ui)
-            # parametric = commandInputs.itemById(parametricInputId).value
-            parametric = False
+            parametric = commandInputs.itemById(parametricInputId).value
+            # parametric = False
             length_param = commandInputs.itemById(lengthInputId).expression
             distance = commandInputs.itemById(distanceInputId)
 

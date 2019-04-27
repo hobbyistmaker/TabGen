@@ -95,7 +95,7 @@ class Parameters:
                                        comment='Auto: number of notches to extrude')
         self.fdistance = Parameter(self.prefix,
                                    'fdistance',
-                                   '({0}_fingers - 3)*{0}_fingerw' if tab_params.start_with_tab else '({0}_fingers - 1)*{0}_fingerw',
+                                   '-({})'.format('({0}_fingers - 3)*{0}_fingerw' if tab_params.start_with_tab else '({0}_fingers - 1)*{0}_fingerw'),
                                    comment='Auto: distance over which notches should be placed')
 
     def create_defined_params(self, tab_params):
@@ -122,7 +122,7 @@ class Parameters:
                                        units='')
         self.fdistance = Parameter(self.prefix,
                                    'fdistance',
-                                   '{0}_length - {0}_foffset*2 - {0}_fingerw')
+                                   '-({0}_length - {0}_foffset*2 - {0}_fingerw)')
 
     def add_far_length(self, expression, units='cm'):
         self.far_length = Parameter(self._clean_name,
@@ -131,17 +131,17 @@ class Parameters:
                                     units=units,
                                     favorite=True)
 
-        if expression < 0:
-            self.far_distance = Parameter(self._clean_name,
-                                          '{}_distance'.format(self._alternate_axis),
-                                          '-{}'.format(self.far_length.name),
-                                          units=units)
-            fingerdstr = 'abs({})'.format(self.fingerd.name) if self.fingerd.value < 0 else self.fingerd.name
-            d2expr = '-(abs({}) - {})'.format(self.far_length.name, fingerdstr)
-        else:
-            self.far_distance = self.far_length
-            fingerdstr = 'abs({})'.format(self.fingerd.name) if self.fingerd.value < 0 else self.fingerd.name
-            d2expr = '{} - {}'.format(self.far_length.name, fingerdstr)
+        # if expression < 0:
+        #     self.far_distance = Parameter(self._clean_name,
+        #                                   '{}_distance'.format(self._alternate_axis),
+        #                                   '-{}'.format(self.far_length.name),
+        #                                   units=units)
+        #     fingerdstr = 'abs({})'.format(self.fingerd.name) if self.fingerd.value < 0 else self.fingerd.name
+        #     d2expr = '-(abs({}) - {})'.format(self.far_length.name, fingerdstr)
+        # else:
+        self.far_distance = self.far_length
+        fingerdstr = 'abs({})'.format(self.fingerd.name) if self.fingerd.value < 0 else self.fingerd.name
+        d2expr = '{} - {}'.format(self.far_length.name, fingerdstr)
 
         self.distance_two = Parameter(self._clean_name,
                                       '{}_distance2'.format(self._alternate_axis),
