@@ -54,10 +54,10 @@ class CommandCreatedEventHandlerPanel(adsk.core.CommandCreatedEventHandler):
             cmd.validateInputs.add(onValidateInputs)
             handlers.append(onValidateInputs)
 
-            # # Add SelectionEvent handler
-            # onSelectionEvent = SelectionEventHandler()
-            # cmd.selectionEvent.add(onSelectionEvent)
-            # handlers.append(onSelectionEvent)
+            # Add SelectionEvent handler
+            onSelectionEvent = SelectionEventHandler()
+            cmd.selectionEvent.add(onSelectionEvent)
+            handlers.append(onSelectionEvent)
 
             # Set up the inputs
             commandInputs = cmd.commandInputs
