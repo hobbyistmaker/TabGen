@@ -43,7 +43,6 @@ class AutoSketch(FingerSketch):
         end_point = self._next_point(start_point, width)
         rectangle = self._draw_rectangle(start_point, end_point)
 
-        self._set_corner_constraints(rectangle)
         self.set_finger_constraints(rectangle)
 
         self.is_visible = False
@@ -56,9 +55,12 @@ class AutoSketch(FingerSketch):
             HorizontalDimension,
             Point3D.create(2, -1, 0))
         tabdim.parameter.value = self.params.width
-
         if self.params.parametric:
             tabdim.parameter.expression = self.parameters.fingerw.name
+
+        self.geometricConstraints.addCoincident(
+            rectangle.top_right,
+            self.rectangle.top.sketch_line)
 
         if self.params.start_with_tab is True:
             margindim = self.dimensions.addDistanceDimension(
@@ -68,18 +70,13 @@ class AutoSketch(FingerSketch):
                 Point3D.create(3, -1, 0))
             margindim.parameter.value = self.params.offset
 
+            self.geometricConstraints.addCoincident(
+                rectangle.bottom_left,
+                self.rectangle.bottom.sketch_line)
+
             if self.params.parametric:
                 margindim.parameter.expression = self.parameters.foffset.name
         else:
             self.geometricConstraints.addCoincident(
                 rectangle.bottom_left,
                 self.rectangle.bottom_left)
-
-    def _set_corner_constraints(self, rectangle):
-        if self.params.start_with_tab is False:
-            self.geometricConstraints.addCoincident(
-                rectangle.bottom_left,
-                self.rectangle.bottom.sketch_line)
-        self.geometricConstraints.addCoincident(
-            rectangle.top_right,
-            self.rectangle.top.sketch_line)
