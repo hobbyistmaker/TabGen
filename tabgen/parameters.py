@@ -55,7 +55,7 @@ class Parameters:
                                    '{}_dfingerw'.format(self._clean_name))
         self._fingerd = Parameter(self.prefix,
                                   'fingerd',
-                                  '-{}'.format(tab_params.depth.expression) if tab_params.parametric else -abs(round(tab_params.depth.value, 5)),
+                                  'abs({})'.format(tab_params.depth.expression),
                                   favorite=True,
                                   comment='Auto: change to proper depth of fingers')
 

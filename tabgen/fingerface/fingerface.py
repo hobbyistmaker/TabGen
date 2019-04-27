@@ -154,7 +154,8 @@ class FingerFace:
     def _extrude_finger(self, depth, profs, parameters=None):
         # Define the extrusion extent to be -tabDepth.
         extCutInput = self.extrudes.createInput(profs, CFO)
-        dist = createByString(str(-(depth.value*10)))
+        # dist = createByString(str(-(depth.value*10)))
+        dist = createByString(str(-abs(depth.value*10)))
         extCutInput.setDistanceExtent(False, dist)
 
         # Make sure that we only cut the body associated with this
@@ -162,14 +163,12 @@ class FingerFace:
         extCutInput.participantBodies = [self.body]
         finger = self.extrudes.add(extCutInput)
 
-        return finger
-
-        # # Manually set the extrude expression -- for some reason
-        # # F360 takes the value of a ValueInput.createByString
-        # # instead of the expression
-        # if parameters is not None:
-        #     finger.extentOne.distance.expression = parameters.fingerd.name
-        #     finger.name = '{} Extrude'.format(parameters.name)
+        # Manually set the extrude expression -- for some reason
+        # F360 takes the value of a ValueInput.createByString
+        # instead of the expression
+        if parameters is not None:
+            finger.name = '{} Extrude'.format(parameters.name)
+            finger.extentOne.distance.expression = '-{}'.format(parameters.fingerd.name)
 
         return finger
 
@@ -209,7 +208,7 @@ class FingerFace:
                                          parallel_distance)
 
         try:
-            # patternInput.patternComputeOption = 1
+            patternInput.patternComputeOption = 1
             pattern = self.patterns.add(patternInput)
             if parameters is not None:
                 pattern.name = '{} Rectangle Pattern'.format(parameters.name)
