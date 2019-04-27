@@ -58,16 +58,16 @@ class DefinedSketch(FingerSketch):
         self.is_visible = False
         return self.profiles
 
-    def set_finger_constraints(self, recobj, width):
+    def set_finger_constraints(self, rectangle, width):
         tabdim = self.dimensions.addDistanceDimension(
-            recobj.bottom_left,
-            recobj.bottom_right,
+            rectangle.bottom_left,
+            rectangle.bottom_right,
             HorizontalDimension,
             Point3D.create(2, -1, 0))
         # tabdim.parameter.value = width
 
         margindim = self.dimensions.addDistanceDimension(
-            recobj.bottom_left,
+            rectangle.bottom_left,
             self.rectangle.bottom_left,
             HorizontalDimension,
             Point3D.create(3, -1, 0))
@@ -75,6 +75,13 @@ class DefinedSketch(FingerSketch):
         #     self.params.offset + (0
         #                                if self.params.start_with_tab
         #                                else width))
+
+        self.geometricConstraints.addCoincident(
+            rectangle.bottom_left,
+            self.rectangle.bottom.sketch_line)
+        self.geometricConstraints.addCoincident(
+            rectangle.top_right,
+            self.rectangle.top.sketch_line)
 
         if self.params.parametric:
             tabdim.parameter.expression = self.parameters.fingerw.name
@@ -87,30 +94,38 @@ class DefinedSketch(FingerSketch):
                                    self.parameters.fingerw.name)
                   )
 
-    def set_first_margin_constraint(self, recobj):
+    def set_first_margin_constraint(self, rectangle):
         tabdim = self.dimensions.addDistanceDimension(
-            recobj.bottom_left,
-            recobj.bottom_right,
+            rectangle.bottom_left,
+            rectangle.bottom_right,
             HorizontalDimension,
             Point3D.create(2, -1, 0))
         tabdim.parameter.value = self.params.offset
 
+        self.geometricConstraints.addCoincident(
+            rectangle.top_right,
+            self.rectangle.top.sketch_line)
+
         if self.params.parametric:
             tabdim.parameter.expression = self.parameters.foffset.name
 
         self.geometricConstraints.addCoincident(
-            recobj.bottom_left,
+            rectangle.bottom_left,
             self.rectangle.bottom_left)
 
-    def set_last_margin_constraint(self, recobj):
+    def set_last_margin_constraint(self, rectangle):
         tabdim = self.dimensions.addDistanceDimension(
-            recobj.bottom_left,
-            recobj.bottom_right,
+            rectangle.bottom_left,
+            rectangle.bottom_right,
             HorizontalDimension,
             Point3D.create(2, -1, 0))
         if self.params.parametric:
             tabdim.parameter.expression = self.parameters.foffset.name
 
         self.geometricConstraints.addCoincident(
-            recobj.bottom_right,
+            rectangle.top_left,
+            self.rectangle.top.sketch_line)
+
+        self.geometricConstraints.addCoincident(
+            rectangle.bottom_right,
             self.rectangle.bottom_right)
