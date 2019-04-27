@@ -1,6 +1,7 @@
-import math
-
 from .axisdir import axis_dir
+from .distance import d
+from .uimessage import uimessage
+from .vertical import vertical
 
 errorMsgInputId = 'errorMsgCommandInput'
 mtlThickInputId = 'mtlThickValueCommandInput'
@@ -23,18 +24,6 @@ singleEdgeId = 'Single Edge'
 dualEdgeId = 'Dual Edge'
 
 
-def d(a, b):
-    return math.sqrt((a.x - b.x)**2 + (a.y - b.y)**2 + (a.z - b.z)**2)
-
-
-def uimessage(ui, msg, value=None):
-    if ui:
-        if value is not None:
-            ui.messageBox(msg.format(value))
-        else:
-            ui.messageBox(msg)
-
-
 __all__ = [d,
            automaticWidthId,
            axis_dir,
@@ -48,5 +37,6 @@ __all__ = [d,
            tabGenCommandId,
            tabWidthInputId,
            uimessage,
-           userDefinedWidthId
+           userDefinedWidthId,
+           vertical
            ]

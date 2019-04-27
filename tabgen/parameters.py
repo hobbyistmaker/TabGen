@@ -90,12 +90,12 @@ class Parameters:
                                  comment='Auto: determines the number of notches to cut along the axis')
         self.extrude_count = Parameter(self.prefix,
                                        'extrude_count',
-                                       '{0}_notches',
+                                       '{0}_notches' if tab_params.start_with_tab else '{0}_fingers - {0}_notches',
                                        units='',
                                        comment='Auto: number of notches to extrude')
         self.fdistance = Parameter(self.prefix,
                                    'fdistance',
-                                   '({0}_fingers - 3)*{0}_fingerw',
+                                   '({0}_fingers - 3)*{0}_fingerw' if tab_params.start_with_tab else '({0}_fingers - 1)*{0}_fingerw',
                                    comment='Auto: distance over which notches should be placed')
 
     def create_defined_params(self, tab_params):
@@ -118,7 +118,7 @@ class Parameters:
                                  '({0}_length - {0}_notch_length + {0}_fingerw)/2')
         self.extrude_count = Parameter(self.prefix,
                                        'extrude_count',
-                                       '{0}_notches - 1',
+                                       '{0}_notches',
                                        units='')
         self.fdistance = Parameter(self.prefix,
                                    'fdistance',

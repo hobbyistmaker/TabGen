@@ -9,9 +9,12 @@ from ..util import errorMsgInputId
 from ..util import fingerTypeId
 from ..util import mtlThickInputId
 from ..util import selectedFaceInputId
+from ..util import startWithTabInputId
 from ..util import tabWidthInputId
 from ..util import dualEdgeSelectId
 from ..util import parametricInputId
+from ..util import automaticWidthId
+from ..util import userDefinedWidthId
 
 from ..tabgen import FingerFace
 
@@ -20,13 +23,14 @@ validateFailedMsg = 'TabGen validate inputs failed: {}'
 tolerance = .001
 
 
-def check_params(tab_config, selected_face, selected_edge, err_msg, ui=None):
+def check_params(args, tab_config, selected_face, selected_edge, err_msg):
     tab_width = tab_config.default_width
-
-    e1, e2 = ('', '')
+    err_msg.text = ''
 
     if selected_face.selectionCount > 0:
-        faces = [FingerFace(selected_face.selection(j).entity, ui)
+        faces = [FingerFace.create(automaticWidthId,
+                                   selected_face.selection(j).entity,
+                                   tab_config)
                  for j in range(selected_face.selectionCount)]
 
         small = False
@@ -36,23 +40,29 @@ def check_params(tab_config, selected_face, selected_edge, err_msg, ui=None):
             dimB = abs(pRange.maxPoint.y - pRange.minPoint.y)
 
             if dimA < 2 * tab_width and dimB < 2 * tab_width:
-                e2 = 'Edges must be at least 2 * the tab width.'
-                err_msg.text = e1 + '\n' + e2
+                err_msg.text = 'Edges must be at least 2 * the tab width.\n'
                 small = True
+
+            if not face.is_edge:
+                err_msg.text = 'TabGen will not operate on non-edge faces.'
+                return False
+
         if small:
             return False
-        else:
-            return True
+
+        if tab_config.finger_type == userDefinedWidthId and tab_config.start_with_tab is False:
+            err_msg.text = 'Starting without tabs using user-defined width is currently not supported.\n'
+            # return False
+
+        return True
     else:
         return False
 
 
 class ValidateInputsHandler(adsk.core.ValidateInputsEventHandler):
 
-    def __init__(self, app, ui):
+    def __init__(self):
         super().__init__()
-        self.app = app
-        self.ui = ui
 
     def notify(self, args):
         try:
@@ -65,10 +75,8 @@ class ValidateInputsHandler(adsk.core.ValidateInputsEventHandler):
             finger_type = commandInputs.itemById(fingerTypeId).selectedItem.name
             tab_width = commandInputs.itemById(tabWidthInputId).value
             parametric = commandInputs.itemById(parametricInputId).value
-            # start_tab = commandInputs.itemById(startWithTabInputId).value
-            start_tab = True
+            start_tab = commandInputs.itemById(startWithTabInputId).value
             depth = commandInputs.itemById(mtlThickInputId).value
-            # dual_sides = False
 
             selInput = commandInputs.itemById(selectedFaceInputId)
             edgeInput = commandInputs.itemById(dualEdgeSelectId)
@@ -79,13 +87,11 @@ class ValidateInputsHandler(adsk.core.ValidateInputsEventHandler):
                                    depth, start_tab, edgeInput,
                                    parametric, length, distance)
 
-            e1 = ''
-            e2 = ''
-
-            if check_params(tab_config, selInput, edgeInput, errMsg, self.ui):
+            if check_params(args, tab_config, selInput, edgeInput,
+                            errMsg):
                 args.areInputsValid = True
             else:
                 args.areInputsValid = False
 
         except:
-            uimessage(self.ui, validateFailedMsg, traceback.format_exc())
+            uimessage(validateFailedMsg, traceback.format_exc())

@@ -11,8 +11,8 @@ from ..util import selectedFaceInputId
 from ..util import singleEdgeId
 from ..util import uimessage
 
+from ..util import automaticWidthId
 from ..tabgen import FingerFace
-from ..tabgen import FingerEdge
 
 # Constants
 
@@ -94,16 +94,13 @@ class InputChangedHandler(adsk.core.InputChangedEventHandler):
                     if edgeInput and edgeInput.isVisible:
                         edgeInput.hasFocus = True
 
-                    face = FingerFace(faceInput.selection(0).entity)
+                    face = FingerFace.create(automaticWidthId, faceInput.selection(0).entity)
                     lengthInput.value = face.length
 
                     if edgeInput.selectionCount > 0:
-                        edge = FingerEdge(edgeInput.selection(0).entity)
-                        distanceInput.value = edge.distance(face.vertices)
+                        distanceInput.value = face.distance_to(edgeInput.selection(0).entity)
                     else:
                         distanceInput.value = 0
 
-
-
         except:
-            uimessage(self.ui, eventFailedMsg, traceback.format_exc())
+            uimessage(eventFailedMsg, traceback.format_exc())

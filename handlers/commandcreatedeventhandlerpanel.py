@@ -14,12 +14,13 @@ from ..util import mtlThickInputId
 from ..util import parametricInputId
 from ..util import selectedFaceInputId
 from ..util import singleEdgeId
-# from ..util import startWithTabInputId
+from ..util import startWithTabInputId
 from ..util import tabWidthInputId
 from ..util import uimessage
 from .commandexecutehandler import CommandExecuteHandler
 from .inputchangedhandler import InputChangedHandler
 from .validateinputshandler import ValidateInputsHandler
+from .selectioneventhandler import SelectionEventHandler
 
 handlers = []
 
@@ -49,9 +50,14 @@ class CommandCreatedEventHandlerPanel(adsk.core.CommandCreatedEventHandler):
             handlers.append(onInputChanged)
 
             # Add onValidateInputs event handler
-            onValidateInputs = ValidateInputsHandler(self.app, self.ui)
+            onValidateInputs = ValidateInputsHandler()
             cmd.validateInputs.add(onValidateInputs)
             handlers.append(onValidateInputs)
+
+            # # Add SelectionEvent handler
+            # onSelectionEvent = SelectionEventHandler()
+            # cmd.selectionEvent.add(onSelectionEvent)
+            # handlers.append(onSelectionEvent)
 
             # Set up the inputs
             commandInputs = cmd.commandInputs
@@ -75,15 +81,16 @@ class CommandCreatedEventHandlerPanel(adsk.core.CommandCreatedEventHandler):
 
             edgeComInput = commandInputs.addSelectionInput(
                 dualEdgeSelectId,
-                'Duplicate Edge: ',
+                'Duplicate Face: ',
                 'Edge to use for distance to opposite side')
+            # edgeComInput.addSelectionFilter('PlanarFaces')
             edgeComInput.addSelectionFilter('LinearEdges')
             edgeComInput.setSelectionLimits(0, 1)
 
             commandInputs.addFloatSpinnerCommandInput(tabWidthInputId, 'Tab Width: ', 'mm', 2.0, 20.0, 0.1, 8.0)
             commandInputs.addFloatSpinnerCommandInput(mtlThickInputId, 'Material Thickness: ', 'mm', 0.5, 6.0, 0.1, 3.0)
             # Disable start with tab due to bugs
-            # commandInputs.addBoolValueInput(startWithTabInputId, 'Start with tab: ', True, '', True)
+            commandInputs.addBoolValueInput(startWithTabInputId, 'Start with tab: ', True, '', True)
             commandInputs.addBoolValueInput(parametricInputId, 'Make Parametric: ', True, '', True)
             commandInputs.addFloatSpinnerCommandInput(lengthInputId, 'Length Parameter: ', 'mm', -2500.0, 2500.0, 0.1, 0.0)
             commandInputs.addFloatSpinnerCommandInput(distanceInputId, 'Distance Parameter: ', 'mm', -2500.0, 2500.0, 0.1, 0.0)
@@ -92,4 +99,4 @@ class CommandCreatedEventHandlerPanel(adsk.core.CommandCreatedEventHandler):
             commandInputs.addTextBoxCommandInput(errorMsgInputId, '', '', 2, True)
 
         except:
-            uimessage(self.ui, initializedFailedMsg, traceback.format_exc())
+            uimessage(initializedFailedMsg, traceback.format_exc())
