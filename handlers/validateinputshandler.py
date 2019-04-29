@@ -24,14 +24,6 @@ tolerance = .001
 
 
 def check_params(args, tab_config, selected_face, selected_edge, err_msg):
-    app = adsk.core.Application.get()
-    ui = app.userInterface
-
-    document = app.activeDocument
-    if document.isSaved is not True:
-        ui.messageBox('Please save your document before continuing.')
-        return False
-
     tab_width = tab_config.default_width
     err_msg.text = ''
 

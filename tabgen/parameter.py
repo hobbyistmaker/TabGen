@@ -75,6 +75,5 @@ class Parameter:
         return self._units
 
     def create(self):
-        if self._param:
-            return set_value(self.name, self.expression, self.user_params,
-                             self.units, self.favorite, self.comment)
+        return set_value(self.name, self.expression, self.user_params,
+                         self.units, self.favorite, self.comment)
