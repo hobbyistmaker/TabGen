@@ -45,14 +45,10 @@ class CommandExecuteHandler(adsk.core.CommandEventHandler):
 
             edge = get_edge(edge_input, self.ui)
             parametric = commandInputs.itemById(parametricInputId).value
-            # parametric = False
-            length_param = commandInputs.itemById(lengthInputId).expression
+            length_param = commandInputs.itemById(lengthInputId)
             distance = commandInputs.itemById(distanceInputId)
 
             start_tab = commandInputs.itemById(startWithTabInputId).value
-            # Starting without a tab opens up multiple bugs that need to be solved
-            # Disable for now
-            # start_tab = True
 
             tab_config = TabConfig(finger_type, tab_width, depth,
                                    start_tab, edge, parametric,

@@ -30,8 +30,6 @@ class DefinedSketch(FingerSketch):
         self.set_finger_constraints(finger, self.params.width)
 
     def start_with_notch(self, fsp, width, offset):
-        if self.rectangle.is_vertical:
-            ui.messageBox('Rectangle is vertical.')
         # Draw starting notch
         fep = self._next_point(fsp, offset)
         notch1 = self._draw_rectangle(fsp, fep)
@@ -55,6 +53,7 @@ class DefinedSketch(FingerSketch):
         width = self.params.width
 
         if self.rectangle.is_vertical:
+            ui.messageBox('Plane is vertical.')
             fsp = self.rectangle.bottom_right.geometry
         else:
             fsp = self.rectangle.bottom_left.geometry

@@ -151,6 +151,13 @@ class FingerFace:
                         distance = measure
         return distance
 
+    @property
+    def face_count(self):
+        attribute = self.body.attributes.itemByName('tabgen', 'faces')
+        if attribute:
+            return int(attribute.value) + 1
+        return 1
+
     def _extrude_finger(self, depth, profs, parameters=None):
         # Define the extrusion extent to be -tabDepth.
         extCutInput = self.extrudes.createInput(profs, CFO)
@@ -198,7 +205,7 @@ class FingerFace:
             sdistance = abs(params.distance_two.value)
 
             if parameters is not None:
-                parameters.add_far_length(sdistance)
+                # parameters.add_far_length(sdistance)
                 parallel_distance = createByString(parameters.distance_two.name)
             else:
                 parallel_distance = createByReal(sdistance - params.depth.value)
@@ -224,6 +231,13 @@ class FingerFace:
     def create_fingers(self):
         if self.bface.isValid and self.__tab_params is not None:
             self.extrude(self.__tab_params)
+
+        self.__faces = self.body.attributes.itemByName('tabgen', 'faces')
+        if self.__faces:
+            value = int(self.__faces.value)
+            self.__faces.value = str(value+1)
+        else:
+            self.__faces = self.body.attributes.add('tabgen', 'faces', str(1))
 
     @property
     def name(self):

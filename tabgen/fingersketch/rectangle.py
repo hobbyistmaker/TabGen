@@ -1,8 +1,12 @@
+import logging
+
 from ...util import vertical
 from .line import Line
 from adsk.core import Application
 app = Application.get()
 ui = app.userInterface
+
+logger = logging.getLogger('rectangle')
 
 
 def compare_lines(first, second, func, reverse):
@@ -13,9 +17,19 @@ def compare_lines(first, second, func, reverse):
 
     points = [sp1, sp2, ep1, ep2]
     point = sorted(points, key=func, reverse=reverse)[0]
+    logger.debug('First Start: {}, {}, {}'.format(sp1.x, sp1.y, sp1.z))
+    logger.debug('First End: {}, {}, {}'.format(ep1.x, ep1.y, ep1.z))
+    logger.debug('Second Start: {}, {}, {}'.format(sp2.x, sp2.y, sp2.z))
+    logger.debug('Second End: {}, {}, {}'.format(ep2.x, ep2.y, ep2.z))
 
     if point.isEqualTo(sp1) or point.isEqualTo(ep1):
+        logger.debug('Point ({}, {}, {}) = 1({}, {}, {}) or 1({}, {}, {})'.format(round(point.x, 3), round(point.y, 3), round(point.z, 3),
+                                                                                  round(sp1.x, 3), round(sp1.y, 3), round(sp1.z, 3),
+                                                                                  round(ep1.x, 3), round(ep1.y, 3), round(ep1.z, 3)))
         return first
+    logger.debug('Point ({}, {}, {}) = 2({}, {}, {}) or 2({}, {}, {})'.format(round(point.x, 3), round(point.y, 3), round(point.z, 3),
+                                                                              round(sp2.x, 3), round(sp2.y, 3), round(sp2.z, 3),
+                                                                              round(ep2.x, 3), round(ep2.y, 3), round(ep2.z, 3)))
     return second
 
 
@@ -33,6 +47,41 @@ def right_line(axes):
 
 def top_line(axes):
     return compare_lines(axes[0], axes[1], lambda k: k.y, True)
+
+
+def debug_dump(rectangle):
+    tlg = rectangle.top_left.geometry
+    tlwg = rectangle.top_left.worldGeometry
+    trg = rectangle.top_right.geometry
+    trwg = rectangle.top_right.worldGeometry
+    blg = rectangle.bottom_left.geometry
+    blwg = rectangle.bottom_left.worldGeometry
+    brg = rectangle.bottom_right.geometry
+    brwg = rectangle.bottom_right.worldGeometry
+    logger.debug('Rectangle Top Left: ({}, {}, {}) - ({}, {}, {})'.format(round(tlg.x*10, 3),
+                                                                          round(tlg.y*10, 3),
+                                                                          round(tlg.z*10, 3),
+                                                                          round(tlwg.x*10, 3),
+                                                                          round(tlwg.y*10, 3),
+                                                                          round(tlwg.z*10, 3)))
+    logger.debug('Rectangle Top Right: ({}, {}, {}) - ({}, {}, {})'.format(round(trg.x*10, 3),
+                                                                           round(trg.y*10, 3),
+                                                                           round(trg.z*10, 3),
+                                                                           round(trwg.x*10, 3),
+                                                                           round(trwg.y*10, 3),
+                                                                           round(trwg.z*10, 3)))
+    logger.debug('Rectangle Bottom Left: ({}, {}, {}) - ({}, {}, {})'.format(round(blg.x*10, 3),
+                                                                             round(blg.y*10, 3),
+                                                                             round(blg.z*10, 3),
+                                                                             round(blwg.x*10, 3),
+                                                                             round(blwg.y*10, 3),
+                                                                             round(blwg.z*10, 3)))
+    logger.debug('Rectangle Bottom Right: ({}, {}, {}) - ({}, {}, {})'.format(round(brg.x*10, 3),
+                                                                              round(brg.y*10, 3),
+                                                                              round(brg.z*10, 3),
+                                                                              round(brwg.x*10, 3),
+                                                                              round(brwg.y*10, 3),
+                                                                              round(brwg.z*10, 3)))
 
 
 class Rectangle:
@@ -59,10 +108,12 @@ class Rectangle:
         self.__set_width_length()
         self.__set_axes()
 
-        # ui.messageBox('Left Length: {}\nLength: {}\n'.format(self.left.length, self.length))
+        debug_dump(self)
 
     def __set_axes(self):
-        if vertical(self.__length_axes[0]) is True:
+        self.__vertical = vertical(self.__length_axes[0])
+
+        if self.__vertical is True:
             tbaxes = self.__width_axes
             lraxes = self.__length_axes
         else:
@@ -135,7 +186,7 @@ class Rectangle:
 
     @property
     def is_vertical(self):
-        return self.left.length == self.length
+        return self.left.length == self.__length
 
     @property
     def right(self):
