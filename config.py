@@ -4,7 +4,7 @@ import logging
 class Configuration:
 
     LOG_FILE = 'tabgen.log'
-    LOG_LEVEL = logging.DEBUG
+    LOG_LEVEL = logging.NOTSET
 
     # Select default command settings
     DEFAULT_TAB_WIDTH = 8
