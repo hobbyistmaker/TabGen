@@ -112,7 +112,3 @@ class AutoFace(FingerFace):
                 tlgroup = self._timeline.timelineGroups.add(spos, lpos)
                 if sketch.parameters:
                     tlgroup.name = '{} Finger Group'.format(sketch.parameters.name)
-
-        attributes = self.body.attributes
-        sketch_alias = attributes.itemByName('Tabgen', 'sketch')
-        ui.messageBox('Found tabgen attribute: {}'.format(sketch_alias.value))
