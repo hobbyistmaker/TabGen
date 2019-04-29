@@ -3,15 +3,16 @@ import traceback
 
 from ..tabgen import TabConfig
 from ..tabgen import FingerFace
-from ..util import uimessage
+from ..util import distanceInputId
+from ..util import dualEdgeSelectId
+from ..util import fingerTypeId
+from ..util import lengthInputId
 from ..util import mtlThickInputId
-from ..util import (fingerTypeId,
-                    selectedFaceInputId,
-                    startWithTabInputId,
-                    tabWidthInputId,
-                    dualSidesInputId,
-                    dualEdgeSelectId,
-                    parametricInputId)
+from ..util import parametricInputId
+from ..util import selectedFaceInputId
+from ..util import startWithTabInputId
+from ..util import tabWidthInputId
+from ..util import uimessage
 
 
 # Constants
@@ -38,25 +39,31 @@ class CommandExecuteHandler(adsk.core.CommandEventHandler):
             selInput = commandInputs.itemById(selectedFaceInputId)
 
             finger_type = commandInputs.itemById(fingerTypeId).selectedItem.name
-            tab_width = commandInputs.itemById(tabWidthInputId).value
-            depth = commandInputs.itemById(mtlThickInputId).value
+            tab_width = commandInputs.itemById(tabWidthInputId)
+            depth = commandInputs.itemById(mtlThickInputId)
             edge_input = commandInputs.itemById(dualEdgeSelectId)
 
             edge = get_edge(edge_input, self.ui)
             parametric = commandInputs.itemById(parametricInputId).value
-            # start_tab = commandInputs.itemById(startWithTabInputId).value
+            # parametric = False
+            length_param = commandInputs.itemById(lengthInputId).expression
+            distance = commandInputs.itemById(distanceInputId)
+
+            start_tab = commandInputs.itemById(startWithTabInputId).value
             # Starting without a tab opens up multiple bugs that need to be solved
             # Disable for now
-            start_tab = True
+            # start_tab = True
 
             tab_config = TabConfig(finger_type, tab_width, depth,
-                                   start_tab, edge, parametric)
+                                   start_tab, edge, parametric,
+                                   length_param, distance)
 
-            faces = [FingerFace(selInput.selection(j).entity, self.ui)
+            faces = [FingerFace.create(finger_type, selInput.selection(j).entity,
+                                       params=tab_config)
                      for j in range(selInput.selectionCount)]
 
             for face in faces:
-                face.create_fingers(tab_config)
+                face.create_fingers()
 
         except:
-            uimessage(self.ui, executionFailedMsg, traceback.format_exc())
+            uimessage(executionFailedMsg, traceback.format_exc())

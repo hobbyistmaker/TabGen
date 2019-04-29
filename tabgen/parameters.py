@@ -35,23 +35,29 @@ class Parameters:
 
         self._pdfingerw = Parameter(parent.face.name,
                                     'dfingerw',
-                                    abs(round(tab_params.default_width, 5)),
-                                    favorite=True)
-        self._xlength = Parameter(name,
-                                  '{}_length'.format(xdir),
-                                  abs(round(parent.x_length, 5)),
-                                  favorite=True)
-        self._ylength = Parameter(name,
-                                  '{}_length'.format(ydir),
-                                  abs(round(parent.y_length, 5)),
-                                  favorite=True)
+                                    tab_params.default_width.expression if tab_params.parametric else tab_params.default_width.value,
+                                    favorite=True,
+                                    comment='Auto: change to desired target width for fingers')
+        if vertical:
+            self._ylength = Parameter(name,
+                                      '{}_length'.format(ydir),
+                                      abs(round(parent.y_length, 5)),
+                                      favorite=True,
+                                      comment='Auto: change to proper user parameter length')
+        else:
+            self._xlength = Parameter(name,
+                                      '{}_length'.format(xdir),
+                                      abs(round(parent.x_length, 5)),
+                                      favorite=True,
+                                      comment='Auto: change to proper user parameter length')
         self._dfingerw = Parameter(self.prefix,
                                    'dfingerw',
                                    '{}_dfingerw'.format(self._clean_name))
         self._fingerd = Parameter(self.prefix,
                                   'fingerd',
-                                  -round(tab_params.depth, 5),
-                                  favorite=True)
+                                  'abs({})'.format(tab_params.depth.expression),
+                                  favorite=True,
+                                  comment='Auto: change to proper depth of fingers')
 
         self.create_params(tab_params)
 
@@ -67,26 +73,39 @@ class Parameters:
         self.fingers = Parameter(self.prefix,
                                  'fingers',
                                  'max(3; (ceil(floor({0}_length/{0}_dfingerw)/2)*2)-1)',
-                                 units='')
+                                 units='',
+                                 comment='Auto: calculates the total number of fingers for axis')
         self.fingerw = Parameter(self.prefix,
                                  'fingerw',
-                                 '{0}_length / {0}_fingers')
+                                 '{0}_length / {0}_fingers',
+                                 comment='Auto: determines width of fingers to fit on axis')
         self.foffset = Parameter(self.prefix,
                                  'foffset',
-                                 '{0}_fingerw')
+                                 '{0}_fingerw',
+                                 comment='Auto: sets the offset from the edge for the first notch')
         self.notches = Parameter(self.prefix,
                                  'notches',
                                  'floor({0}_fingers/2)',
-                                 units='')
+                                 units='',
+                                 comment='Auto: determines the number of notches to cut along the axis')
         self.extrude_count = Parameter(self.prefix,
                                        'extrude_count',
-                                       '{0}_notches',
-                                       units='')
+                                       '{0}_notches' if tab_params.start_with_tab else '{0}_fingers - {0}_notches',
+                                       units='',
+                                       comment='Auto: number of notches to extrude')
         self.fdistance = Parameter(self.prefix,
                                    'fdistance',
-                                   '({0}_fingers - 3)*{0}_fingerw')
+                                   '-({})'.format('({0}_fingers - 3)*{0}_fingerw' if tab_params.start_with_tab else '({0}_fingers - 1)*{0}_fingerw'),
+                                   comment='Auto: distance over which notches should be placed')
 
     def create_defined_params(self, tab_params):
+        if tab_params.start_with_tab is True:
+            extrude_count = '{0}_notches'
+            fdistance = '-({0}_length - {0}_foffset*2 - {0}_fingerw)'
+        else:
+            extrude_count = '{0}_notches-1'
+            fdistance = '-({0}_length - {0}_foffset*2 - {0}_fingerw*3)'
+
         self.fingers = Parameter(self.prefix,
                                  'fingers',
                                  'floor({0}_length / {0}_dfingerw)',
@@ -106,30 +125,22 @@ class Parameters:
                                  '({0}_length - {0}_notch_length + {0}_fingerw)/2')
         self.extrude_count = Parameter(self.prefix,
                                        'extrude_count',
-                                       '{0}_notches - 1',
+                                       extrude_count,
                                        units='')
         self.fdistance = Parameter(self.prefix,
                                    'fdistance',
-                                   '{0}_length - {0}_foffset*2 - {0}_fingerw')
+                                   fdistance)
 
-    def add_far_length(self, expression, units='cm'):
+    def add_far_length(self, expression, units='cm', corner=False):
         self.far_length = Parameter(self._clean_name,
                                     '{}_length'.format(self._alternate_axis),
                                     abs(expression),
                                     units=units,
                                     favorite=True)
 
-        if expression < 0:
-            self.far_distance = Parameter(self._clean_name,
-                                          '{}_distance'.format(self._alternate_axis),
-                                          '-{}'.format(self.far_length.name),
-                                          units=units)
-            fingerdstr = 'abs({})'.format(self.fingerd.name) if self.fingerd.value < 0 else self.fingerd.name
-            d2expr = '-(abs({}) - {})'.format(self.far_length.name, fingerdstr)
-        else:
-            self.far_distance = self.far_length
-            fingerdstr = 'abs({})'.format(self.fingerd.name) if self.fingerd.value < 0 else self.fingerd.name
-            d2expr = '{} - {}'.format(self.far_length.name, fingerdstr)
+        self.far_distance = self.far_length
+        fingerdstr = 'abs({})'.format(self.fingerd.name) if self.fingerd.value < 0 else self.fingerd.name
+        d2expr = '{} - {}'.format(self.far_length.name, fingerdstr)
 
         self.distance_two = Parameter(self._clean_name,
                                       '{}_distance2'.format(self._alternate_axis),
