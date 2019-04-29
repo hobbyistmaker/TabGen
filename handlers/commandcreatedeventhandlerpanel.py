@@ -6,10 +6,19 @@ import traceback
 from adsk.core import DropDownStyles as dds
 from adsk.core import Application
 
-from ..util import errorMsgInputId, fingerTypeId, mtlThickInputId
-from ..util import selectedFaceInputId, startWithTabInputId
-from ..util import tabWidthInputId, dualEdgeSelectId
+from ..util import distanceInputId
+from ..util import dualEdgeId
+from ..util import dualEdgeSelectId
+from ..util import errorMsgInputId
+from ..util import fingerTypeId
+from ..util import fingerPlaceId
+from ..util import lengthInputId
+from ..util import mtlThickInputId
 from ..util import parametricInputId
+from ..util import selectedFaceInputId
+from ..util import singleEdgeId
+from ..util import startWithTabInputId
+from ..util import tabWidthInputId
 from ..util import uimessage
 from ..util import userDefinedWidthId
 from ..util import automaticWidthId
@@ -17,6 +26,7 @@ from ..config import Configuration
 from .commandexecutehandler import CommandExecuteHandler
 from .inputchangedhandler import InputChangedHandler
 from .validateinputshandler import ValidateInputsHandler
+from .selectioneventhandler import SelectionEventHandler
 
 app = Application.get()
 ui = app.userInterface
@@ -48,7 +58,7 @@ class CommandCreatedEventHandlerPanel(adsk.core.CommandCreatedEventHandler):
             logger.debug('InputChangedHandler added.')
 
             # Add onValidateInputs event handler
-            onValidateInputs = ValidateInputsHandler(self.app, self.ui)
+            onValidateInputs = ValidateInputsHandler()
             cmd.validateInputs.add(onValidateInputs)
             handlers.append(onValidateInputs)
             logger.debug('ValidateInputsHandler added.')
@@ -82,15 +92,11 @@ class CommandCreatedEventHandlerPanel(adsk.core.CommandCreatedEventHandler):
             selComInput.setSelectionLimits(1, 1)
             logger.debug('Created face selection input.')
 
-            boxtypedropdown = commandInputs.addDropDownCommandInput(fingerTypeId, 'Fingers Type', dds.TextListDropDownStyle)
-            boxtypedropdownitems = boxtypedropdown.listItems
-            boxtypedropdownitems.add('User-Defined Width', False, '')
-            boxtypedropdownitems.add('Automatic Width', True, '')
-
             edgeComInput = commandInputs.addSelectionInput(
                 dualEdgeSelectId,
-                'Duplicate Edge: ',
+                'Duplicate Face: ',
                 'Edge to use for distance to opposite side')
+            # edgeComInput.addSelectionFilter('PlanarFaces')
             edgeComInput.addSelectionFilter('LinearEdges')
             edgeComInput.setSelectionLimits(0, 1)
             logger.debug('Created edge selection input.')
@@ -117,4 +123,4 @@ class CommandCreatedEventHandlerPanel(adsk.core.CommandCreatedEventHandler):
             commandInputs.addTextBoxCommandInput(errorMsgInputId, '', '', 2, True)
 
         except:
-            uimessage(self.ui, initializedFailedMsg, traceback.format_exc())
+            uimessage(initializedFailedMsg, traceback.format_exc())
