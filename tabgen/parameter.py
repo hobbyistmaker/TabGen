@@ -26,8 +26,9 @@ def set_value(name,
     itemParam = user_params.add(name,
                                 createByString(inputValue),
                                 units,
-                                comment if comment else 'Auto-generated parameter')
-    itemParam.expression = inputValue
+                                comment if comment
+                                else 'Auto-generated parameter')
+    # itemParam.expression = inputValue
     itemParam.isFavorite = favorite
     return itemParam
 
@@ -72,4 +73,5 @@ class Parameter:
         return self._units
 
     def create(self):
-        return set_value(self.name, self.expression, self.units, self.favorite, self.comment)
+        return set_value(self.name, self.expression, self.units,
+                         self.favorite, self.comment)

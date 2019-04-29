@@ -23,8 +23,8 @@ class Parameters:
         self.face_num = parent.face.face_count
         self._clean_name = clean_param(name)
         self.prefix = '{0}_{1}{2}'.format(self._clean_name,
-                                       dirname,
-                                       self.face_num)
+                                          dirname,
+                                          self.face_num)
 
         self.x, self.y, self.z = (False, False, False)
 
