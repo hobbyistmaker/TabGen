@@ -4,10 +4,6 @@ from adsk.core import ValueInput
 
 app = Application.get()
 ui = app.userInterface
-des = Design.cast(app.activeProduct)
-
-all_params = des.allParameters
-user_params = des.userParameters
 
 createByReal = ValueInput.createByReal
 createByString = ValueInput.createByString
@@ -19,6 +15,7 @@ def clean_param(param):
 
 def set_value(name,
               value,
+              user_params,
               units='cm',
               favorite=False,
               comment=''):
@@ -37,14 +34,19 @@ class Parameter:
 
     def __init__(self, prefix, name,
                  expression, units='cm', favorite=False, comment=''):
+        des = Design.cast(app.activeProduct)
+
+        self.user_params = des.userParameters
+
         self.prefix = prefix if isinstance(prefix, str) else str(prefix)
         self._expression = expression.format(prefix) if isinstance(expression, str) else expression
         self._name = name if isinstance(name, str) else str(name)
         self._units = units if isinstance(units, str) else ''
         self._comment = comment
 
-        self._param = user_params.itemByName(self.name)
         self._favorite = favorite
+
+        self._param = self.user_params.itemByName(self.name)
         if not (self._param):
             self._param = self.create()
 
@@ -73,5 +75,6 @@ class Parameter:
         return self._units
 
     def create(self):
-        return set_value(self.name, self.expression, self.units,
-                         self.favorite, self.comment)
+        if self._param:
+            return set_value(self.name, self.expression, self.user_params,
+                             self.units, self.favorite, self.comment)
