@@ -1,3 +1,4 @@
+import logging
 import traceback
 
 from adsk.core import Point3D
@@ -21,23 +22,24 @@ EDT = PatternDistanceType.ExtentPatternDistanceType
 HorizontalDimension = DimensionOrientations.HorizontalDimensionOrientation
 VerticalDimension = DimensionOrientations.VerticalDimensionOrientation
 
+logger = logging.getLogger('fingersketch')
+
 
 class FingerSketch:
 
     @classmethod
-    def create(cls, fingertype, face, params=None, ui=None):
+    def create(cls, fingertype, face, params=None):
         sc = [subclass for subclass in cls.__subclasses__()
               if subclass.finger_type == fingertype]
         return (sc[0](face, params)
                 if len(sc) > 0
-                else FingerSketch(face, params, ui))
+                else FingerSketch(face, params))
 
-    def __init__(self, face, tab_params, ui=None):
+    def __init__(self, face, tab_params):
         self.__sketch = face.parent.sketches.add(face.bface)
 
         self.__tab_params = tab_params
         self._face = face
-        self.face = self._face
         self._ui = ui
 
         profile = self.__sketch.profiles.item(0)
@@ -62,7 +64,12 @@ class FingerSketch:
                                          if self.vertical else
                                          axis_dir(self.__sketch.xDirection)
                                          ).upper())
-        self.__sketch.name = '{} Finger Sketch'.format(self.name)
+        self.sketch_alias = '{} Finger Sketch'.format(self.name)
+        self.__sketch.name = self.sketch_alias
+
+    @property
+    def face(self):
+        return self._face
 
     @property
     def params(self):
@@ -167,27 +174,46 @@ class FingerSketch:
 
     def _next_point(self, point, width, backwards=False):
         if self.rectangle.is_vertical:
-            # ui.messageBox('Face width is {}.\nFinger width is {}'.format(self.rectangle.width, width))
             xwidth = self.rectangle.width
             ywidth = width
         else:
-            # ui.messageBox('Face width is {}.\nFinger width is {}'.format(self.rectangle.width, width))
             ywidth = self.rectangle.width
             xwidth = width
 
-        return Point3D.create(point.x + xwidth,
-                              point.y + ywidth,
+        xpoint = point.x + xwidth
+        ypoint = point.y + ywidth
+
+        logging.debug('Current Point: {} {} {} -- Next Point: {} {} {}'.format(point.x,
+                                                                               point.y,
+                                                                               point.z,
+                                                                               xpoint,
+                                                                               ypoint,
+                                                                               point.z))
+        return Point3D.create(xpoint,
+                              ypoint,
                               point.z)
 
     def offset(self, point, offset=0):
         if type(point) is SketchPoint:
             o = point.geometry
+            wg = point.worldGeometry
+            logging.debug('Point World Geometry: {}, {}, {}'.format(wg.x,
+                                                                    wg.y,
+                                                                    wg.z))
         else:
             o = point
 
         if self.rectangle.is_vertical:
             o.y += offset
+            logging.debug('Offsetting Point ({}, {}, {}) + Y{}'.format(point.x,
+                                                                       point.y,
+                                                                       point.z,
+                                                                       offset))
         else:
+            logging.debug('Offsetting Point ({}, {}, {}) + X{}'.format(point.x,
+                                                                       point.y,
+                                                                       point.z,
+                                                                       offset))
             o.x += offset
 
         return o

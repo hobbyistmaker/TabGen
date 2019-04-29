@@ -20,9 +20,11 @@ class Parameters:
         self._parent = parent
 
         dirname = ydir if vertical else xdir
+        self.face_num = parent.face.face_count
         self._clean_name = clean_param(name)
-        self.prefix = '{}_{}'.format(self._clean_name,
-                                     dirname)
+        self.prefix = '{0}_{1}{2}'.format(self._clean_name,
+                                       dirname,
+                                       self.face_num)
 
         self.x, self.y, self.z = (False, False, False)
 
@@ -39,23 +41,51 @@ class Parameters:
                                     favorite=True,
                                     comment='Auto: change to desired target width for fingers')
         if vertical:
+            if tab_params.parametric:
+                yparam = tab_params.length.expression
+            else:
+                yparam = abs(round(parent.y_length, 5))
+
             self._ylength = Parameter(name,
-                                      '{}_length'.format(ydir),
-                                      abs(round(parent.y_length, 5)),
+                                      '{}{}_length'.format(ydir, self.face_num),
+                                      yparam,
                                       favorite=True,
                                       comment='Auto: change to proper user parameter length')
         else:
+            if tab_params.parametric:
+                xparam = tab_params.length.expression
+            else:
+                xparam = abs(round(parent.x_length, 5))
             self._xlength = Parameter(name,
-                                      '{}_length'.format(xdir),
-                                      abs(round(parent.x_length, 5)),
+                                      '{}{}_length'.format(xdir, self.face_num),
+                                      xparam,
                                       favorite=True,
                                       comment='Auto: change to proper user parameter length')
+
         self._dfingerw = Parameter(self.prefix,
                                    'dfingerw',
                                    '{}_dfingerw'.format(self._clean_name))
         self._fingerd = Parameter(self.prefix,
                                   'fingerd',
                                   'abs({})'.format(tab_params.depth.expression),
+                                  favorite=True,
+                                  comment='Auto: change to proper depth of fingers')
+
+        if tab_params.parametric:
+            fingerd = 'abs({})'.format(tab_params.depth.expression)
+            disttwo = '{} - {}'.format(tab_params.distance_two.expression,
+                                       self.fingerd.name)
+        else:
+            fingerd = tab_params.depth.value
+            disttwo = tab_params.distance_two.value - fingerd
+
+        self.distance_two = Parameter(self._clean_name,
+                                      '{}{}_distance2'.format(self._alternate_axis, self.face_num),
+                                      disttwo
+                                      )
+        self._fingerd = Parameter(self.prefix,
+                                  'fingerd',
+                                  fingerd,
                                   favorite=True,
                                   comment='Auto: change to proper depth of fingers')
 
@@ -133,7 +163,7 @@ class Parameters:
 
     def add_far_length(self, expression, units='cm', corner=False):
         self.far_length = Parameter(self._clean_name,
-                                    '{}_length'.format(self._alternate_axis),
+                                    '{}{}_height'.format(self._alternate_axis, self.face_num),
                                     abs(expression),
                                     units=units,
                                     favorite=True)
@@ -143,7 +173,7 @@ class Parameters:
         d2expr = '{} - {}'.format(self.far_length.name, fingerdstr)
 
         self.distance_two = Parameter(self._clean_name,
-                                      '{}_distance2'.format(self._alternate_axis),
+                                      '{}{}_distance2'.format(self._alternate_axis, self.face_num),
                                       d2expr)
 
     @property

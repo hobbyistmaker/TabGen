@@ -77,14 +77,16 @@ class DefinedFace(FingerFace):
                               tc.start_with_tab,
                               tc.edge,
                               default_finger_count,
+                              tc.length,
                               tc.default_width,
                               tab_width,
                               tc.depth,
                               extrude_count,
+                              tc.distance,
                               distance,
                               margin,
                               tc.parametric)
-        sketch = FingerSketch.create(tc.finger_type, self, params, self._ui)
+        sketch = FingerSketch.create(tc.finger_type, self, params)
 
         # We need to save some information for future reference,
         # since the underlying data will change once any changes are

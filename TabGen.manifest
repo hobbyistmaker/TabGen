@@ -6,7 +6,7 @@
 	"description":	{
 		"":	"Fusion 360 add-in to generate finger-joint tabs along a rectangular edge"
 	},
-	"version":	"0.01",
+	"version":	"0.02",
 	"runOnStartup":	false,
 	"supportedOS":	"windows|mac",
 	"editEnabled":	true

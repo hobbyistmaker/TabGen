@@ -54,14 +54,17 @@ class AutoFace(FingerFace):
                               tc.start_with_tab,
                               tc.edge,
                               default_finger_count,
+                              tc.length,
                               tc.default_width,
                               default_tab_width,
                               tc.depth,
                               extrude_count,
+                              tc.distance,
                               distance,
                               tab_width + (tc.depth.value if small_tabs() else 0),
                               tc.parametric)
-        sketch = FingerSketch.create(tc.finger_type, self, params, self._ui)
+        sketch = FingerSketch.create(tc.finger_type, self, params)
+        self.body.attributes.add('Tabgen', 'sketch', sketch.sketch_alias)
 
         # We need to save some information for future reference,
         # since the underlying data will change once any changes are
@@ -109,3 +112,7 @@ class AutoFace(FingerFace):
                 tlgroup = self._timeline.timelineGroups.add(spos, lpos)
                 if sketch.parameters:
                     tlgroup.name = '{} Finger Group'.format(sketch.parameters.name)
+
+        attributes = self.body.attributes
+        sketch_alias = attributes.itemByName('Tabgen', 'sketch')
+        ui.messageBox('Found tabgen attribute: {}'.format(sketch_alias.value))
