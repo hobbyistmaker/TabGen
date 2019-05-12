@@ -25,8 +25,8 @@ class Configuration:
     DEFAULT_MAKE_PARAMETRIC = False
 
     # Select one of the two following
-    DEFAULT_USER_WIDTH_TAB = True
-    DEFAULT_AUTO_WIDTH_TAB = False
+    DEFAULT_USER_WIDTH_TAB = False
+    DEFAULT_AUTO_WIDTH_TAB = True
 
     # Select one of the two following
     DEFAULT_SINGLE_EDGE = False

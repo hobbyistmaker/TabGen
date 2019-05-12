@@ -1,7 +1,5 @@
-from .autosketch import AutoSketch
 from .definedsketch import DefinedSketch
 from .fingersketch import FingerSketch
 
-__all__ = [AutoSketch,
-           DefinedSketch,
+__all__ = [DefinedSketch,
            FingerSketch]

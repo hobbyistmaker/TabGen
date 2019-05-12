@@ -28,13 +28,14 @@ class AutoFace(FingerFace):
 
     finger_type = automaticWidthId
 
-    def extrude(self, tc):
+    def extrude(self):
         def small_tabs():
             return True if tc.default_width.value < tc.depth.value*2 else False
 
+        tc = self._config
         # Calculate the parameters that will be used to define the spacing,
         # size and distance of the notches that will be cut in the face
-        length = (self.length-tc.depth.value*2) if small_tabs() else self.length
+        length = self.length-abs(tc.margin.value)*2
 
         default_finger_count = max(3,
                                    (math.ceil(math.floor(length / tc.default_width.value)/2)*2)-1)
@@ -58,10 +59,11 @@ class AutoFace(FingerFace):
                               tc.default_width,
                               default_tab_width,
                               tc.depth,
+                              tc.margin,
                               extrude_count,
                               tc.distance,
                               distance,
-                              tab_width + (tc.depth.value if small_tabs() else 0),
+                              tab_width,
                               tc.parametric)
         sketch = FingerSketch.create(tc.finger_type, self, params)
         self.body.attributes.add('Tabgen', 'sketch', sketch.sketch_alias)

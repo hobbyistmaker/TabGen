@@ -1,6 +1,5 @@
 from .axisdir import axis_dir
 from .distance import d
-from .uimessage import uimessage
 from .vertical import vertical
 
 errorMsgInputId = 'errorMsgCommandInput'
@@ -16,6 +15,7 @@ dualEdgeSelectId = 'dualEdgeSelectInput'
 parametricInputId = 'parametricInput'
 lengthInputId = 'lengthCommandInput'
 distanceInputId = 'distanceCommandInput'
+marginInputId = 'marginCommandInput'
 
 userDefinedWidthId = 'User-Defined Width'
 automaticWidthId = 'Automatic Width'
@@ -36,7 +36,6 @@ __all__ = [d,
            startWithTabInputId,
            tabGenCommandId,
            tabWidthInputId,
-           uimessage,
            userDefinedWidthId,
            vertical
            ]

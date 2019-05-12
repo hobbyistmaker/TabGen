@@ -1,5 +1,4 @@
-from ...util import d
-
+from ..base import Base
 
 def x_direction(start, end):
     return 1 if (start.x >= 0
@@ -20,14 +19,18 @@ def direction(point1, point2, vertical):
         return x_direction(point1, point2)
 
 
-class Line:
+class Line(Base):
 
-    def __init__(self, line):
+    def __init__(self, line, construction=False):
+        super().__init__()
+
         self._line = line
         self._start_point = line.startSketchPoint
         self._end_point = line.endSketchPoint
         self._start_geometry = self._start_point.geometry
         self._end_geometry = self._end_point.geometry
+
+        self._line.isConstruction = construction
 
     @property
     def direction(self):

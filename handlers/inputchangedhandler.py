@@ -1,6 +1,8 @@
 import adsk.core
 import traceback
 
+from adsk.core import Application
+
 from ..util import d
 from ..util import distanceInputId
 from ..util import dualEdgeSelectId
@@ -9,11 +11,12 @@ from ..util import lengthInputId
 from ..util import parametricInputId
 from ..util import selectedFaceInputId
 from ..util import singleEdgeId
-from ..util import uimessage
 
 from ..util import automaticWidthId
-from ..tabgen import FingerFace
+from ..core import Face
 
+app = Application.get()
+ui = app.userInterface
 # Constants
 
 eventFailedMsg = 'TabGen input changed event failed: {}'
@@ -22,11 +25,6 @@ tolerance = 0.001
 
 
 class InputChangedHandler(adsk.core.InputChangedEventHandler):
-
-    def __init__(self, app, ui):
-        super().__init__()
-        self.app = app
-        self.ui = ui
 
     def notify(self, args):
         try:
@@ -91,16 +89,17 @@ class InputChangedHandler(adsk.core.InputChangedEventHandler):
                                 dualEdgeSelectId,
                                 fingerPlaceId]):
                 if faceInput.selectionCount > 0:
-                    if edgeInput and edgeInput.isVisible:
+                    if edgeInput and edgeInput.isVisible and edgeInput.selectionCount == 0:
                         edgeInput.hasFocus = True
 
-                    face = FingerFace.create(automaticWidthId, faceInput.selection(0).entity)
-                    lengthInput.value = face.length
+                    face = Face.from_entity(faceInput.selection(0).entity)
+                    if face:
+                        lengthInput.value = face.length
 
-                    if edgeInput.selectionCount > 0:
-                        distanceInput.value = face.distance_to(edgeInput.selection(0).entity)
-                    else:
-                        distanceInput.value = 0
+                        if edgeInput.selectionCount > 0:
+                            distanceInput.value = face.distance_to(edgeInput.selection(0).entity)
+                        else:
+                            distanceInput.value = 0
 
         except:
-            uimessage(eventFailedMsg, traceback.format_exc())
+            ui.messageBox(eventFailedMsg.format(traceback.format_exc()))

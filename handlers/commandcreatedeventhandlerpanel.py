@@ -13,13 +13,13 @@ from ..util import errorMsgInputId
 from ..util import fingerTypeId
 from ..util import fingerPlaceId
 from ..util import lengthInputId
+from ..util import marginInputId
 from ..util import mtlThickInputId
 from ..util import parametricInputId
 from ..util import selectedFaceInputId
 from ..util import singleEdgeId
 from ..util import startWithTabInputId
 from ..util import tabWidthInputId
-from ..util import uimessage
 from ..util import userDefinedWidthId
 from ..util import automaticWidthId
 from ..config import Configuration
@@ -54,13 +54,13 @@ class CommandCreatedEventHandlerPanel(adsk.core.CommandCreatedEventHandler):
                 cmd.helpFile = 'resources/help.html'
 
                 # Add onExecute event handler
-                onExecute = CommandExecuteHandler(app, ui)
+                onExecute = CommandExecuteHandler()
                 cmd.execute.add(onExecute)
                 handlers.append(onExecute)
                 logger.debug('CommandExecuteHandler added.')
 
                 # Add onInputChanged handler
-                onInputChanged = InputChangedHandler(app, ui)
+                onInputChanged = InputChangedHandler()
                 cmd.inputChanged.add(onInputChanged)
                 handlers.append(onInputChanged)
                 logger.debug('InputChangedHandler added.')
@@ -119,6 +119,10 @@ class CommandCreatedEventHandlerPanel(adsk.core.CommandCreatedEventHandler):
                                                           0.5, 6.0, 0.1,
                                                           Configuration.DEFAULT_MATERIAL_THICKNESS)
                 logger.debug('Created Material Thickness inpurt with default value of {}'.format(Configuration.DEFAULT_MATERIAL_THICKNESS))
+                commandInputs.addFloatSpinnerCommandInput(marginInputId,
+                                                          'Margin from Edge: ', 'mm',
+                                                          0.5, 6.0, 0.1,
+                                                          Configuration.DEFAULT_MATERIAL_THICKNESS)
 
                 # Disable start with tab due to bugs
                 commandInputs.addBoolValueInput(startWithTabInputId, 'Start with tab: ', True, '', Configuration.DEFAULT_START_WITH_TAB)
@@ -130,4 +134,4 @@ class CommandCreatedEventHandlerPanel(adsk.core.CommandCreatedEventHandler):
 
                 commandInputs.addTextBoxCommandInput(errorMsgInputId, '', '', 2, True)
         except:
-            uimessage(initializedFailedMsg, traceback.format_exc())
+            uimessage(initializedFailedMsg, traceback.format_exc(3))

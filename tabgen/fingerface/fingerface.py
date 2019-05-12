@@ -10,7 +10,8 @@ from adsk.fusion import FeatureOperations
 from adsk.fusion import PatternDistanceType
 
 from ...util import d
-from ...util import uimessage
+from ...util import automaticWidthId
+from ..fingersketch import FingerSketch
 
 app = Application.get()
 ui = app.userInterface
@@ -39,42 +40,70 @@ def edge_matches_points(edge, point1, point2):
 
 class FingerFace:
 
-    finger_type = 'none'
+    finger_type = automaticWidthId
 
     @classmethod
-    def create(cls, fingertype, entity, params=None):
+    def create(cls, manager, config):
         sc = [subclass for subclass in cls.__subclasses__()
-              if subclass.finger_type == fingertype]
-        return (sc[0](entity, params)
+              if subclass.finger_type == config.finger_type]
+        return (sc[0](manager, config)
                 if len(sc) > 0
-                else FingerFace(entity, params))
+                else FingerFace(manager, config))
 
-    def __init__(self, bface, params=None, pface=None):
+    def __init__(self, manager, config):
         design = Design.cast(app.activeProduct)
+        try:
+            self.__config = config
+            self.__bface = config.face
+            self.__manager = manager
 
-        self._ui = ui
-        self.__bface = bface
-        self.__evaluator = bface.geometry.evaluator
-        pRange = self.evaluator.parametricRange()
+            self.__prefix = self.name
 
-        self.__xlen = pRange.maxPoint.x - pRange.minPoint.x
-        self.__ylen = pRange.maxPoint.y - pRange.minPoint.y
+            self.__face_count = config.face_id
+        except:
+            ui.messageBox(traceback.format_exc())
 
-        self.__vertices = [bface.vertices.item(j).geometry
-                           for j in range(bface.vertices.count)]
+    def create_fingers(self):
+        if self.bface.isValid and self._config is not None:
+            self.sketch = FingerSketch.create(self, self._config)
 
-        self.__width = min(self.__xlen, self.__ylen)
-        self.__length = max(self.__xlen, self.__ylen)
+            self.join_point = self.sketch.reference_points
+            self.primary_axis = self.sketch.reference_line.sketch_line
+            self.secondary_axis, self.secondary_point = self.perpendicular_edge_from_point(self.join_point)
 
-        self.__tab_params = params
+            setup = self.__setup_draw()
+            profiles = self.__draw(setup)
+            complete = self.__complete_draw(profiles)
+            self.__fix_timeline(complete)
 
-        self.__xy = False
-        self.__xz = False
-        self.__yz = False
-        self._timeline = design.timeline
+        if self.face_count:
+            value = int(self.face_count.value)
+            self.face_count.value = str(value+1)
+        else:
+            self.face_count = self.body.attributes.add('tabgen', 'faces', str(1))
 
-        self._edges = [self.body.edges.item(j)
-                       for j in range(0, self.body.edges.count)]
+    def distance_to(self, second_face):
+        """ For the edge selected by the user, find the
+            minimum distance between the edge and this
+            face. This minimum distance will be used
+            for the calculation that defines how far
+            to cut the fingers on the secondary face.
+            """
+        primary_face = Plane.cast(self.bface.geometry)
+        this_face = Line3D.cast(second_face.geometry)
+
+        distance = 0
+
+        if primary_face.isParallelToLine(this_face):
+            this_vertices = [second_face.startVertex.geometry,
+                             second_face.endVertex.geometry]
+
+            for primary_vertex in self.vertices:
+                for second_vertex in this_vertices:
+                    measure = d(primary_vertex, second_vertex)
+                    if distance == 0 or measure < distance:
+                        distance = measure
+        return distance
 
     def edge_from_point(self, point, edge, reverse=False):
         """ Given a reference Point3D, return the vertex that
@@ -111,8 +140,6 @@ class FingerFace:
                     # line. This is not the line that we want to use
                     continue
 
-            # if face is not None:
-            #     ui.messageBox('Checking edge.')
             # given an edge that doesn't match the sketch line,
             # get the point of the edge at the other side. restart
             # the loop if there's no match for some reason.
@@ -128,37 +155,7 @@ class FingerFace:
                     return (vedge, vother.geometry)
         return (None, None)
 
-    def distance_to(self, second_face):
-        """ For the edge selected by the user, find the
-            minimum distance between the edge and this
-            face. This minimum distance will be used
-            for the calculation that defines how far
-            to cut the fingers on the secondary face.
-            """
-        primary_face = Plane.cast(self.__bface.geometry)
-        this_face = Line3D.cast(second_face.geometry)
-
-        distance = 0
-
-        if primary_face.isParallelToLine(this_face):
-            this_vertices = [second_face.startVertex.geometry,
-                             second_face.endVertex.geometry]
-
-            for primary_vertex in self.__vertices:
-                for second_vertex in this_vertices:
-                    measure = d(primary_vertex, second_vertex)
-                    if distance == 0 or measure < distance:
-                        distance = measure
-        return distance
-
-    @property
-    def face_count(self):
-        attribute = self.body.attributes.itemByName('tabgen', 'faces')
-        if attribute:
-            return int(attribute.value) + 1
-        return 1
-
-    def _extrude_finger(self, depth, profs, parameters=None):
+    def _extrude_finger(self, depth, profs):
         # Define the extrusion extent to be -tabDepth.
         extCutInput = self.extrudes.createInput(profs, CFO)
         # dist = createByString(str(-(depth.value*10)))
@@ -173,79 +170,75 @@ class FingerFace:
         # Manually set the extrude expression -- for some reason
         # F360 takes the value of a ValueInput.createByString
         # instead of the expression
-        if parameters is not None:
-            finger.name = '{} Extrude'.format(parameters.name)
-            finger.extentOne.distance.expression = '-{}'.format(parameters.fingerd.name)
+        self.params.depth.entity = finger.extentOne.distance
+        finger.name = '{} Extrude'.format(self.name)
+        # if parameters is not None:
+        #     finger.extentOne.distance.expression = '-{}'.format(parameters.depth.name)
 
         return finger
 
-    def _duplicate_fingers(self, params, finger, primary,
-                           secondary, edge=None, sketch=None):
+    def _duplicate_fingers(self, finger, primary,
+                           secondary, edge=None):
 
-        parameters = sketch.parameters
-        dov = -params.distance
+        params = self.sketch.params
+        patterns = self.patterns
 
-        if parameters is None:
-            quantity = createByReal(params.notches)
-            distance = createByReal(dov)
-        else:
-            quantity = createByString(parameters.extrude_count.name)
-            distance = createByString(parameters.fdistance.name)
+        ui.messageBox(params.notches.expression)
+        ui.messageBox(params.cut_distance.expression)
+        quantity = createByString(params.notches.expression)
+        distance = createByString(params.cut_distance.expression)
 
         inputEntities = ObjectCollection.create()
         inputEntities.add(finger)
 
-        patternInput = self.patterns.createInput(inputEntities,
-                                                 primary,
-                                                 quantity,
-                                                 distance,
-                                                 EDT)
+        patternInput = patterns.createInput(inputEntities,
+                                            primary,
+                                            quantity,
+                                            distance,
+                                            EDT)
 
         if edge is not None and secondary is not None:
-            sdistance = abs(params.distance_two.value)
-
-            if parameters is not None:
-                # parameters.add_far_length(sdistance)
-                parallel_distance = createByString(parameters.distance_two.name)
-            else:
-                parallel_distance = createByReal(sdistance - params.depth.value)
-
+            parallel_distance = createByString(params.distance_two.name)
             patternInput.setDirectionTwo(secondary,
                                          createByReal(2),
                                          parallel_distance)
 
         try:
             patternInput.patternComputeOption = 1
-            pattern = self.patterns.add(patternInput)
-            if parameters is not None:
-                pattern.name = '{} Rectangle Pattern'.format(parameters.name)
+            pattern = patterns.add(patternInput)
+            pattern.name = '{} Rectangle Pattern'.format(params.name)
             return pattern
         except:
-            uimessage(traceback.format_exc())
+            ui.messageBox(traceback.format_exc())
 
-    def extrude(self, tc):
+    def _draw(self, setup):
+        self.sketch.draw_finger()
+
+    def _setup_draw(self):
         pass
 
-    __extrude = extrude
+    def _complete_draw(self, profiles):
+        pass
 
-    def create_fingers(self):
-        if self.bface.isValid and self.__tab_params is not None:
-            self.extrude(self.__tab_params)
+    def _fix_timeline(self, completion):
+        pass
 
-        self.__faces = self.body.attributes.itemByName('tabgen', 'faces')
-        if self.__faces:
-            value = int(self.__faces.value)
-            self.__faces.value = str(value+1)
-        else:
-            self.__faces = self.body.attributes.add('tabgen', 'faces', str(1))
+    __draw = _draw
+    __setup_draw = _setup_draw
+    __complete_draw = _complete_draw
+    __fix_timeline = _fix_timeline
 
     @property
-    def name(self):
-        return self.__bface.body.name
+    def _config(self):
+        return self.__config
 
     @property
-    def axis(self):
-        return self.__find_primary_axis()
+    def _edges(self):
+        return self.__edges
+
+    @property
+    def _prefix(self):
+        return self.__prefix
 
     @property
     def bface(self):
@@ -264,14 +257,16 @@ class FingerFace:
         return self.parent.features.extrudeFeatures
 
     @property
+    def face_count(self):
+        if self.__face_count:
+            return int(attribute.value) + 1
+        return 1
+
+    @property
     def is_edge(self):
         # Get the area for each face, remove the two largest,
         # and check if the current face is in the remaining list
-        faces = sorted([self.body.faces.item(j)
-                        for j in range(0, self.body.faces.count)],
-                       key=lambda face: face.area)
-        return self.__bface in faces[:-2]
-
+        return self.__is_edge
 
     @property
     def length(self):
@@ -280,6 +275,10 @@ class FingerFace:
     @property
     def mirrors(self):
         return self.parent.features.mirrorFeatures
+
+    @property
+    def name(self):
+        return self.__bface.body.name
 
     @property
     def parent(self):
@@ -294,10 +293,22 @@ class FingerFace:
         return self.parent.constructionPlanes
 
     @property
+    def sketch(self):
+        return self.__sketch
+
+    @sketch.setter
+    def sketch(self, sketch):
+        self.__sketch = sketch
+
+    @property
     def vertical(self):
         if self.__xlen == self.__width:
             return True
         return False
+
+    @property
+    def vertices(self):
+        return self.__vertices
 
     @property
     def width(self):
@@ -308,21 +319,5 @@ class FingerFace:
         return self.__xlen
 
     @property
-    def xy(self):
-        return self.__xy
-
-    @property
-    def xz(self):
-        return self.__xz
-
-    @property
     def y_length(self):
         return self.__ylen
-
-    @property
-    def yz(self):
-        return self.__yz
-
-    @property
-    def vertices(self):
-        return self.__vertices

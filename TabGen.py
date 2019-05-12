@@ -54,6 +54,7 @@ def run(context):
         logger.debug(msg)
         if ui:
             ui.messageBox(msg)
+        stop(context)
 
 
 def stop(context):

@@ -17,13 +17,6 @@ HorizontalDimension = DimensionOrientations.HorizontalDimensionOrientation
 VerticalDimension = DimensionOrientations.VerticalDimensionOrientation
 
 
-def display_line(line, title):
-    spg = line.startSketchPoint.geometry
-    epg = line.endSketchPoint.geometry
-
-    ui.messageBox('Start Point\nX: {} -- Y: {} -- Z: {}\n\nEnd Point\nX: {} -- Y: {} -- Z: {}'.format(spg.x, spg.y, spg.z, epg.x, epg.y, epg.z), title)
-
-
 class AutoSketch(FingerSketch):
 
     finger_type = automaticWidthId
@@ -31,7 +24,7 @@ class AutoSketch(FingerSketch):
     def draw_finger(self):
         params = self.params
         width = params.width
-        ofs = params.offset
+        ofs = params.margin.value
 
         fsp = self.rectangle.bottom_left.geometry
 
