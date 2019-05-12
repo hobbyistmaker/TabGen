@@ -56,6 +56,10 @@ class Parameter:
         return self._comment
 
     @property
+    def comment(self):
+        return self._comment
+
+    @property
     def name(self):
         return clean_param('{0}_{1}'.format(self.prefix, self._name))
 
