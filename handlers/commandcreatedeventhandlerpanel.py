@@ -23,10 +23,6 @@ from ..util import tabWidthInputId
 from ..util import userDefinedWidthId
 from ..util import automaticWidthId
 from ..config import Configuration
-from .commandexecutehandler import CommandExecuteHandler
-from .inputchangedhandler import InputChangedHandler
-from .validateinputshandler import ValidateInputsHandler
-from .selectioneventhandler import SelectionEventHandler
 
 app = Application.get()
 ui = app.userInterface
@@ -38,6 +34,14 @@ logger = logging.getLogger('commandcreatedeventhandlerpanel')
 
 
 class CommandCreatedEventHandlerPanel(adsk.core.CommandCreatedEventHandler):
+
+    def __init__(self, execute, input_, validate, select):
+        super().__init__()
+
+        self.execute = execute
+        self.input_ = input_
+        self.validate = validate
+        self.select = select
 
     def notify(self, args):
         try:
@@ -53,29 +57,18 @@ class CommandCreatedEventHandlerPanel(adsk.core.CommandCreatedEventHandler):
                 cmd = args.command
                 cmd.helpFile = 'resources/help.html'
 
+
                 # Add onExecute event handler
-                onExecute = CommandExecuteHandler()
-                cmd.execute.add(onExecute)
-                handlers.append(onExecute)
-                logger.debug('CommandExecuteHandler added.')
+                cmd.execute.add(self.execute)
 
                 # Add onInputChanged handler
-                onInputChanged = InputChangedHandler()
-                cmd.inputChanged.add(onInputChanged)
-                handlers.append(onInputChanged)
-                logger.debug('InputChangedHandler added.')
+                cmd.inputChanged.add(self.input_)
 
-                # Add onValidateInputs event handler
-                onValidateInputs = ValidateInputsHandler()
-                cmd.validateInputs.add(onValidateInputs)
-                handlers.append(onValidateInputs)
-                logger.debug('ValidateInputsHandler added.')
+                # # Add onValidateInputs event handler
+                # cmd.validateInputs.add(self.validate)
 
                 # Add SelectionEvent handler
-                onSelectionEvent = SelectionEventHandler()
-                cmd.selectionEvent.add(onSelectionEvent)
-                handlers.append(onSelectionEvent)
-                logger.debug('SelectionEventHandler added.')
+                cmd.selectionEvent.add(self.select)
 
                 # Set up the inputs
                 commandInputs = cmd.commandInputs
@@ -121,7 +114,7 @@ class CommandCreatedEventHandlerPanel(adsk.core.CommandCreatedEventHandler):
                 logger.debug('Created Material Thickness inpurt with default value of {}'.format(Configuration.DEFAULT_MATERIAL_THICKNESS))
                 commandInputs.addFloatSpinnerCommandInput(marginInputId,
                                                           'Margin from Edge: ', 'mm',
-                                                          0.5, 6.0, 0.1,
+                                                          0, 2500, 0.1,
                                                           Configuration.DEFAULT_MATERIAL_THICKNESS)
 
                 # Disable start with tab due to bugs
@@ -129,9 +122,9 @@ class CommandCreatedEventHandlerPanel(adsk.core.CommandCreatedEventHandler):
                 logger.debug('Created Start With Tab boolean check with default value of {}'.format(Configuration.DEFAULT_START_WITH_TAB))
                 commandInputs.addBoolValueInput(parametricInputId, 'Make Parametric: ', True, '', Configuration.DEFAULT_MAKE_PARAMETRIC)
                 logger.debug('Created Make Parametric boolean check with default value of {}'.format(Configuration.DEFAULT_MAKE_PARAMETRIC))
-                commandInputs.addFloatSpinnerCommandInput(lengthInputId, 'Length Parameter: ', 'mm', -2500.0, 2500.0, 0.1, 0.0)
-                commandInputs.addFloatSpinnerCommandInput(distanceInputId, 'Distance Parameter: ', 'mm', -2500.0, 2500.0, 0.1, 0.0)
+                commandInputs.addFloatSpinnerCommandInput(lengthInputId, 'Length Parameter: ', 'mm', 0, 2500.0, 0.1, 0.0)
+                commandInputs.addFloatSpinnerCommandInput(distanceInputId, 'Distance Parameter: ', 'mm', 0, 2500.0, 0.1, 0.0)
 
                 commandInputs.addTextBoxCommandInput(errorMsgInputId, '', '', 2, True)
         except:
-            uimessage(initializedFailedMsg, traceback.format_exc(3))
+            ui.messageBox('{}:\n{}'.format(initializedFailedMsg, traceback.format_exc(3)))

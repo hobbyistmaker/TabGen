@@ -1,8 +1,12 @@
 from adsk.core import Point3D
+from adsk.fusion import DimensionOrientations
 
 from ..base import Base
 
 from .rectangle import Rectangle
+
+HorizontalDimension = DimensionOrientations.HorizontalDimensionOrientation
+VerticalDimension = DimensionOrientations.VerticalDimensionOrientation
 
 
 class Sketch(Base):
@@ -33,16 +37,33 @@ class Sketch(Base):
         self.reference_plane = self.sketch.referencePlane
         self.reference_line = self.border.reference_line
 
-    def draw_rectangle(self, point, length):
+    def draw_rectangle(self, point, length, constrain=False):
         width = self.border.width
 
         return Rectangle.draw(self.sketch,
                               point,
-                              self.offset_point(point, length))
+                              self.offset_point(point, length, width),
+                              self.border.bottom.sketch_line if constrain else None,
+                              self.border.top.sketch_line if constrain else None,
+                              self.border.bottom.left)
 
-    def offset_point(self, point, length, same_line=False):
-        width = 0 if same_line else self.border.width
+    def draw_margin(self, point):
+        end_point = self.offset_point(point, 0, self.border.width)
 
+        marginline = self.lines.addByTwoPoints(point, end_point)
+        marginline.isConstruction = True
+
+        self.margin_dimension = self.sketch.sketchDimensions.addDistanceDimension(
+            self.border.bottom.left.point,
+            marginline.startSketchPoint,
+            HorizontalDimension,
+            Point3D.create(point.x + .5, point.y - .5, 0)
+        )
+        self.sketch.geometricConstraints.addPerpendicular(self.border.bottom.sketch_line,
+                                                          marginline)
+        return marginline
+
+    def offset_point(self, point, length, width=0):
         if self.is_vertical:
             xoffset = width
             yoffset = length

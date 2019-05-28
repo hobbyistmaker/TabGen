@@ -7,10 +7,13 @@ import adsk.core
 import adsk.fusion
 import traceback
 
+from adsk.core import Application
+
 from .config import Configuration
-from .handlers import handlers
-from .handlers import CommandCreatedEventHandlerPanel
+# from .handlers import handlers
+# from .handlers import CommandCreatedEventHandlerPanel
 from .util import tabGenCommandId
+from .core import tabgenerator
 
 point3d = adsk.core.Point3D
 
@@ -23,55 +26,26 @@ logging.basicConfig(filename=Configuration.LOG_FILE,
                     level=Configuration.LOG_LEVEL)
 logger = logging.getLogger('tabgen')
 
+app = adsk.core.Application.get()
+ui = app.userInterface
+
 
 def run(context):
     ui = None
     try:
-        app = adsk.core.Application.get()
-        ui = app.userInterface
-
-        logger.debug('Creating CommandEventHandlerPanel definition.')
-        # Create the command definition and add a button to the Add-ins panel
-        # per Autodesk UI guidance.
-        cmdDef = ui.commandDefinitions.addButtonDefinition(
-            tabGenCommandId,
-            'Generate Tabs',
-            'Creates finger-joint tabs and gaps on rectangular faces')
-        createPanel = ui.allToolbarPanels.itemById('SolidScriptsAddinsPanel')
-        createPanel.controls.addCommand(cmdDef)
-
-        # Set up the command created event handler
-        onCommandCreated = CommandCreatedEventHandlerPanel()
-        cmdDef.commandCreated.add(onCommandCreated)
-        handlers.append(onCommandCreated)
-
-        # If the command is being manually started let the user know it's done
-        # if context['IsApplicationStartup'] is False:
-        #     ui.messageBox('The "Generate Tabs" command has been added\nto the MODIFY panel of the MODEL workspace.')
+        tabgenerator.start()
 
     except:
         msg = 'Failed:\n{}'.format(traceback.format_exc())
         logger.debug(msg)
         if ui:
             ui.messageBox(msg)
-        stop(context)
 
 
 def stop(context):
     ui = None
     try:
-        app = adsk.core.Application.get()
-        ui = app.userInterface
-
-        modifyPanel = ui.allToolbarPanels.itemById('SolidScriptsAddinsPanel')
-        tabGenButton = modifyPanel.controls.itemById(tabGenCommandId)
-        if tabGenButton:
-            tabGenButton.deleteMe()
-
-        cmdDef = ui.commandDefinitions.itemById(tabGenCommandId)
-        if cmdDef:
-            cmdDef.deleteMe()
-        logger.debug('TabGen add-in stopped.')
+        tabgenerator.stop()
 
     except:
         msg = 'TabGen add-in stop failed: {}'.format(traceback.format_exc())

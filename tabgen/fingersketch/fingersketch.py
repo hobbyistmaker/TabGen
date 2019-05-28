@@ -8,8 +8,8 @@ from adsk.fusion import FeatureOperations
 from adsk.fusion import PatternDistanceType
 from adsk.fusion import SketchPoint
 
-from ...util import automaticWidthId
-from ...util import axis_dir
+from util import automaticWidthId
+from util import axis_dir
 
 from .rectangle import Rectangle
 

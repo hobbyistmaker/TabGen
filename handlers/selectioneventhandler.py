@@ -34,22 +34,25 @@ class SelectionEventHandler(SelectionEventHandler):
                 inputs = firingEvent.sender.commandInputs
                 if inputs:
                     if activeSelectionInput.id == selectedFaceInputId:
-                        face = Face.from_entity(entity)
+                        face = Face(entity)
 
-                        if face.is_edge:
+                        if face.is_edge and not face.is_completed:
                             edgeSelect = SelectionCommandInput.cast(inputs.itemById(dualEdgeSelectId))
                             if edgeSelect.selectionCount == 1:
-                                eventArgs.isSelectable = face.isParallelToLine(edgeSelect.selection(0).entity.geometry)
+                                eventArgs.isSelectable = face.isParallelToLine(edgeSelect.selection(0).entity)
                             else:
                                 eventArgs.isSelectable = True
                         else:
                             eventArgs.isSelectable = False
 
                     elif activeSelectionInput.id == dualEdgeSelectId:
-                        faceSelect = SelectionCommandInput.cast(inputs.itemById(selectedFaceInputId))
-                        if faceSelect.selectionCount == 1:
-                            face = Face.from_entity(faceSelect.selection(0).entity)
-                            eventArgs.isSelectable = face.isParallelToLine(entity)
+                        if activeSelectionInput.selectionCount == 0:
+                            faceSelect = SelectionCommandInput.cast(inputs.itemById(selectedFaceInputId))
+                            if faceSelect.selectionCount == 1:
+                                face = Face(faceSelect.selection(0).entity)
+                                eventArgs.isSelectable = face.isParallelToLine(entity)
+                        else:
+                            eventArgs.isSelectable = False
             except:
                 ui.messageBox(traceback.format_exc())
         else:

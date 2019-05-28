@@ -1,3 +1,4 @@
+import math
 import traceback
 
 from adsk.core import ObjectCollection as oc
@@ -9,7 +10,7 @@ from ...util import automaticWidthId
 
 from ..base import Base
 from ..operations import TimelineGroup
-from ..tabconfig import TabConfig
+from ..tabconfig import UserOptions
 
 from .property import Property
 
@@ -19,19 +20,21 @@ class Fingers(Base):
     finger_type = automaticWidthId
 
     @classmethod
-    def create(cls, face, inputs):
-        config = TabConfig.create(inputs)
+    def create(cls, options):
+        face = options.face
+
         sc = [subclass for subclass in cls.__subclasses__()
-              if subclass.finger_type == config.finger_type]
-        return (sc[0](face, config)
+              if subclass.finger_type == options.finger_type]
+        return (sc[0](face, options)
                 if len(sc) > 0
-                else cls(face, config))
+                else cls(face, options))
 
     def __init__(self, face, config):
         super().__init__()
 
         self.face = face
         self.config = config
+
         self.name = self.clean_string(self.face.name)
 
         self.timeline = TimelineGroup('{} Finger Group'.format(self.name),
@@ -42,8 +45,9 @@ class Fingers(Base):
             conf = self.config
             patterns = self.face.patterns
             alias = self.clean_string(self.name)
-            notches = conf.notches.value
-            notch_length = conf.notch_length.value
+            notches = self.notches
+            notch_distance = self.notch_distance if not self.second_distance else -self.notch_distance
+            edge = secondary.edge if self.second_distance > 0 else None
 
             inputs = oc.create()
             inputs.add(features)
@@ -51,29 +55,32 @@ class Fingers(Base):
             pattern = patterns.createInput(inputs,
                                            primary,
                                            vi.createByReal(notches),
-                                           vi.createByReal(notch_length),
+                                           vi.createByReal(notch_distance),
                                            pdt.ExtentPatternDistanceType)
 
-            if secondary is not None:
-                parallel_distance = vi.createByReal(conf.second_distance.value)
-                pattern.setDirectionTwo(secondary,
-                                        vi.createByReal(2),
-                                        parallel_distance)
-                # in the future, make the number of cuts in the second
-                # direction user definable for walls in the middle of the
-                # body
+            parallel_distance = vi.createByReal(self.second_distance)
+            pattern.setDirectionTwo(edge,
+                                    vi.createByReal(2),
+                                    parallel_distance)
+            # in the future, make the number of cuts in the second
+            # direction user definable for walls in the middle of the
+            # body
 
-            patterns.add(pattern)
+            feature = patterns.add(pattern)
 
-            return pattern
+            return feature
         except:
             self.msg(traceback.format_exc())
 
     def execute(self):
         sketch = self.face.add_sketch()
+        self.face.mark_complete()
         conf = self.config
-        offset = conf.offset.value
-        width = conf.tab_width.value
+
+        self.add_options(conf)
+
+        offset = self.offset
+        width = self.tab_width
 
         try:
             ref_points = sketch.reference_points
@@ -85,18 +92,21 @@ class Fingers(Base):
 
             fsp = stp if not swt else sketch.offset_point(stp,
                                                           offset,
-                                                          same_line=True)
+                                                          width=0)
 
-            sketch.draw_rectangle(fsp, width)
+            self.margin_line = sketch.draw_margin(fsp)
+
+            finger_sketch = sketch.draw_rectangle(fsp, width, constrain=True)
         except:
             self.msg(traceback.format_exc())
 
         self.finger = self.extrude('{} Finger'.format(self.name),
                                    conf.depth.expression,
                                    sketch.profiles[0])
+
         self.pattern = self.duplicate_notches('{} Finger'.format(self.name),
                                               primary_axis,
-                                              secondary.edge,
+                                              secondary,
                                               self.finger)
         self.save_parameters()
 
@@ -119,10 +129,59 @@ class Fingers(Base):
             self.msg(traceback.format_exc())
 
     def save_parameters(self):
-        pass
+        def check_negative(value, expression):
+            if value > 0:
+                return '-({})'.format(expression)
+            else:
+                return expression
+
+        def check_positive(value, expression):
+            if value < 0:
+                return 'abs({})'.format(expression)
+            else:
+                return expression
+
+        self.config.depth.save(parameter=self.finger.extentOne.distance, valcheck=check_negative)
+
 
     __save_parameters = save_parameters
 
     @property
     def body(self):
         return self.face.body
+
+    @property
+    def adjusted_length(self):
+        return self.config.length.value - self.config.margin.value * 2
+
+    @property
+    def fingers(self):
+        return max(3, (math.ceil(math.floor(self.adjusted_length / self.config.default_width.value)/2)*2)-1)
+
+    @property
+    def notch_distance(self):
+        return (self.fingers - (3 if self.config.start_with_tab else 1)) * self.tab_width
+
+    @property
+    def notches(self):
+        return math.floor(self.fingers/2) if self.config.start_with_tab else math.ceil(self.fingers/2)
+
+    @property
+    def offset(self):
+        return (self.config.length.value - (self.adjusted_length - self.tab_width * (2 if self.config.start_with_tab else 0)))/2
+
+    @property
+    def second_distance(self):
+        distance = self.config.distance.value
+        depth = self.config.depth.value
+        return (distance - depth) if distance > depth else 0
+
+    @property
+    def tab_width(self):
+        return self.adjusted_length / self.fingers
+
+    def add_options(self, conf):
+        adjusted_length = '{} - {} * 2'.format(conf.length.name, conf.margin.name)
+        fingers = 'max(3; (ceil(floor({} / {})/2)*2)-1)'.format(adjusted_length, conf.default_width.name)
+        notches = ('floor({}/2)' if conf.start_with_tab else 'ceil({}/2)').format(fingers)
+        notch_distance = '({}*2){}'.format(notches, '')

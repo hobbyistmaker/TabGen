@@ -1,3 +1,3 @@
-from .tabconfig import TabConfig
+from .useroptions import UserOptions
 
-__all__ = [TabConfig]
+__all__ = [UserOptions]

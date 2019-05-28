@@ -15,9 +15,7 @@ class TimelineGroup(Operation):
         mp = self.marker_position
         lpos = mp if mp < self.count else self.count-1
 
-        self.msg('Timeline: {} - {}'.format(self.start,  lpos))
         if self.timeline and self.is_valid and (lpos - self.start) > 1:
-            self.msg('Creating timeline group')
             group = self.groups.add(self.start, lpos)
 
     @property

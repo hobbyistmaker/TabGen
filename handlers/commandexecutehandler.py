@@ -1,32 +1,28 @@
-import adsk.core
 import traceback
 
-from ..core import Face
-from ..core import Fingers
-from ..core import TabConfig
+from adsk.core import Application
+from adsk.core import CommandEventHandler
 
-app = adsk.core.Application.get()
+app = Application.get()
 ui = app.userInterface
 
 # Constants
 executionFailedMsg = 'TabGen executon failed: {}'
 
 
-class CommandExecuteHandler(adsk.core.CommandEventHandler):
+class CommandExecuteHandler(CommandEventHandler):
 
-    def __init__(self):
+    def __init__(self, generator):
         super().__init__()
+        self.generator = generator
 
     def notify(self, args):
+        command = args.firingEvent.sender
+
         try:
 
-            command = args.firingEvent.sender
-            commandInputs = command.commandInputs
-
-            face = Face.from_inputs(commandInputs)
-            fingers = Fingers.create(face, commandInputs)
+            self.generator.create(command.commandInputs)
 
         except:
 
             ui.messageBox(executionFailedMsg.format(traceback.format_exc()))
-

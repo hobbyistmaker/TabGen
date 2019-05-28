@@ -2,12 +2,17 @@ import logging
 
 from collections import namedtuple
 
+from adsk.core import Point3D
+from adsk.fusion import DimensionOrientations
+
 from ...util import vertical
 
 from ..base import Base
 
 from .line import Top, Bottom, Left, Right
 
+HorizontalDimension = DimensionOrientations.HorizontalDimensionOrientation
+VerticalDimension = DimensionOrientations.VerticalDimensionOrientation
 
 logger = logging.getLogger('rectangle')
 
@@ -23,10 +28,6 @@ def compare_lines(first, second, func, reverse):
 
     points = [sp1, sp2, ep1, ep2]
     point = sorted(points, key=func, reverse=reverse)[0]
-    logger.debug('First Start: {}, {}, {}'.format(sp1.x, sp1.y, sp1.z))
-    logger.debug('First End: {}, {}, {}'.format(ep1.x, ep1.y, ep1.z))
-    logger.debug('Second Start: {}, {}, {}'.format(sp2.x, sp2.y, sp2.z))
-    logger.debug('Second End: {}, {}, {}'.format(ep2.x, ep2.y, ep2.z))
 
     if point.isEqualTo(sp1) or point.isEqualTo(ep1):
         return first
@@ -52,7 +53,8 @@ def top_line(axes):
 class Rectangle(Base):
 
     @classmethod
-    def draw(cls, sketch, first_point, second_point):
+    def draw(cls, sketch, first_point, second_point,
+             bottom_reference=None, top_reference=None, ref_point=None):
         lines = sketch.sketchCurves.sketchLines
 
         rectangle = Rectangle(sketch,
@@ -64,6 +66,19 @@ class Rectangle(Base):
         sketch.geometricConstraints.addVertical(rectangle.left.sketch_line)
         sketch.geometricConstraints.addVertical(rectangle.right.sketch_line)
 
+        rectangle.dimension_length()
+
+        if bottom_reference:
+            sketch.geometricConstraints.addCoincident(rectangle.bottom.left.point,
+                                                      bottom_reference)
+
+        if top_reference:
+            sketch.geometricConstraints.addCoincident(rectangle.top.right.point,
+                                                      top_reference)
+
+        if ref_point:
+            rectangle.dimension_start(ref_point)
+
         return rectangle
 
     def __init__(self, sketch, lines, construction=False):
@@ -74,11 +89,10 @@ class Rectangle(Base):
         self.sketch = sketch
         self.construction = construction
 
-        self.__set_width_length()
-        self.__set_axes()
+        self.__set_width_length(self.lines)
+        self.__set_axes(self.construction)
 
-    def __set_axes(self):
-        construction = self.construction
+    def __set_axes(self, construction):
         is_vertical = vertical(self.length_axes[0])
 
         if is_vertical is True:
@@ -93,9 +107,9 @@ class Rectangle(Base):
         self.left = Left(left_line(lraxes), construction)
         self.right = Right(right_line(lraxes), construction)
 
-    def __set_width_length(self):
-        lline1 = self.lines[0]
-        lline2 = self.lines[1]
+    def __set_width_length(self, lines):
+        lline1 = lines[0]
+        lline2 = lines[1]
 
         self.width = min(lline1.length, lline2.length)
         self.length = max(lline1.length, lline2.length)
@@ -126,9 +140,35 @@ class Rectangle(Base):
             return ReferencePoint(self.bottom.right.vertex,
                                   self.top.right.vertex)
         else:
-            return ReferencePoint(self.top.right.vertex,
-                                  self.top.left.vertex)
+            return ReferencePoint(self.bottom.left.vertex,
+                                  self.bottom.right.vertex)
 
     @property
     def reference_line(self):
         return self.left.sketch_line if self.is_vertical else self.top.sketch_line
+
+    def dimension_length(self):
+        blp = self.bottom.left.geometry
+        dimp = Point3D.create(blp.x + .5, blp.y - .5, 0)
+        self.__length_dimension = self.sketch.sketchDimensions.addDistanceDimension(
+            self.bottom.left.point,
+            self.bottom.right.point,
+            HorizontalDimension if not self.is_vertical else VerticalDimension,
+            dimp
+        )
+
+    def length_dimension(self, value):
+        self.__length_dimension.name = value.name
+        self.__length_dimension.units = value.units
+        self.__length_dimension.expression = value.expression
+        self.__length_dimension.comment = value.comment
+
+    def dimension_start(self, point):
+        blp = self.bottom.left.geometry
+        dimp = Point3D.create(blp.x + .5, blp.y - .5, 0)
+        self.offset_dimension = self.sketch.sketchDimensions.addDistanceDimension(
+            point.point,
+            self.bottom.left.point,
+            HorizontalDimension if not self.is_vertical else VerticalDimension,
+            dimp
+        )
