@@ -11,7 +11,7 @@ def automatic(inputs):
     depth = abs(inputs.depth.value)
     margin = abs(inputs.margin.value)
 
-    adjusted_length = (face_length/repeats) - margin*2
+    adjusted_length = face_length - margin*2
     fingers = (math.ceil(max(3, math.floor(adjusted_length / default_width))/2)*2)-1
 
     finger_length = adjusted_length / fingers
