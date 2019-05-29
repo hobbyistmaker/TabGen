@@ -21,9 +21,11 @@ class CommandExecuteHandler(CommandEventHandler):
 
         try:
             inputs = fusion.InputReader(command.commandInputs)
-            manager = managers.create(self.app, self.ui, inputs)
 
-            # self.ui.messageBox('Executing command.')
+            if inputs.face_selected:
+                manager = managers.create(self.app, self.ui, inputs)
+            else:
+                self.ui.messageBox('No face was selected for placing fingers.')
 
         except:
 

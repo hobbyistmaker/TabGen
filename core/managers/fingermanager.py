@@ -66,6 +66,9 @@ class FingerManager:
         # becomes invalid.
         self.draw_finger(sketch, lines, extrudes, body, primary, secondary)
 
+        if self.inputs.repeat.value > 1:
+            pass
+
         if self.params.offset and not self.inputs.tab_first:
             self.draw_corner(sketch, lines, extrudes, body, primary, secondary)
 
@@ -95,7 +98,7 @@ class FingerManager:
         self.corner_cut = self.extrude(profiles, body, extrudes, name)
 
         dname = '{} Corner Duplicate Pattern'.format(self.name)
-        self.corner_pattern = self.duplicate(dname, self.corner_cut, 1, 0,
+        self.corner_pattern = self.duplicate(dname, [self.corner_cut], 1, 0,
                                              2, primary, secondary, body)
 
         if self.border.is_vertical:
@@ -222,14 +225,15 @@ class FingerManager:
         quantity = self.params.notches
         distance = self.params.pattern_distance
         dname = '{} Finger Duplicate Pattern'.format(self.name)
-        self.finger_pattern = self.duplicate(dname, self.finger_cut, quantity, distance,
+        self.finger_pattern = self.duplicate(dname, [self.finger_cut], quantity, distance,
                                              self.inputs.interior.value + 2,
                                              primary, secondary, body)
 
-    def duplicate(self, name, feature, quantity, distance,
+    def duplicate(self, name, features, quantity, distance,
                   squantity, primary, secondary, body):
         entities = ObjectCollection.create()
-        entities.add(feature)
+        for feature in features:
+            entities.add(feature)
 
         patterns = body.parentComponent.features.rectangularPatternFeatures
 

@@ -188,11 +188,11 @@ class CommandCreatedEventHandlerPanel(CommandCreatedEventHandler):
                                               2,
                                               True)
 
-                inputs.addBoolValueInput(defs.parametricInputId,
-                                         'Disable Parametric',
-                                         True,
-                                         '',
-                                         self.config.DEFAULT_DISABLE_PARAMETRIC)
+                # inputs.addBoolValueInput(defs.parametricInputId,
+                #                          'Disable Parametric',
+                #                          True,
+                #                          '',
+                #                          self.config.DEFAULT_DISABLE_PARAMETRIC)
         except:
             self.ui.messageBox('{}:\n{}'.format(initializedFailedMsg,
                                                 traceback.format_exc(3)))
