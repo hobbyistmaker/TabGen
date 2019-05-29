@@ -50,6 +50,7 @@ class FingerManager:
 
     def draw(self, sketch):
         lines = sketch.sketchCurves.sketchLines
+        timeline = self.app.activeProduct.timeline
 
         extrudes = self.inputs.selected_body.parentComponent.features.extrudeFeatures
         body = self.inputs.selected_body
@@ -57,6 +58,8 @@ class FingerManager:
         primary = self.border.reference_line
         secondary = fusion.perpendicular_edge_from_vertex(self.inputs.selected_face,
                                                           self.border.top.left.vertex).edge
+
+        start_mp = timeline.markerPosition-1
 
         # The finger has to be drawn and extruded first; the operation
         # will fail after the corners are cut, since the edge reference
@@ -77,6 +80,11 @@ class FingerManager:
                           getattr(self, 'corner_pattern', None),
                           getattr(self, 'left_dimension', None),
                           getattr(self, 'right_dimension', None))
+
+        # Create a Timeline group to keep things organized
+        end_mp = timeline.markerPosition
+        tlgroup = timeline.timelineGroups.add(start_mp, end_mp-1)
+        # tlgroup.name = '{} Finger Group'.format(self.name)
 
     def draw_corner(self, sketch, lines, extrudes, body, primary, secondary):
         self.left_corner = self.draw_left_corner(sketch, lines)
