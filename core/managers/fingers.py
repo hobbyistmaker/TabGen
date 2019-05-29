@@ -24,8 +24,8 @@ def create(app, ui, inputs):
     # Let's project the face outside edges into the sketch.
     # This makes it easier to find the axes for duplicating
     # fingers across opposing sides of the body
-    # for edge in face.edges[0:4]:
-    #     sketch.project(edge)
+    for edge in face.edges[0:4]:
+        sketch.project(edge)
 
     lines = sketch.sketchCurves.sketchLines
     # Change the default edges into construction lines so that
@@ -33,7 +33,9 @@ def create(app, ui, inputs):
     for line in lines[0:4]:
         line.isConstruction = True
 
-    lines = sketch.sketchCurves.sketchLines
+    for edge in face.edges:
+        ui.messageBox('Found edge.')
+
     # Create a border object from the projected edges
     # and make them construction lines to prevent unneeded
     # profiles in the sketch
