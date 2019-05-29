@@ -23,7 +23,7 @@ class CommandExecuteHandler(CommandEventHandler):
             inputs = fusion.InputReader(command.commandInputs)
             manager = managers.create(self.app, self.ui, inputs)
 
-            self.ui.messageBox('Executing command.')
+            # self.ui.messageBox('Executing command.')
 
         except:
 

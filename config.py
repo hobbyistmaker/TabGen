@@ -23,7 +23,7 @@ class Configuration:
     DEFAULT_MATERIAL_THICKNESS = 3.2
     DEFAULT_MARGIN_WIDTH = 0
     DEFAULT_START_WITH_TAB = True
-    DEFAULT_MAKE_PARAMETRIC = False
+    DEFAULT_DISABLE_PARAMETRIC = False
 
     # Select one of the two following
     DEFAULT_USER_WIDTH_TAB = True
