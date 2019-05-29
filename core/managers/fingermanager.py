@@ -66,16 +66,21 @@ class FingerManager:
         if self.params.offset and not self.inputs.tab_first:
             self.draw_corner(sketch, lines, extrudes, body, primary, secondary)
 
-        self.modifier(self.app.activeProduct.allParameters,
-                      self.app.activeProduct.userParameters,
-                      self.finger_dimension, self.offset_dimension,
-                      self.finger_cut, self.finger_pattern,
-                      getattr(self, 'corner_cut', None),
-                      getattr(self, 'corner_pattern', None))
+        if not self.inputs.parametric:
+            self.modifier(self.alias,
+                          self.app.activeProduct.allParameters,
+                          self.app.activeProduct.userParameters,
+                          self.inputs,
+                          self.finger_dimension, self.offset_dimension,
+                          self.finger_cut, self.finger_pattern,
+                          getattr(self, 'corner_cut', None),
+                          getattr(self, 'corner_pattern', None),
+                          getattr(self, 'left_dimension', None),
+                          getattr(self, 'right_dimension', None))
 
     def draw_corner(self, sketch, lines, extrudes, body, primary, secondary):
-        self.draw_left_corner(sketch, lines)
-        self.draw_right_corner(sketch, lines)
+        self.left_corner = self.draw_left_corner(sketch, lines)
+        self.right_corner = self.draw_right_corner(sketch, lines)
 
         name = '{} Corner Cut Extrude'.format(self.name)
         profiles = [sketch.profiles.item(1), sketch.profiles.item(2)]
@@ -85,12 +90,105 @@ class FingerManager:
         self.corner_pattern = self.duplicate(dname, self.corner_cut, 1, 0,
                                              2, primary, secondary, body)
 
+        if self.border.is_vertical:
+            self.constrain_vertical_corners(sketch, self.left_corner, self.right_corner)
+        else:
+            self.constrain_horizontal_corners(sketch, self.left_corner, self.right_corner)
+
+    def constrain_horizontal_corners(self, sketch, left_corner, right_corner):
+        dimensions = sketch.sketchDimensions
+        constraints = sketch.geometricConstraints
+        lreference = left_corner.bottom.left.geometry
+        rreference = right_corner.bottom.left.geometry
+
+        self.left_dimension = dimensions.addDistanceDimension(
+            left_corner.bottom.left.point,
+            left_corner.bottom.right.point,
+            HorizontalDimension,
+            Point3D.create(lreference.x + .5, lreference.y - .5, 0)
+        )
+        constraints.addCoincident(
+            left_corner.bottom.left.point,
+            self.border.bottom.left.point
+        )
+        constraints.addCoincident(
+            left_corner.top.right.point,
+            self.border.top.line
+        )
+        constraints.addHorizontal(left_corner.bottom.line)
+        constraints.addHorizontal(left_corner.top.line)
+        constraints.addVertical(left_corner.left.line)
+        constraints.addVertical(left_corner.right.line)
+
+        self.right_dimension = dimensions.addDistanceDimension(
+            right_corner.bottom.left.point,
+            right_corner.bottom.right.point,
+            HorizontalDimension,
+            Point3D.create(rreference.x + .5, rreference.y - .5, 0)
+        )
+        constraints.addCoincident(
+            right_corner.bottom.left.point,
+            self.border.bottom.line
+        )
+        constraints.addCoincident(
+            right_corner.top.right.point,
+            self.border.top.right.point
+        )
+        constraints.addHorizontal(right_corner.bottom.line)
+        constraints.addHorizontal(right_corner.top.line)
+        constraints.addVertical(right_corner.left.line)
+        constraints.addVertical(right_corner.right.line)
+
+    def constrain_vertical_corners(self, sketch, left_corner, right_corner):
+        dimensions = sketch.sketchDimensions
+        constraints = sketch.geometricConstraints
+        lreference = left_corner.bottom.left.geometry
+        rreference = right_corner.bottom.left.geometry
+
+        self.left_dimension = dimensions.addDistanceDimension(
+            left_corner.bottom.left.point,
+            left_corner.bottom.right.point,
+            HorizontalDimension,
+            Point3D.create(lreference.x + .5, lreference.y - .5, 0)
+        )
+        constraints.addCoincident(
+            left_corner.bottom.left.point,
+            self.border.bottom.left.point
+        )
+        constraints.addCoincident(
+            left_corner.top.right.point,
+            self.border.top.line
+        )
+        constraints.addHorizontal(left_corner.bottom.line)
+        constraints.addHorizontal(left_corner.top.line)
+        constraints.addVertical(left_corner.left.line)
+        constraints.addVertical(left_corner.right.line)
+
+        self.right_dimension = dimensions.addDistanceDimension(
+            right_corner.bottom.left.point,
+            right_corner.bottom.right.point,
+            HorizontalDimension,
+            Point3D.create(rreference.x + .5, rreference.y - .5, 0)
+        )
+        constraints.addCoincident(
+            right_corner.bottom.left.point,
+            self.border.bottom.line
+        )
+        constraints.addCoincident(
+            right_corner.top.right.point,
+            self.border.top.right.point
+        )
+        constraints.addHorizontal(right_corner.bottom.line)
+        constraints.addHorizontal(right_corner.top.line)
+        constraints.addVertical(right_corner.left.line)
+        constraints.addVertical(right_corner.right.line)
+
     def draw_left_corner(self, sketch, lines):
         start = self.border.bottom.left.geometry
         end = fusion.next_point(start, self.params.offset,
                                 self.border.width, self.border.is_vertical)
 
-        self.left_corner = fusion.Rectangle(lines.addTwoPointRectangle(start, end))
+        return fusion.Rectangle(lines.addTwoPointRectangle(start, end))
 
     def draw_right_corner(self, sketch, lines):
         start = fusion.next_point(self.border.bottom.right.geometry,
@@ -98,10 +196,9 @@ class FingerManager:
         end = fusion.next_point(start, self.params.offset,
                                 self.border.width, self.border.is_vertical)
 
-        self.right_corner = fusion.Rectangle(lines.addTwoPointRectangle(start, end))
+        return fusion.Rectangle(lines.addTwoPointRectangle(start, end))
 
     def draw_finger(self, sketch, lines, extrudes, body, primary, secondary):
-        self.ui.messageBox('Start distance: {}'.format(self.params.start))
         start = fusion.next_point(self.border.bottom.left.geometry, self.params.start,
                                   0, self.border.is_vertical)
         end = fusion.next_point(start, self.params.finger_length,
@@ -165,6 +262,11 @@ class FingerManager:
         reference = finger.bottom.left.geometry
 
         if self.border.is_vertical:
+            constraints.addVertical(self.finger.bottom.line)
+            constraints.addVertical(self.finger.top.line)
+            constraints.addHorizontal(self.finger.left.line)
+            constraints.addHorizontal(self.finger.right.line)
+
             self.finger_dimension = dimensions.addDistanceDimension(
                 finger.bottom.left.point,
                 finger.top.left.point,
@@ -187,6 +289,11 @@ class FingerManager:
                 self.border.left.line
             )
         else:
+            constraints.addHorizontal(self.finger.bottom.line)
+            constraints.addHorizontal(self.finger.top.line)
+            constraints.addVertical(self.finger.left.line)
+            constraints.addVertical(self.finger.right.line)
+
             self.finger_dimension = dimensions.addDistanceDimension(
                 finger.bottom.left.point,
                 finger.bottom.right.point,

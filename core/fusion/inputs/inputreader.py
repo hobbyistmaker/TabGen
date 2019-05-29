@@ -14,6 +14,7 @@ class InputReader:
         self.interior = inputs.itemById(defs.wallCountInputId)
         self.tab_first = inputs.itemById(defs.startWithTabInputId).value
         self.finger_type = inputs.itemById(defs.fingerTypeId).selectedItem.name
+        self.parametric = inputs.itemById(defs.parametricInputId).value
         self.err = inputs.itemById(defs.ERROR_MSG_INPUT_ID)
 
     @property
