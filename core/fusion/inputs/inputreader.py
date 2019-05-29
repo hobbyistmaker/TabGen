@@ -12,6 +12,7 @@ class InputReader:
         self.margin = inputs.itemById(defs.marginInputId)
         self.width = inputs.itemById(defs.tabWidthInputId)
         self.interior = inputs.itemById(defs.wallCountInputId)
+        self.repeat = inputs.itemById(defs.repeatInputId)
         self.tab_first = inputs.itemById(defs.startWithTabInputId).value
         self.finger_type = inputs.itemById(defs.fingerTypeId).selectedItem.name
         self.parametric = inputs.itemById(defs.parametricInputId).value
