@@ -45,6 +45,10 @@ class Line:
 
         if self.line.isReference:
             self.edge = self.line.referencedEntity
+        else:
+            self.edge = None
+
+        if self.edge:
             if self.edge.isParamReversed:
                 self.end_vertex = getattr(self.edge, 'startVertex', None)
                 self.start_vertex = getattr(self.edge, 'endVertex', None)
@@ -66,6 +70,17 @@ class Line:
         self.start = Point(self.start_point,
                            self.start_vertex,
                            self.start_point.geometry)
+
+    def find_reference(self, line, face):
+        line_start = line.startSketchPoint.worldGeometry
+        line_end = line.endSketchPoint.worldGeometry
+
+        for edge in face.edges:
+            start = edge.startVertex
+            end = edge.endVertex
+            if ((line_start.isEqualTo(start) and line_end.isEqualTo(end)) or
+                (line_end.isEqualTo(start) and line_start.isEqualTo(end))):
+                return edge
 
     @property
     def direction(self):

@@ -26,6 +26,7 @@ class FingerManager:
 
     def __init__(self, app, ui, inputs, name, alias, border):
         self.inputs = inputs
+        self.face = self.inputs.selected_face
         self.alias = alias
         self.border = border
         self.app = app
@@ -65,9 +66,6 @@ class FingerManager:
         # will fail after the corners are cut, since the edge reference
         # becomes invalid.
         self.draw_finger(sketch, lines, extrudes, body, primary, secondary)
-
-        if self.inputs.repeat.value > 1:
-            pass
 
         if self.params.offset and not self.inputs.tab_first:
             self.draw_corner(sketch, lines, extrudes, body, primary, secondary)
