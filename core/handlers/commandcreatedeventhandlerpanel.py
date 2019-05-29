@@ -173,15 +173,6 @@ class CommandCreatedEventHandlerPanel(CommandCreatedEventHandler):
                                                    0.1,
                                                    0.0)
 
-                inputs.addIntegerSpinnerCommandInput(
-                    defs.repeatInputId,
-                    'Repeat Pattern',
-                    0,
-                    200,
-                    1,
-                    self.config.DEFAULT_REPEAT_COUNT
-                    )
-
                 inputs.addTextBoxCommandInput(defs.ERROR_MSG_INPUT_ID,
                                               '',
                                               '',
