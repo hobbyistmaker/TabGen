@@ -34,3 +34,4 @@ class Configuration:
     DEFAULT_DUAL_EDGE = True
 
     DEFAULT_WALL_COUNT = 0
+    DEFAULT_REPEAT_COUNT = 0

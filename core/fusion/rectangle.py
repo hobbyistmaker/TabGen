@@ -41,12 +41,18 @@ def top_line(axes):
     return compare_lines(axes[0], axes[1], lambda k: k.y, True)
 
 
+class InvalidLinesError(Exception): pass
+
+
 class Rectangle:
 
     def __init__(self, lines):
         super().__init__()
 
         self.lines = lines
+
+        if len(self.lines) < 4:
+            raise InvalidLinesError
 
         self.__set_width_length(self.lines)
         self.__set_axes()

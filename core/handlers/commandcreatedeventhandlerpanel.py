@@ -173,17 +173,26 @@ class CommandCreatedEventHandlerPanel(CommandCreatedEventHandler):
                                                    0.1,
                                                    0.0)
 
+                inputs.addIntegerSpinnerCommandInput(
+                    defs.repeatInputId,
+                    'Repeat Pattern',
+                    0,
+                    200,
+                    1,
+                    self.config.DEFAULT_REPEAT_COUNT
+                    )
+
                 inputs.addTextBoxCommandInput(defs.ERROR_MSG_INPUT_ID,
                                               '',
                                               '',
                                               2,
                                               True)
 
-                inputs.addBoolValueInput(defs.parametricInputId,
-                                         'Disable Parametric',
-                                         True,
-                                         '',
-                                         self.config.DEFAULT_DISABLE_PARAMETRIC)
+                # inputs.addBoolValueInput(defs.parametricInputId,
+                #                          'Disable Parametric',
+                #                          True,
+                #                          '',
+                #                          self.config.DEFAULT_DISABLE_PARAMETRIC)
         except:
             self.ui.messageBox('{}:\n{}'.format(initializedFailedMsg,
                                                 traceback.format_exc(3)))

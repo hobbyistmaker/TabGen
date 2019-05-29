@@ -12,38 +12,19 @@ class InputReader:
         self.margin = inputs.itemById(defs.marginInputId)
         self.width = inputs.itemById(defs.tabWidthInputId)
         self.interior = inputs.itemById(defs.wallCountInputId)
+        self.repeat = inputs.itemById(defs.repeatInputId)
         self.tab_first = inputs.itemById(defs.startWithTabInputId).value
         self.finger_type = inputs.itemById(defs.fingerTypeId).selectedItem.name
         self.parametric = inputs.itemById(defs.parametricInputId).value
         self.err = inputs.itemById(defs.ERROR_MSG_INPUT_ID)
 
-    @property
-    def edge_selected(self):
-        return self.edge and self.edge.selectionCount > 0
-
-    @property
-    def face_selected(self):
-        return self.face and self.face.selectionCount > 0
-
-    @property
-    def selected_body(self):
-        return self.selected_face.body if self.selected_face else None
-
-    @property
-    def selected_face(self):
-        return self.face.selection(0).entity if self.face_selected else None
-
-    @property
-    def selected_edge(self):
-        return self.edge.selection(0).entity if self.edge_selected else None
-
-    @property
-    def single_edge_selected(self):
-        return self.placement.selectedItem.name == defs.singleEdgeId
-
-    @property
-    def dual_edge_selected(self):
-        return not self.single_edge_selected
+        self.face_selected = self.face and self.face.selectionCount > 0
+        self.selected_face = self.face.selection(0).entity if self.face_selected else None
+        self.selected_body = self.selected_face.body if self.selected_face else None
+        self.edge_selected = self.edge and self.edge.selectionCount > 0
+        self.selected_edge = self.edge.selection(0).entity if self.edge_selected else None
+        self.single_edge_selected = self.placement.selectedItem.name == defs.singleEdgeId
+        self.dual_edge_selected = not self.single_edge_selected
 
     def alternate_edge(self, edge):
         if not self.face_selected:
