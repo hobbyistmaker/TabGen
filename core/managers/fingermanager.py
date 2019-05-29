@@ -21,6 +21,8 @@ EDT = PatternDistanceType.ExtentPatternDistanceType
 HorizontalDimension = do.HorizontalDimensionOrientation
 VerticalDimension = do.VerticalDimensionOrientation
 
+class PrimaryAxisMissing(Exception): pass
+
 
 class FingerManager:
 
@@ -85,7 +87,7 @@ class FingerManager:
         # Create a Timeline group to keep things organized
         end_mp = timeline.markerPosition
         tlgroup = timeline.timelineGroups.add(start_mp, end_mp-1)
-        # tlgroup.name = '{} Finger Group'.format(self.name)
+        tlgroup.name = '{} Finger Group'.format(self.name)
 
     def draw_corner(self, sketch, lines, extrudes, body, primary, secondary):
         self.left_corner = self.draw_left_corner(sketch, lines)
@@ -229,6 +231,10 @@ class FingerManager:
 
     def duplicate(self, name, features, quantity, distance,
                   squantity, primary, secondary, body):
+
+        if not primary or not primary.isValid:
+            raise PrimaryAxisMissing
+
         entities = ObjectCollection.create()
         for feature in features:
             entities.add(feature)
@@ -240,11 +246,13 @@ class FingerManager:
 
         input_ = patterns.createInput(entities, primary, quantity, distance, EDT)
 
-        if self.params.distance > 0:
+        if self.params.distance > 0 and secondary and secondary.isValid:
             second_distance = vi.createByReal(self.params.distance - self.params.depth)
             input_.setDirectionTwo(secondary,
                                    vi.createByReal(squantity),
                                    second_distance)
+        else:
+            self.ui.messageBox('secondary valid: {}'.format(secondary.isValid))
 
         pattern = patterns.add(input_)
         pattern.name = name

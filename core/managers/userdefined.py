@@ -127,11 +127,12 @@ def user_defined_params(alias, all_parameters, user_parameters, inputs,
     finger_pattern.distanceTwo.expression = '{} - abs({})'.format(face_distance, depth)
     finger_pattern.distanceTwo.name = '{}_secondary'.format(alias)
 
-    if lcorner_dimension:
-        lcorner_dimension.parameter.expression = offset
-        lcorner_dimension.parameter.name = '{}_offset'.format(alias)
-    if rcorner_dimension:
-        rcorner_dimension.parameter.expression = lcorner_dimension.parameter.name
+    # Corner dimensions cause a bug with adjacent faces -- no idea why
+    # if lcorner_dimension:
+    #     lcorner_dimension.parameter.expression = offset
+    #     lcorner_dimension.parameter.name = '{}_offset'.format(alias)
+    # if rcorner_dimension:
+    #     rcorner_dimension.parameter.expression = lcorner_dimension.parameter.name
 
     if corner_cut:
         corner_cut.extentOne.distance.expression = finger_cut.extentOne.distance.name

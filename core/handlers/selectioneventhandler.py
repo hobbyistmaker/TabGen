@@ -32,6 +32,9 @@ class SelectionEventHandler(SelectionEventHandler):
                 inputs.alternate_face(entity)):
             return False
 
+        if entity.objectType == 'Sketch':
+            return False
+
         return inputs.edge_parallel_to_face(entity)
 
     def check_selection(self, entity, selection, inputs):

@@ -9,7 +9,7 @@ from .face import distance_between
 from .face import edge_on_face
 from .face import face_orientation
 from .face import parallel_to_edge
-from .face import perpendicular_edge_from_vertex
+from .face import perpendicular_edge_from_vertex, perpendicular_edge_from_line
 from .face import vertex_distance
 from .rectangle import Rectangle
 from .sketch import next_point
@@ -28,6 +28,7 @@ __all__ = [
     next_point,
     number_of_faces,
     parallel_to_edge,
+    perpendicular_edge_from_line,
     perpendicular_edge_from_vertex,
     Rectangle,
     vertex_distance
