@@ -18,18 +18,23 @@ def create(app, ui, inputs):
 
     sketch = face.body.parentComponent.sketches.add(face)
 
-    lines = sketch.sketchCurves.sketchLines
+    if face is None or face.isValid is False:
+        raise InvalidFaceSelected
 
     # Let's project the face outside edges into the sketch.
     # This makes it easier to find the axes for duplicating
     # fingers across opposing sides of the body
     for edge in face.edges[0:4]:
-        ref = sketch.project(edge)
+        sketch.project(edge)
 
+    lines = sketch.sketchCurves.sketchLines
     # Change the default edges into construction lines so that
     # we don't have unneeded profiles in the sketch
     for line in lines[0:4]:
         line.isConstruction = True
+
+    for edge in face.edges:
+        ui.messageBox('Found edge.')
 
     # Create a border object from the projected edges
     # and make them construction lines to prevent unneeded

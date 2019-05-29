@@ -5,8 +5,6 @@ from adsk.core import ValueInput as vi
 from .properties import Properties
 
 def automatic(inputs):
-    repeats = max(1, inputs.repeat.value)
-
     default_width = abs(inputs.width.value)
     face_length = abs(inputs.length.value)
     distance = abs(inputs.distance.value)

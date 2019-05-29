@@ -14,6 +14,7 @@ distanceInputId = 'distanceCommandInput'
 marginInputId = 'marginCommandInput'
 wallCountInputId = 'wallCountValueInput'
 repeatInputId = 'repeatValueInput'
+patternDistanceInputId = 'patternValueInput'
 
 parentPanelId = 'SolidScriptsAddinsPanel'
 
