@@ -26,14 +26,6 @@ def user_defined(inputs):
         # Offset: Portion of the face excluded from use
         offset = 0
         notches = math.floor(fingers/2)
-    elif margin:
-        # pattern_distance = finger_distance - finger_length * 5
-        # offset = (face_length - finger_distance)/2 + finger_length
-        # start = (face_length - finger_distance)/2 + finger_length*2
-        pattern_distance = finger_distance - finger_length
-        offset = (face_length - finger_distance)/2
-        start = (face_length - finger_distance)/2 + finger_length
-        notches = math.ceil(fingers/2)
     else:
         # If there isn't a margin, we'll offset the fingers from the
         # sides so that fingers on interior walls don't end up too close
