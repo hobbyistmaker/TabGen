@@ -32,16 +32,16 @@ def user_defined(inputs):
         # start = (face_length - finger_distance)/2 + finger_length*2
         pattern_distance = finger_distance - finger_length
         offset = (face_length - finger_distance)/2
-        start = (face_length - finger_distance)/2
+        start = (face_length - finger_distance)/2 + finger_length
         notches = math.ceil(fingers/2)
     else:
         # If there isn't a margin, we'll offset the fingers from the
         # sides so that fingers on interior walls don't end up too close
         # to the edges.
-        pattern_distance = finger_distance - finger_length * 5
-        offset = (face_length - finger_distance)/2 + finger_length
-        start = (face_length - finger_distance)/2 + finger_length*2
-        notches = math.ceil(fingers/2) - 2
+        pattern_distance = finger_distance - finger_length
+        offset = (face_length - finger_distance)/2
+        start = (face_length - finger_distance)/2 + finger_length
+        notches = math.ceil(fingers/2)
 
     return Properties(finger_length, face_length, distance, depth, margin,
                       adjusted_length, fingers, finger_length, start, notches,
@@ -49,7 +49,7 @@ def user_defined(inputs):
 
 
 def user_defined_params(alias, all_parameters, user_parameters, inputs,
-                     finger_dimension, offset_dimension,
+                     finger_dimension, start_dimension,
                      finger_cut, finger_pattern,
                      corner_cut, corner_pattern,
                      lcorner_dimension, rcorner_dimension):
@@ -111,12 +111,12 @@ def user_defined_params(alias, all_parameters, user_parameters, inputs,
         notches = 'floor({}/2)'.format(fingers)
     else:
         pattern_distance = '({} - {} * (5*{}))'.format(finger_distance, finger_length, margin_truth)
-        offset = '(({} - {})/2 + ({}*{}))'.format(face_length, finger_distance, finger_dimension.parameter.name, margin_truth)
-        start = '({} + ({}*{}))'.format(offset, finger_dimension.parameter.name, margin_truth)
+        offset = '({} - {})/2'.format(face_length, finger_distance)
+        start = '{}'.format(finger_dimension.parameter.name)
         notches = 'ceil({}/2) - (2*{})'.format(fingers, margin_truth)
 
-    offset_dimension.parameter.expression = start
-    offset_dimension.parameter.name = '{}_start_width'.format(alias)
+    start_dimension.parameter.expression = '{} + {}'.format(offset, start)
+    start_dimension.parameter.name = '{}_start_width'.format(alias)
 
     finger_pattern.quantityOne.expression = notches
     finger_pattern.quantityOne.name = '{}_notches'.format(alias)
@@ -128,11 +128,11 @@ def user_defined_params(alias, all_parameters, user_parameters, inputs,
     finger_pattern.distanceTwo.name = '{}_secondary'.format(alias)
 
     # Corner dimensions cause a bug with adjacent faces -- no idea why
-    # if lcorner_dimension:
-    #     lcorner_dimension.parameter.expression = offset
-    #     lcorner_dimension.parameter.name = '{}_offset'.format(alias)
-    # if rcorner_dimension:
-    #     rcorner_dimension.parameter.expression = lcorner_dimension.parameter.name
+    if lcorner_dimension:
+        lcorner_dimension.parameter.expression = offset
+        lcorner_dimension.parameter.name = '{}_offset'.format(alias)
+    if rcorner_dimension:
+        rcorner_dimension.parameter.expression = lcorner_dimension.parameter.name
 
     if corner_cut:
         corner_cut.extentOne.distance.expression = finger_cut.extentOne.distance.name
