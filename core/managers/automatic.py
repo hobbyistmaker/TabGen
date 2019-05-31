@@ -86,34 +86,33 @@ def automatic_params(alias, all_parameters, user_parameters, inputs,
     finger_length = '({}/{})'.format(adjusted_length, fingers)
 
     finger_dimension.parameter.expression = finger_length
-    finger_dimension.parameter.name = '{}_finger_width'.format(alias)
+    # finger_dimension.parameter.name = '{}_finger_width'.format(alias)
 
     if inputs.tab_first:
         pattern_distance = '({} - {}*3)'.format(adjusted_length, finger_length)
-        start = '({} + {})'.format(margin, finger_length)
-        offset = '({})'.format(margin)
         notches = 'floor({}/2)'.format(fingers)
     else:
         pattern_distance = '({} - {})'.format(adjusted_length, finger_length)
-        offset = '({})'.format(margin)
-        start = '({})'.format(margin)
         notches = 'ceil({}/2)'.format(fingers, margin_truth)
 
+    start = '({} + {})'.format(margin, finger_length)
+    offset = '({})'.format(margin)
+
     offset_dimension.parameter.expression = start
-    offset_dimension.parameter.name = '{}_start_width'.format(alias)
+    # offset_dimension.parameter.name = '{}_start_width'.format(alias)
 
     finger_pattern.quantityOne.expression = notches
-    finger_pattern.quantityOne.name = '{}_notches'.format(alias)
+    # finger_pattern.quantityOne.name = '{}_notches'.format(alias)
     finger_pattern.distanceOne.expression = pattern_distance
-    finger_pattern.distanceOne.name = '{}_pattern_distance'.format(alias)
+    # finger_pattern.distanceOne.name = '{}_pattern_distance'.format(alias)
     finger_pattern.quantityTwo.expression = wall_count
-    finger_pattern.quantityTwo.name = '{}_walls'.format(alias)
+    # finger_pattern.quantityTwo.name = '{}_walls'.format(alias)
     finger_pattern.distanceTwo.expression = '{} - abs({})'.format(face_distance, depth)
-    finger_pattern.distanceTwo.name = '{}_secondary'.format(alias)
+    # finger_pattern.distanceTwo.name = '{}_secondary'.format(alias)
 
     if lcorner_dimension:
         lcorner_dimension.parameter.expression = offset
-        lcorner_dimension.parameter.name = '{}_offset'.format(alias)
+        # lcorner_dimension.parameter.name = '{}_offset'.format(alias)
     if rcorner_dimension:
         rcorner_dimension.parameter.expression = lcorner_dimension.parameter.name
 
@@ -133,5 +132,5 @@ def set_parameter(alias, name, input_, all_params, parameter, format_str):
         expression = input_value
 
     parameter.expression = format_str.format(expression)
-    parameter.name = '{}_{}'.format(alias, name)
+    # parameter.name = '{}_{}'.format(alias, name)
     return parameter.name
