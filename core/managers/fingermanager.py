@@ -251,8 +251,6 @@ class FingerManager:
             input_.setDirectionTwo(secondary,
                                    vi.createByReal(squantity),
                                    second_distance)
-        else:
-            self.ui.messageBox('secondary valid: {}'.format(secondary.isValid))
 
         pattern = patterns.add(input_)
         pattern.name = name
