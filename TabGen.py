@@ -1,3 +1,16 @@
+# Author-
+# Description-
+import logging
+
+import adsk.cam
+import adsk.core
+import adsk.fusion
+import traceback
+
+from .config import Configuration
+from .core import definitions as defs
+from .core.handlers import CommandCreatedEventHandlerPanel
+
 START_MSG = """The "Generate Tabs" command has been added
 to the Add-ins panel of the MODEL workspace."""
 
