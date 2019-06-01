@@ -1,5 +1,6 @@
 from .dimensions import dimensions
 from .distancebetween import distance_between
+from .distancebetween import distance_between_faces
 from .edgeonface import edge_on_face
 from .faceorientation import face_orientation
 from .paralleltoedge import parallel_to_edge
@@ -9,6 +10,7 @@ from .vertexdistance import vertex_distance
 __all__ = [
     dimensions,
     distance_between,
+    distance_between_faces,
     edge_on_face,
     face_orientation,
     parallel_to_edge,

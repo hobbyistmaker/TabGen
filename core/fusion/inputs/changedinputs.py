@@ -1,10 +1,23 @@
 from ..face import dimensions
 from ..face import distance_between
+from ..face import distance_between_faces
 
 from .inputreader import InputReader
 
 
 class ChangedInputs(InputReader):
+
+    def find_opposite(self):
+        if self.face_selected and not self.single_edge_selected:
+            plane = self.selected_face.geometry
+            body = self.selected_face.body
+            for alternate in body.faces:
+                alternate_plane = alternate.geometry
+                if alternate_plane.isParallelToPlane(plane):
+                    if alternate.area == self.selected_face.area:
+                        self.edge.addSelection(alternate)
+        elif self.single_edge_selected:
+            self.edge.clearSelection()
 
     def finger_placement(self):
         self.distance.isVisible = not self.single_edge_selected
@@ -32,5 +45,5 @@ class ChangedInputs(InputReader):
         if not self.face_selected or not self.edge_selected:
             return 0
 
-        return distance_between(self.selected_face,
-                                self.selected_edge)
+        return distance_between_faces(self.selected_face,
+                                      self.selected_edge)

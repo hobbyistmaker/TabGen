@@ -54,7 +54,8 @@ class CommandCreatedEventHandlerPanel(CommandCreatedEventHandler):
 
             else:
                 cmd = args.command
-                cmd.helpFile = 'resources/help.html'
+                # cmd.helpFile = 'resources/help.html'
+                cmd.helpFile = self.config.help_file
 
                 # Add onExecute event handler
                 execute = CommandExecuteHandler(self.config)
@@ -112,9 +113,9 @@ class CommandCreatedEventHandlerPanel(CommandCreatedEventHandler):
                 self.add_selection(
                     inputs,
                     defs.dualEdgeSelectId,
-                    'Duplicate Edge',
-                    'Edge on opposite side for dual-edge cuts.',
-                    'LinearEdges',
+                    'Secondary Face',
+                    'Opposite face for dual-edge cuts.',
+                    'PlanarFaces',
                     0,
                     1
                 )

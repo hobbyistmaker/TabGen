@@ -122,7 +122,6 @@ def user_defined_params(alias, all_parameters, user_parameters, inputs,
         finger_pattern.quantityOne.expression = 'ceil(({} / {})/2)'.format(finger_distance.parameter.name,
                                                                             finger_length)
 
-    # finger_pattern.quantityOne.expression = notches
     finger_pattern.distanceOne.expression = pattern_distance.parameter.name
 
     offset = '(({} - {})/2)'.format(face_length, finger_distance.parameter.name)

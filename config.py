@@ -1,4 +1,5 @@
 import logging
+import os
 
 
 class Configuration:
@@ -43,4 +44,5 @@ class Configuration:
         self.app = app
         self.ui = app.userInterface
         self.design = app.activeProduct
+        self.help_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'resources', 'help.html')
         self.inputs = None

@@ -30,6 +30,9 @@ class InputChangedHandler(InputChangedEventHandler):
             if id_ == defs.fingerPlaceId:
                 inputs.finger_placement()
 
+            if id_ == defs.selectedFaceInputId or id_ == defs.fingerPlaceId:
+                inputs.find_opposite()
+
             if id_ in [defs.selectedFaceInputId,
                        defs.dualEdgeSelectId,
                        defs.fingerPlaceId

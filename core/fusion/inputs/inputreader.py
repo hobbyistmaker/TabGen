@@ -17,13 +17,28 @@ class InputReader:
         self.parametric = inputs.itemById(defs.parametricInputId).value
         self.err = inputs.itemById(defs.ERROR_MSG_INPUT_ID)
 
-        self.face_selected = self.face and self.face.selectionCount > 0
-        self.selected_face = self.face.selection(0).entity if self.face_selected else None
-        self.selected_body = self.selected_face.body if self.selected_face else None
-        self.edge_selected = self.edge and self.edge.selectionCount > 0
-        self.selected_edge = self.edge.selection(0).entity if self.edge_selected else None
         self.single_edge_selected = self.placement.selectedItem.name == defs.singleEdgeId
         self.dual_edge_selected = not self.single_edge_selected
+
+    @property
+    def face_selected(self):
+        return self.face and self.face.selectionCount > 0
+
+    @property
+    def selected_face(self):
+        return self.face.selection(0).entity if self.face_selected else None
+
+    @property
+    def edge_selected(self):
+        return self.edge and self.edge.selectionCount > 0
+
+    @property
+    def selected_edge(self):
+        return self.edge.selection(0).entity if self.edge_selected else None
+
+    @property
+    def selected_body(self):
+        return self.selected_face.body if self.selected_face else None
 
     def alternate_edge(self, edge):
         if not self.face_selected:
@@ -41,11 +56,12 @@ class InputReader:
         if not self.face_selected:
             return True
 
-        return self.selected_face.geometry.isParallelToLine(edge.geometry)
+        # return self.selected_face.geometry.isParallelToLine(edge.geometry)
+        return self.selected_face.geometry.isParallelToPlane(edge.geometry)
 
     def edge_parallel_to_face(self, face):
         if not self.edge_selected:
             return True
 
-        return face.geometry.isParallelToLine(self.selected_edge.geometry)
-
+        # return face.geometry.isParallelToLine(self.selected_edge.geometry)
+        return self.face.geometry.isParallelToPlane(self.selected_edge.geometry)
