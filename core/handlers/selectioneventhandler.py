@@ -28,24 +28,22 @@ class SelectionEventHandler(SelectionEventHandler):
         return inputs.face_parallel_to_edge(entity)
 
     def check_face_selection(self, entity, inputs):
-        if not (fusion.check_if_edge(entity) and
-                inputs.alternate_face(entity)):
+        if not (fusion.check_if_edge(entity)):
             return False
 
         if entity.objectType == 'Sketch':
             return False
 
-        return inputs.edge_parallel_to_face(entity)
+        return inputs.opposite_face(entity)
 
     def check_selection(self, entity, selection, inputs):
         if not self.valid_selection(selection):
             return True
 
         try:
-            if selection.id == defs.selectedFaceInputId:
+            if selection.id in [defs.selectedFaceInputId,
+                                defs.dualEdgeSelectId]:
                 return self.check_face_selection(entity, inputs)
-            else:
-                return self.check_edge_selection(entity, inputs)
         except:
             raise SelectionValidationError
 

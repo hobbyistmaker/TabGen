@@ -16,7 +16,7 @@ def create(config):
     sketch = initialize_sketch(face)
     border = create_sketch_border(sketch)
 
-    name = config.inputs.selected_body.name
+    name = config.inputs.name
     orientation = fusion.face_orientation(face)
     face_id = fusion.add_face(face)
 

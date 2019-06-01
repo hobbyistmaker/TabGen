@@ -15,23 +15,33 @@ class ChangedInputs(InputReader):
                 alternate_plane = alternate.geometry
                 if alternate_plane.isParallelToPlane(plane):
                     if alternate.area == self.selected_face.area:
-                        self.edge.addSelection(alternate)
-        elif self.single_edge_selected:
-            self.edge.clearSelection()
+                        if self.edge.addSelection(alternate):
+                            self.edge_selected = self.edge.selectionCount > 0
+                            self.selected_edge = self.edge.selection(0).entity if self.edge_selected else None
 
     def finger_placement(self):
-        self.distance.isVisible = not self.single_edge_selected
-        self.edge.isVisible = not self.single_edge_selected
-        self.edge.isEnabled = not self.single_edge_selected
-
         if self.single_edge_selected:
             self.edge.clearSelection()
             self.face.hasFocus = self.edge.hasFocus
+            self.edge.isEnabled = False
+            self.edge.isVisible = False
+            self.distance.isVisible = False
+            self.distance.value = 0
+            self.distance.isEnabled = False
+        else:
+            self.edge.isEnabled = True
+            self.edge.isVisible = True
+            self.distance.isVisible = True
+            self.distance.isEnabled = True
 
     def update_inputs(self):
-        self.edge.hasFocus = self.face_selected and not self.edge_selected
+        if self.edge.isEnabled:
+            self.edge.hasFocus = self.face_selected and not self.edge_selected
+
         self.length.value = self.length_value
-        self.distance.value = self.distance_value
+
+        if self.distance.isEnabled:
+            self.distance.value = self.distance_value
 
     @property
     def length_value(self):

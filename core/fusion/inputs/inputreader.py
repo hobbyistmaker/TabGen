@@ -3,7 +3,7 @@ from ... import definitions as defs
 class InputReader:
 
     def __init__(self, inputs):
-        self.placement = inputs.itemById(defs.fingerPlaceId)
+        self.placement = inputs.itemById(defs.fingerPlaceId).selectedItem.name
         self.face = inputs.itemById(defs.selectedFaceInputId)
         self.edge = inputs.itemById(defs.dualEdgeSelectId)
         self.length = inputs.itemById(defs.lengthInputId)
@@ -17,28 +17,25 @@ class InputReader:
         self.parametric = inputs.itemById(defs.parametricInputId).value
         self.err = inputs.itemById(defs.ERROR_MSG_INPUT_ID)
 
-        self.single_edge_selected = self.placement.selectedItem.name == defs.singleEdgeId
-        self.dual_edge_selected = not self.single_edge_selected
+        self.face_selected = self.face.selectionCount > 0
+        self.selected_face = self.face.selection(0).entity if self.face_selected else None
+
+        self.selected_body = self.selected_face.body if self.selected_face else None
+
+        self.edge_selected = self.edge.selectionCount > 0
+        self.selected_edge = self.edge.selection(0).entity if self.edge_selected else None
 
     @property
-    def face_selected(self):
-        return self.face and self.face.selectionCount > 0
+    def name(self):
+        return self.selected_body.name
 
     @property
-    def selected_face(self):
-        return self.face.selection(0).entity if self.face_selected else None
+    def dual_edge_selected(self):
+        return not self.single_edge_selected
 
     @property
-    def edge_selected(self):
-        return self.edge and self.edge.selectionCount > 0
-
-    @property
-    def selected_edge(self):
-        return self.edge.selection(0).entity if self.edge_selected else None
-
-    @property
-    def selected_body(self):
-        return self.selected_face.body if self.selected_face else None
+    def single_edge_selected(self):
+        return self.placement == defs.singleEdgeId
 
     def alternate_edge(self, edge):
         if not self.face_selected:
@@ -56,12 +53,25 @@ class InputReader:
         if not self.face_selected:
             return True
 
-        # return self.selected_face.geometry.isParallelToLine(edge.geometry)
         return self.selected_face.geometry.isParallelToPlane(edge.geometry)
 
     def edge_parallel_to_face(self, face):
         if not self.edge_selected:
             return True
 
-        # return face.geometry.isParallelToLine(self.selected_edge.geometry)
-        return self.face.geometry.isParallelToPlane(self.selected_edge.geometry)
+        return face.geometry.isParallelToPlane(self.selected_edge.geometry)
+
+    def opposite_face(self, face):
+        if self.edge_selected and self.face_selected:
+            return False
+
+        if self.face_selected:
+            if (self.selected_face == face) or (not face.geometry.isParallelToPlane(self.selected_face.geometry)):
+                return False
+            return face.area == self.selected_face.area
+        elif self.edge_selected:
+            if (self.selected_edge == face) or (not face.geometry.isParallelToPlane(self.selected_edge.geometry)):
+                return False
+            return face.area == self.selected_edge.area
+
+        return True

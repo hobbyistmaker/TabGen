@@ -1,11 +1,11 @@
 import traceback
 
-from adsk.core import Application
 from adsk.core import ValidateInputsEventHandler
 
 from .. import fusion
 
 validateFailedMsg = 'TabGen validate inputs failed: {}'
+
 
 class InputValidationError(Exception): pass
 
@@ -16,9 +16,10 @@ def check_edge(inputs):
 
     return fusion.check_if_edge(inputs.selected_face)
 
+
 def check_all(inputs):
     if ((not inputs.face_selected) or
-        (inputs.dual_edge_selected and not inputs.edge_selected)):
+       (inputs.dual_edge_selected and not inputs.edge_selected)):
         return False
 
     return check_edge(inputs)
