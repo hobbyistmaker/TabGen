@@ -4,6 +4,20 @@ from adsk.core import ValueInput as vi
 
 from .properties import Properties
 
+
+def set_parameter(input_, all_params, parameter, format_str):
+    input_value = input_.expression
+
+    param = all_params.itemByName(input_value)
+    if param:
+        expression = param.name
+    else:
+        expression = input_value
+
+    parameter.expression = format_str.format(expression)
+    return parameter.name
+
+
 def user_defined(inputs):
     finger_length = abs(inputs.width.value)
     face_length = abs(inputs.length.value)
@@ -47,7 +61,7 @@ def user_defined_params(alias, all_parameters, user_parameters, inputs,
 
     wall_count = '({} + 2)'.format(inputs.interior.value)
 
-    depth = set_parameter(alias, 'depth', inputs.depth,
+    depth = set_parameter(inputs.depth,
                           all_parameters, finger_cut.extentOne.distance,
                           '-abs({})')
 
@@ -138,15 +152,3 @@ def user_defined_params(alias, all_parameters, user_parameters, inputs,
     if corner_pattern:
         corner_pattern.quantityTwo.expression = '2'
         corner_pattern.distanceTwo.expression = finger_pattern.distanceTwo.name
-
-def set_parameter(alias, name, input_, all_params, parameter, format_str):
-    input_value = input_.expression
-
-    param = all_params.itemByName(input_value)
-    if param:
-        expression = param.name
-    else:
-        expression = input_value
-
-    parameter.expression = format_str.format(expression)
-    return parameter.name

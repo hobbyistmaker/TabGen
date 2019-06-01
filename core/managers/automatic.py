@@ -43,7 +43,7 @@ def automatic_params(alias, all_parameters, user_parameters, inputs,
 
     wall_count = '({} + 2)'.format(inputs.interior.value)
 
-    depth = set_parameter(alias, 'depth', inputs.depth,
+    depth = set_parameter(inputs.depth,
                           all_parameters, finger_cut.extentOne.distance,
                           '-abs({})')
 
@@ -119,7 +119,8 @@ def automatic_params(alias, all_parameters, user_parameters, inputs,
         corner_pattern.quantityTwo.expression = '2'
         corner_pattern.distanceTwo.expression = finger_pattern.distanceTwo.name
 
-def set_parameter(alias, name, input_, all_params, parameter, format_str):
+
+def set_parameter(input_, all_params, parameter, format_str):
     input_value = input_.expression
 
     param = all_params.itemByName(input_value)
@@ -129,5 +130,4 @@ def set_parameter(alias, name, input_, all_params, parameter, format_str):
         expression = input_value
 
     parameter.expression = format_str.format(expression)
-    # parameter.name = '{}_{}'.format(alias, name)
     return parameter.name
