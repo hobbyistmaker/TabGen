@@ -15,6 +15,7 @@ def automatic(inputs):
     fingers = (math.ceil(max(3, math.floor(adjusted_length / default_width))/2)*2)-1
 
     finger_length = adjusted_length / fingers
+    finger_distance = finger_length * fingers
 
     if inputs.tab_first:
         pattern_distance = adjusted_length - finger_length * 3
@@ -28,13 +29,15 @@ def automatic(inputs):
         notches = math.ceil(fingers/2)
 
     return Properties(default_width, face_length, distance, depth, margin,
-                      adjusted_length, fingers, finger_length, start, notches,
+                      adjusted_length, fingers, finger_length, finger_distance, start, notches,
                       pattern_distance, offset)
 
 
 def automatic_params(alias, all_parameters, user_parameters, inputs,
                      finger_dimension, offset_dimension,
                      finger_cut, finger_pattern,
+                     finger_distance, adjusted_length,
+                     pattern_distance,
                      corner_cut, corner_pattern,
                      lcorner_dimension, rcorner_dimension):
 
@@ -81,38 +84,32 @@ def automatic_params(alias, all_parameters, user_parameters, inputs,
                                             inputs.width.unitType,
                                             'TabGen: default finger width').name
 
-    adjusted_length = '(({}) - ({})*2)'.format(face_length, margin)
-    fingers = '((ceil(max(3; floor({} / {}))/2)*2)-1)'.format(adjusted_length, default_width)
-    finger_length = '({}/{})'.format(adjusted_length, fingers)
+    adjusted_length.parameter.expression = '(({}) - ({})*2)'.format(face_length, margin)
+    fingers = '((ceil(max(3; floor({} / {}))/2)*2)-1)'.format(adjusted_length.parameter.name, default_width)
+    finger_length = '({}/{})'.format(adjusted_length.parameter.name, fingers)
 
     finger_dimension.parameter.expression = finger_length
-    # finger_dimension.parameter.name = '{}_finger_width'.format(alias)
+    finger_distance.parameter.expression = adjusted_length.parameter.name
 
     if inputs.tab_first:
-        pattern_distance = '({} - {}*3)'.format(adjusted_length, finger_length)
+        pattern_distance = '({} - {}*3)'.format(adjusted_length.parameter.name, finger_length)
         notches = 'floor({}/2)'.format(fingers)
     else:
-        pattern_distance = '({} - {})'.format(adjusted_length, finger_length)
+        pattern_distance = '({} - {})'.format(adjusted_length.parameter.name, finger_length)
         notches = 'ceil({}/2)'.format(fingers, margin_truth)
 
     start = '({} + {})'.format(margin, finger_length)
     offset = '({})'.format(margin)
 
     offset_dimension.parameter.expression = start
-    # offset_dimension.parameter.name = '{}_start_width'.format(alias)
 
     finger_pattern.quantityOne.expression = notches
-    # finger_pattern.quantityOne.name = '{}_notches'.format(alias)
     finger_pattern.distanceOne.expression = pattern_distance
-    # finger_pattern.distanceOne.name = '{}_pattern_distance'.format(alias)
     finger_pattern.quantityTwo.expression = wall_count
-    # finger_pattern.quantityTwo.name = '{}_walls'.format(alias)
     finger_pattern.distanceTwo.expression = '{} - abs({})'.format(face_distance, depth)
-    # finger_pattern.distanceTwo.name = '{}_secondary'.format(alias)
 
     if lcorner_dimension:
         lcorner_dimension.parameter.expression = offset
-        # lcorner_dimension.parameter.name = '{}_offset'.format(alias)
     if rcorner_dimension:
         rcorner_dimension.parameter.expression = lcorner_dimension.parameter.name
 

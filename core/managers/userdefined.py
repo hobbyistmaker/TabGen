@@ -33,24 +33,17 @@ def user_defined(inputs):
         notches = math.ceil(fingers/2)
 
     return Properties(finger_length, face_length, distance, depth, margin,
-                      adjusted_length, fingers, finger_length, start, notches,
+                      adjusted_length, fingers, finger_length, finger_distance, start, notches,
                       pattern_distance, offset)
 
 
 def user_defined_params(alias, all_parameters, user_parameters, inputs,
                      finger_dimension, start_dimension,
                      finger_cut, finger_pattern,
+                     finger_distance, adjusted_length,
+                     pattern_distance,
                      corner_cut, corner_pattern,
                      lcorner_dimension, rcorner_dimension):
-
-    # finger_dimension.parameter.name = '{}_finger_width'.format(alias)
-    # finger_pattern.quantityOne.name = '{}_notches'.format(alias)
-    # finger_pattern.distanceOne.name = '{}_pattern_distance'.format(alias)
-    # start_dimension.parameter.name = '{}_start_width'.format(alias)
-    # finger_pattern.quantityTwo.name = '{}_walls'.format(alias)
-    # finger_pattern.distanceTwo.name = '{}_secondary'.format(alias)
-    # if lcorner_dimension:
-        # lcorner_dimension.parameter.name = '{}_offset'.format(alias)
 
     wall_count = '({} + 2)'.format(inputs.interior.value)
 
@@ -95,29 +88,32 @@ def user_defined_params(alias, all_parameters, user_parameters, inputs,
                                             inputs.width.unitType,
                                             'TabGen: default finger width').name
 
-    adjusted_length = '(({}) - ({})*2)'.format(face_length, margin)
-    fingers = '((ceil(max(3; floor({} / {}))/2)*2)-1)'.format(adjusted_length, finger_length)
+    adjusted_length.parameter.expression = '(({}) - ({})*2)'.format(face_length, margin)
+    fingers = '((ceil(max(3; floor({} / {}))/2)*2)-1)'.format(adjusted_length.parameter.name, finger_length)
 
     finger_dimension.parameter.expression = finger_length
 
     if inputs.tab_first:
         notches = 'floor({}/2)'.format(fingers)
-        finger_count = '(({}*2/1pcs)+1)'.format(finger_pattern.quantityOne.name)
-        finger_distance = '({} * {})'.format(finger_length, finger_count)
-        pattern_distance = '({} - {}*3)'.format(finger_distance, finger_length)
+        finger_count = '(({}*2)+1)'.format(notches)
+        finger_distance.parameter.expression = '({} * {})'.format(finger_length, finger_count)
+        pattern_distance.parameter.expression = '({} - {}*3)'.format(finger_distance.parameter.name, finger_length)
+        finger_pattern.quantityOne.expression = 'floor(({} / {})/2)'.format(finger_distance.parameter.name,
+                                                                            finger_length)
     else:
         notches = 'ceil({}/2)'.format(fingers)
-        finger_count = '(({}*2/1pcs)-1)'.format(finger_pattern.quantityOne.name)
-        finger_distance = '({} * {})'.format(finger_length, finger_count)
-        pattern_distance = '({} - {})'.format(finger_distance, finger_length)
+        finger_count = '(({}*2)-1)'.format(notches)
+        finger_distance.parameter.expression = '({} * {})'.format(finger_length, finger_count)
+        pattern_distance.parameter.expression = '({} - {})'.format(finger_distance.parameter.name, finger_length)
+        finger_pattern.quantityOne.expression = 'ceil(({} / {})/2)'.format(finger_distance.parameter.name,
+                                                                            finger_length)
 
-    finger_pattern.quantityOne.expression = notches
-    finger_pattern.distanceOne.expression = pattern_distance
+    # finger_pattern.quantityOne.expression = notches
+    finger_pattern.distanceOne.expression = pattern_distance.parameter.name
 
-    # start = '({} - {})/2 + {}'.format(face_length, finger_distance, finger_length)
-    offset = '(({} - {})/2)'.format(face_length, finger_distance)
+    offset = '(({} - {})/2)'.format(face_length, finger_distance.parameter.name)
 
-    # Corner dimensions cause a bug with adjacent faces -- no idea why
+    # Corner dimensions can cause a bug with adjacent faces -- no idea why
     if lcorner_dimension:
         lcorner_dimension.parameter.expression = offset
         start_fmt = '({})'.format(lcorner_dimension.parameter.name)
@@ -153,5 +149,4 @@ def set_parameter(alias, name, input_, all_params, parameter, format_str):
         expression = input_value
 
     parameter.expression = format_str.format(expression)
-    # parameter.name = '{}_{}'.format(alias, name)
     return parameter.name
