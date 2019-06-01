@@ -30,41 +30,43 @@ logger = logging.getLogger('tabgen')
 
 handlers = []
 
-Command = namedtuple('Command', ['cid', 'name', 'description'])
+class CommandCreationError(Exception): pass
 
-class CommandCreationException(Exception): pass
+class CommandDefinitionFailure(Exception): pass
 
-class CommandDefinitionFailureException(Exception): pass
-
-class ButtonDefinitionFailureException(Exception): pass
+class ButtonDefinitionFailure(Exception): pass
 
 
-def initialize_panel(ui, command):
-    cmd_def = ui.commandDefinitions.itemById(command.cid)
-    return cmd_def if cmd_def else create_command(ui, command)
+def initialize_panel(ui):
+    cmd_def = ui.commandDefinitions.itemById(defs.tabGenCommandId)
+    return cmd_def if cmd_def else create_command(ui)
 
 
-def create_command(ui, command):
+def create_command(ui):
     try:
         return ui.commandDefinitions.addButtonDefinition(
-            command.cid,
-            command.name,
-            command.description
+            defs.tabGenCommandId,
+            'Generate Tabs',
+            'Creates finger-joint tabs and gaps on rectangular faces'
         )
     except:
-        raise ButtonDefinitionFailureException
+        raise ButtonDefinitionFailure
 
 
-def add_command(panel, cmd_def):
-    try:
-        control = panel.controls.itemById(cmd_def.id)
-        return control if control else panel.controls.addCommand(cmd_def)
-    except:
-        raise CommandDefinitionFailureException
+def add_command(config):
+    addins = config.ui.allToolbarPanels.itemById(defs.parentPanelId)
+    cmd_def = initialize_panel(config.ui)
 
+    existing_control = addins.controls.itemById(cmd_def.id)
+    if not existing_control:
+        addins.controls.addCommand(cmd_def)
 
-command = Command(defs.tabGenCommandId, 'Generate Tabs',
-                  'Creates finger-joint tabs and gaps on rectangular faces')
+    panel = CommandCreatedEventHandlerPanel(config)
+
+    if not cmd_def.commandCreated.add(panel):
+        raise CommandCreationError
+
+    return panel
 
 
 def run(context):
@@ -74,15 +76,8 @@ def run(context):
 
         # Create the command definition and add a button to the Add-ins panel
         # per Autodesk UI guidance.
-        addins = ui.allToolbarPanels.itemById(defs.parentPanelId)
-        cmd_def = initialize_panel(ui, command)
-        control = add_command(addins, cmd_def)
-
-        panel = CommandCreatedEventHandlerPanel(app, ui, Configuration)
+        panel = add_command(Configuration(app))
         handlers.append(panel)
-
-        if not cmd_def.commandCreated.add(panel):
-            raise CommandCreationException
 
         # If the command is being manually started let the user know it's done
         if context['IsApplicationStartup'] is False:
@@ -101,7 +96,7 @@ def stop(context):
         ui = app.userInterface
 
         addins = ui.allToolbarPanels.itemById(defs.parentPanelId)
-        cmd_def = initialize_panel(ui, command)
+        cmd_def = initialize_panel(ui)
         control = addins.controls.itemById(cmd_def.id)
 
         if control:

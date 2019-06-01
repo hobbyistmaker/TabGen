@@ -17,10 +17,10 @@ initializedFailedMsg = 'TabGen initialization failed: {}'
 
 class CommandCreatedEventHandlerPanel(CommandCreatedEventHandler):
 
-    def __init__(self, app, ui, config):
+    def __init__(self, config):
         super().__init__()
-        self.app = app
-        self.ui = ui
+        self.app = config.app
+        self.ui = config.ui
         self.config = config
         self.handlers = []
 

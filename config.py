@@ -35,3 +35,8 @@ class Configuration:
 
     DEFAULT_WALL_COUNT = 0
     DEFAULT_REPEAT_COUNT = 0
+
+    def __init__(self, app):
+        self.app = app
+        self.ui = app.userInterface
+        self.design = app.activeProduct
