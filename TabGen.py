@@ -1,21 +1,3 @@
-# Author-
-# Description-
-import logging
-import sys
-
-from collections import namedtuple
-
-import adsk.cam
-import adsk.core
-import adsk.fusion
-import traceback
-
-from adsk.core import Application
-
-from .config import Configuration
-from .core import definitions as defs
-from .core.handlers import CommandCreatedEventHandlerPanel
-
 START_MSG = """The "Generate Tabs" command has been added
 to the Add-ins panel of the MODEL workspace."""
 
@@ -30,9 +12,12 @@ logger = logging.getLogger('tabgen')
 
 handlers = []
 
+
 class CommandCreationError(Exception): pass
 
+
 class CommandDefinitionFailure(Exception): pass
+
 
 class ButtonDefinitionFailure(Exception): pass
 

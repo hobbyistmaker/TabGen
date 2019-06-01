@@ -1,8 +1,3 @@
-import math
-
-from collections import namedtuple
-from functools import partial
-
 from adsk.core import ObjectCollection
 from adsk.core import Point3D
 from adsk.core import ValueInput as vi
@@ -20,6 +15,7 @@ CFO = FeatureOperations.CutFeatureOperation
 EDT = PatternDistanceType.ExtentPatternDistanceType
 HorizontalDimension = do.HorizontalDimensionOrientation
 VerticalDimension = do.VerticalDimensionOrientation
+
 
 class PrimaryAxisMissing(Exception): pass
 
