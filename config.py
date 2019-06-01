@@ -19,9 +19,12 @@ class Configuration:
     LOG_LEVEL = logging.NOTSET
 
     # Select default command settings
+    # The width and thickness are defined in millimeters here
+    # and converted to other units later
     DEFAULT_TAB_WIDTH = 8
     DEFAULT_MATERIAL_THICKNESS = 3.2
     DEFAULT_MARGIN_WIDTH = 0
+
     DEFAULT_START_WITH_TAB = True
     DEFAULT_DISABLE_PARAMETRIC = False
 
@@ -40,3 +43,4 @@ class Configuration:
         self.app = app
         self.ui = app.userInterface
         self.design = app.activeProduct
+        self.inputs = None

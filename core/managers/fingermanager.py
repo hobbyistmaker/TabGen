@@ -26,13 +26,13 @@ class PrimaryAxisMissing(Exception): pass
 
 class FingerManager:
 
-    def __init__(self, app, ui, inputs, name, alias, border):
-        self.inputs = inputs
+    def __init__(self, config, name, alias, border):
+        self.inputs = config.inputs
         self.face = self.inputs.selected_face
         self.alias = alias
         self.border = border
-        self.app = app
-        self.ui = ui
+        self.app = config.app
+        self.ui = config.ui
         self.name = name
 
         # We'll create simple numeric fields for use
@@ -48,8 +48,8 @@ class FingerManager:
             defs.userDefinedWidthId: user_defined_params
         }
 
-        self.params = param_finders[inputs.finger_type](inputs)
-        self.modifier = param_modifier[inputs.finger_type]
+        self.params = param_finders[self.inputs.finger_type](self.inputs)
+        self.modifier = param_modifier[self.inputs.finger_type]
 
     def draw(self, sketch):
         lines = sketch.sketchCurves.sketchLines
@@ -353,7 +353,7 @@ class FingerManager:
         for profile in profiles:
             selection.add(profile)
 
-        dist = vi.createByString(str(-abs(self.params.depth*10)))
+        dist = vi.createByReal(-abs(self.params.depth))
         cut_input = extrudes.createInput(selection, CFO)
         cut_input.setDistanceExtent(False, dist)
         cut_input.participantBodies = [body]

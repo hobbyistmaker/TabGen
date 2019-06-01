@@ -45,6 +45,10 @@ class CommandCreatedEventHandlerPanel(CommandCreatedEventHandler):
     def notify(self, args):
         try:
             document = self.app.activeDocument
+            design = self.app.activeProduct
+            units_manager = design.unitsManager
+            units = units_manager.defaultLengthUnits
+
             if document.isSaved is not True:
                 self.ui.messageBox('Please save your document before continuing.')
 
@@ -53,7 +57,7 @@ class CommandCreatedEventHandlerPanel(CommandCreatedEventHandler):
                 cmd.helpFile = 'resources/help.html'
 
                 # Add onExecute event handler
-                execute = CommandExecuteHandler(self.app, self.ui)
+                execute = CommandExecuteHandler(self.config)
                 cmd.execute.add(execute)
                 self.handlers.append(execute)
 
@@ -127,29 +131,29 @@ class CommandCreatedEventHandlerPanel(CommandCreatedEventHandler):
                 inputs.addFloatSpinnerCommandInput(
                     defs.tabWidthInputId,
                     'Tab Width',
-                    'mm',
-                    2.0,
-                    20.0,
-                    0.1,
-                    self.config.DEFAULT_TAB_WIDTH
+                    units,
+                    units_manager.convert(2.0, 'mm', units),
+                    units_manager.convert(20.0, 'mm', units),
+                    units_manager.convert(0.1, 'mm', units),
+                    units_manager.convert(self.config.DEFAULT_TAB_WIDTH, 'mm', units)
                     )
                 inputs.addFloatSpinnerCommandInput(
                     defs.mtlThickInputId,
                     'Tab Depth',
-                    'mm',
-                    0.5,
-                    6.0,
-                    0.1,
-                    self.config.DEFAULT_MATERIAL_THICKNESS
+                    units,
+                    units_manager.convert(0.5, 'mm', units),
+                    units_manager.convert(6.0, 'mm', units),
+                    units_manager.convert(0.1, 'mm', units),
+                    units_manager.convert(self.config.DEFAULT_MATERIAL_THICKNESS, 'mm', units)
                     )
                 inputs.addFloatSpinnerCommandInput(
                     defs.marginInputId,
                     'Margin from Edge',
-                    'mm',
-                    0,
-                    2500,
-                    0.1,
-                    self.config.DEFAULT_MARGIN_WIDTH
+                    units,
+                    units_manager.convert(0, 'mm', units),
+                    units_manager.convert(2500, 'mm', units),
+                    units_manager.convert(0.1, 'mm', units),
+                    units_manager.convert(self.config.DEFAULT_MARGIN_WIDTH, 'mm', units)
                     )
 
                 # Disable start with tab due to bugs
@@ -160,18 +164,18 @@ class CommandCreatedEventHandlerPanel(CommandCreatedEventHandler):
                                          self.config.DEFAULT_START_WITH_TAB)
                 inputs.addFloatSpinnerCommandInput(defs.lengthInputId,
                                                    'Face Length',
-                                                   'mm',
-                                                   0,
-                                                   2500.0,
-                                                   0.1,
-                                                   0.0)
+                                                   units,
+                                                   units_manager.convert(0, 'mm', units),
+                                                   units_manager.convert(2500.0, 'mm', units),
+                                                   units_manager.convert(0.1, 'mm', units),
+                                                   units_manager.convert(0.0, 'mm', units))
                 inputs.addFloatSpinnerCommandInput(defs.distanceInputId,
                                                    'Duplicate Distance',
-                                                   'mm',
-                                                   0,
-                                                   2500.0,
-                                                   0.1,
-                                                   0.0)
+                                                   units,
+                                                   units_manager.convert(0, 'mm', units),
+                                                   units_manager.convert(2500.0, 'mm', units),
+                                                   units_manager.convert(0.1, 'mm', units),
+                                                   units_manager.convert(0.0, 'mm', units))
 
                 inputs.addTextBoxCommandInput(defs.ERROR_MSG_INPUT_ID,
                                               '',

@@ -11,19 +11,19 @@ executionFailedMsg = 'TabGen executon failed: {}'
 
 class CommandExecuteHandler(CommandEventHandler):
 
-    def __init__(self, app, ui):
+    def __init__(self, config):
         super().__init__()
-        self.app = app
-        self.ui = ui
+        self.config = config
+        self.ui = self.config.ui
 
     def notify(self, args):
         command = args.firingEvent.sender
 
         try:
-            inputs = fusion.InputReader(command.commandInputs)
+            self.config.inputs = fusion.InputReader(command.commandInputs)
 
-            if inputs.face_selected:
-                manager = managers.create(self.app, self.ui, inputs)
+            if self.config.inputs.face_selected:
+                managers.create(self.config)
             else:
                 self.ui.messageBox('No face was selected for placing fingers.')
 
