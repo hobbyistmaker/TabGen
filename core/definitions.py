@@ -20,6 +20,7 @@ parentPanelId = 'SolidScriptsAddinsPanel'
 
 userDefinedWidthId = 'User-Defined Width'
 automaticWidthId = 'Automatic Width'
+autoDefinedWidthId = 'Auto-Defined Width (test)'
 
 singleEdgeId = 'Single Edge'
 dualEdgeId = 'Dual Edge'
