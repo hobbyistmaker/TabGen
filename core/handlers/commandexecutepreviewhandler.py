@@ -28,7 +28,7 @@ class CommandExecutePreviewHandler(CommandEventHandler):
                 else:
                     self.ui.messageBox('No face was selected for placing fingers.')
 
-                args.isValidResult = True
+                args.isValidResult = False
             else:
                 args.isValidResult = False
 

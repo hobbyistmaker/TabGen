@@ -221,7 +221,7 @@ class FingerManager:
         constraints.addVertical(right_corner.left.line)
         constraints.addVertical(right_corner.right.line)
 
-    def draw(self, sketch, preview=False):
+    def draw(self, sketch):
         lines = sketch.sketchCurves.sketchLines
         timeline = self.app.activeProduct.timeline
 
@@ -240,12 +240,20 @@ class FingerManager:
         # The finger has to be drawn and extruded first; the operation
         # will fail after the corners are cut, since the edge reference
         # becomes invalid.
-        self.draw_finger(sketch, lines, extrudes, body, primary, secondary)
+        self.draw_finger(sketch, extrudes, body, primary, secondary)
 
         if self.params.offset and not self.inputs.tab_first:
-            self.draw_corner(sketch, lines, extrudes, body, primary, secondary)
+            self.draw_corner(sketch, extrudes, body, primary, secondary)
 
-        if preview and not self.inputs.parametric:
+        # Create a Timeline group to keep things organized
+        end_mp = timeline.markerPosition
+        tlgroup = timeline.timelineGroups.add(start_mp, end_mp-1)
+        tlgroup.name = '{} Finger Group'.format(self.name)
+
+        return self
+
+    def save(self):
+        if not self.inputs.parametric:
             self.modifier(self.alias,
                           self.app.activeProduct.allParameters,
                           self.app.activeProduct.userParameters,
@@ -259,29 +267,34 @@ class FingerManager:
                           getattr(self, 'left_dimension', None),
                           getattr(self, 'right_dimension', None))
 
-        # Create a Timeline group to keep things organized
-        end_mp = timeline.markerPosition
-        tlgroup = timeline.timelineGroups.add(start_mp, end_mp-1)
-        tlgroup.name = '{} Finger Group'.format(self.name)
+    def draw_corner(self, sketch, extrudes, body, primary, secondary):
+        self.left_corner = self.draw_left_corner(sketch)
+        self.right_corner = self.draw_right_corner(sketch)
 
-    def draw_corner(self, sketch, lines, extrudes, body, primary, secondary):
-        self.left_corner = self.draw_left_corner(sketch, lines)
-        self.right_corner = self.draw_right_corner(sketch, lines)
+        self.extrude_corner(body, extrudes, sketch)
 
-        name = '{} Corner Cut Extrude'.format(self.name)
-        profiles = [sketch.profiles.item(1), sketch.profiles.item(2)]
-        self.corner_cut = self.extrude(profiles, body, extrudes, name)
+        self.duplicate_corner(body, primary, secondary)
 
-        dname = '{} Corner Duplicate Pattern'.format(self.name)
-        self.corner_pattern = self.duplicate(dname, [self.corner_cut], 1, 0,
-                                             2, primary, secondary, body)
+        self.constrain_corners(sketch)
 
+    def constrain_corners(self, sketch):
         if self.border.is_vertical:
             self.constrain_vertical_corners(sketch, self.left_corner, self.right_corner)
         else:
             self.constrain_horizontal_corners(sketch, self.left_corner, self.right_corner)
 
-    def draw_finger(self, sketch, lines, extrudes, body, primary, secondary):
+    def duplicate_corner(self, body, primary, secondary):
+        dname = '{} Corner Duplicate Pattern'.format(self.name)
+        self.corner_pattern = self.duplicate(dname, [self.corner_cut], 1, 0,
+                                             2, primary, secondary, body)
+
+    def extrude_corner(self, body, extrudes, sketch):
+        name = '{} Corner Cut Extrude'.format(self.name)
+        profiles = [sketch.profiles.item(1), sketch.profiles.item(2)]
+        self.corner_cut = self.extrude(profiles, body, extrudes, name)
+
+    def draw_finger(self, sketch, extrudes, body, primary, secondary):
+        lines = sketch.sketchCurves.sketchLines
         start = fusion.next_point(self.border.bottom.left.geometry, self.params.start,
                                   0, self.border.is_vertical)
         end = fusion.next_point(start, self.params.finger_length,
@@ -289,26 +302,32 @@ class FingerManager:
 
         self.finger = fusion.Rectangle(lines.addTwoPointRectangle(start, end))
         self.constrain_finger(sketch, self.finger)
+        self.finger_cut = self.exrude_finger(body, extrudes, sketch)
+        self.finger_pattern = self.duplicate_finger(body, primary, secondary)
 
-        profiles = [sketch.profiles.item(0)]
-        cname = '{} Finger Cut Extrude'.format(self.name)
-        self.finger_cut = self.extrude(profiles, body, extrudes, cname)
-
+    def duplicate_finger(self, body, primary, secondary):
         quantity = self.params.notches
         distance = self.params.pattern_distance
         dname = '{} Finger Duplicate Pattern'.format(self.name)
-        self.finger_pattern = self.duplicate(dname, [self.finger_cut], quantity, distance,
-                                             self.inputs.interior.value + 2,
-                                             primary, secondary, body)
+        return self.duplicate(dname, [self.finger_cut], quantity, distance,
+                                      self.inputs.interior.value + 2,
+                                      primary, secondary, body)
 
-    def draw_left_corner(self, sketch, lines):
+    def exrude_finger(self, body, extrudes, sketch):
+        profiles = [sketch.profiles.item(0)]
+        cname = '{} Finger Cut Extrude'.format(self.name)
+        return self.extrude(profiles, body, extrudes, cname)
+
+    def draw_left_corner(self, sketch):
+        lines = sketch.sketchCurves.sketchLines
         start = self.border.bottom.left.geometry
         end = fusion.next_point(start, self.params.offset,
                                 self.border.width, self.border.is_vertical)
 
         return fusion.Rectangle(lines.addTwoPointRectangle(start, end))
 
-    def draw_right_corner(self, sketch, lines):
+    def draw_right_corner(self, sketch):
+        lines = sketch.sketchCurves.sketchLines
         start = fusion.next_point(self.border.bottom.right.geometry,
                                   -self.params.offset, 0, self.border.is_vertical)
         end = fusion.next_point(start, self.params.offset,
@@ -333,15 +352,18 @@ class FingerManager:
 
         input_ = patterns.createInput(entities, primary, quantity, distance, EDT)
 
+        self.configure_secondary_axis(input_, secondary, squantity)
+
+        pattern = patterns.add(input_)
+        pattern.name = name
+        return pattern
+
+    def configure_secondary_axis(self, input_, secondary, squantity):
         if self.params.distance > 0 and secondary and secondary.isValid:
             second_distance = vi.createByReal(self.params.distance - self.params.depth)
             input_.setDirectionTwo(secondary,
                                    vi.createByReal(squantity),
                                    second_distance)
-
-        pattern = patterns.add(input_)
-        pattern.name = name
-        return pattern
 
     def extrude(self, profiles, body, extrudes, name):
         selection = ObjectCollection.create()

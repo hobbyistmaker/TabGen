@@ -23,7 +23,8 @@ class CommandExecuteHandler(CommandEventHandler):
             self.config.inputs = fusion.InputReader(command.commandInputs)
 
             if self.config.inputs.face_selected:
-                managers.create(self.config)
+                manager = managers.create(self.config)
+                manager.save()
             else:
                 self.ui.messageBox('No face was selected for placing fingers.')
 
