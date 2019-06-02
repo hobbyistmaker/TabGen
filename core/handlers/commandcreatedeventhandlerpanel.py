@@ -16,6 +16,7 @@ Item = namedtuple('Item', ['id_', 'enabled'])
 
 initializedFailedMsg = 'TabGen initialization failed: {}'
 
+
 class CommandCreatedEventHandlerPanel(CommandCreatedEventHandler):
 
     def __init__(self, config):
