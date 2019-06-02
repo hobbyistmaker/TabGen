@@ -10,7 +10,7 @@ class InvalidFaceSelected(Exception): pass
 class FaceNotExists(Exception): pass
 
 
-def create(config):
+def create(config, preview=True):
     face = config.inputs.selected_face
 
     sketch = initialize_sketch(face)
@@ -28,7 +28,9 @@ def create(config):
     sketch.name = '{} Finger Sketch'.format(name)
 
     manager = FingerManager(config, name, alias, border)
-    return manager.draw(sketch)
+    properties = manager.draw(sketch)
+    if not preview:
+        manager.save(properties)
 
 
 def create_sketch_border(sketch):
