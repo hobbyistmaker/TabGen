@@ -28,7 +28,7 @@ def create(config):
     sketch.name = '{} Finger Sketch'.format(name)
 
     manager = FingerManager(config, name, alias, border)
-    manager.draw(sketch)
+    manager.draw(sketch, config.inputs.preview)
 
 
 def create_sketch_border(sketch):

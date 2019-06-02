@@ -15,6 +15,8 @@ marginInputId = 'marginCommandInput'
 wallCountInputId = 'wallCountValueInput'
 repeatInputId = 'repeatValueInput'
 patternDistanceInputId = 'patternValueInput'
+referenceSelectId = 'referenceSelectInput'
+previewInputId = 'previewCommandInput'
 
 parentPanelId = 'SolidScriptsAddinsPanel'
 

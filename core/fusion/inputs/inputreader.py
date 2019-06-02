@@ -2,10 +2,11 @@ from ... import definitions as defs
 
 class InputReader:
 
-    def __init__(self, inputs):
+    def __init__(self, inputs, preview=False):
         self.placement = inputs.itemById(defs.fingerPlaceId).selectedItem.name
         self.face = inputs.itemById(defs.selectedFaceInputId)
         self.edge = inputs.itemById(defs.dualEdgeSelectId)
+        self.reference_edges = inputs.itemById(defs.referenceSelectId)
         self.length = inputs.itemById(defs.lengthInputId)
         self.distance = inputs.itemById(defs.distanceInputId)
         self.depth = inputs.itemById(defs.mtlThickInputId)
@@ -15,7 +16,9 @@ class InputReader:
         self.tab_first = inputs.itemById(defs.startWithTabInputId).value
         self.finger_type = inputs.itemById(defs.fingerTypeId).selectedItem.name
         self.parametric = inputs.itemById(defs.parametricInputId).value
+        self.preview_enabled = inputs.itemById(defs.previewInputId).value
         self.err = inputs.itemById(defs.ERROR_MSG_INPUT_ID)
+        self.preview = preview
 
         self.face_selected = self.face.selectionCount > 0
         self.selected_face = self.face.selection(0).entity if self.face_selected else None

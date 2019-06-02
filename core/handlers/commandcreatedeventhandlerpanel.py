@@ -7,6 +7,7 @@ from adsk.core import DropDownStyles as dds
 
 from .. import definitions as defs
 from .commandexecutehandler import CommandExecuteHandler
+from .commandexecutepreviewhandler import CommandExecutePreviewHandler
 from .inputchangedhandler import InputChangedHandler
 from .selectioneventhandler import SelectionEventHandler
 from .validateinputshandler import ValidateInputsHandler
@@ -62,6 +63,11 @@ class CommandCreatedEventHandlerPanel(CommandCreatedEventHandler):
                 cmd.execute.add(execute)
                 self.handlers.append(execute)
 
+                # Add onExecute event handler
+                execute_preview = CommandExecutePreviewHandler(self.config)
+                cmd.executePreview.add(execute_preview)
+                self.handlers.append(execute_preview)
+
                 # Add onInputChanged handler
                 changed = InputChangedHandler(self.app, self.ui)
                 cmd.inputChanged.add(changed)
@@ -80,54 +86,26 @@ class CommandCreatedEventHandlerPanel(CommandCreatedEventHandler):
                 # Set up the inputs
                 inputs = cmd.commandInputs
 
-                self.add_dropdown(
-                    inputs,
-                    defs.fingerTypeId,
-                    'Fingers Type',
-                    [Item(defs.userDefinedWidthId,
-                          self.config.DEFAULT_USER_WIDTH_TAB),
-                    Item(defs.automaticWidthId,
-                         self.config.DEFAULT_AUTO_WIDTH_TAB)
-                    ])
+                self.add_dropdown(inputs, defs.fingerTypeId, 'Fingers Type', [Item(defs.userDefinedWidthId,
+                                                                                   self.config.DEFAULT_USER_WIDTH_TAB),
+                                                                              Item(defs.automaticWidthId,
+                                                                                   self.config.DEFAULT_AUTO_WIDTH_TAB)
+                                                                              ])
 
-                self.add_dropdown(
-                    inputs,
-                    defs.fingerPlaceId,
-                    'Placement',
-                    [Item(defs.singleEdgeId,
-                          self.config.DEFAULT_SINGLE_EDGE),
-                     Item(defs.dualEdgeId,
-                          self.config.DEFAULT_DUAL_EDGE)
-                    ])
+                self.add_dropdown(inputs, defs.fingerPlaceId, 'Placement', [Item(defs.singleEdgeId,
+                                                                                 self.config.DEFAULT_SINGLE_EDGE),
+                                                                            Item(defs.dualEdgeId,
+                                                                                 self.config.DEFAULT_DUAL_EDGE)
+                                                                            ])
 
-                self.add_selection(
-                    inputs,
-                    defs.selectedFaceInputId,
-                    'Face',
-                    'Faces where tabs will be cut.',
-                    'PlanarFaces',
-                    1,
-                    1
-                )
+                self.add_selection(inputs, defs.selectedFaceInputId, 'Face', 'Faces where tabs will be cut.',
+                                   'PlanarFaces', 1, 1)
 
-                self.add_selection(
-                    inputs,
-                    defs.dualEdgeSelectId,
-                    'Secondary Face',
-                    'Opposite face for dual-edge cuts.',
-                    'PlanarFaces',
-                    0,
-                    1
-                )
+                self.add_selection(inputs, defs.dualEdgeSelectId, 'Secondary Face',
+                                   'Opposite face for dual-edge cuts.', 'PlanarFaces', 0, 1)
 
-                inputs.addIntegerSpinnerCommandInput(
-                    defs.wallCountInputId,
-                    'Interior Walls',
-                    0,
-                    200,
-                    1,
-                    self.config.DEFAULT_WALL_COUNT
-                    )
+                inputs.addIntegerSpinnerCommandInput(defs.wallCountInputId, 'Interior Walls',
+                                                     0, 200, 1, self.config.DEFAULT_WALL_COUNT)
 
                 inputs.addFloatSpinnerCommandInput(
                     defs.tabWidthInputId,
@@ -189,6 +167,11 @@ class CommandCreatedEventHandlerPanel(CommandCreatedEventHandler):
                                          True,
                                          '',
                                          self.config.DEFAULT_DISABLE_PARAMETRIC)
+                inputs.addBoolValueInput(defs.previewInputId,
+                                         'Enable Preview',
+                                         True,
+                                         '',
+                                         self.config.DEFAULT_ENABLE_PREVIEW)
         except:
             self.ui.messageBox('{}:\n{}'.format(initializedFailedMsg,
                                                 traceback.format_exc(3)))

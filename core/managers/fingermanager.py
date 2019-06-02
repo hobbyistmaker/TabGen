@@ -221,7 +221,7 @@ class FingerManager:
         constraints.addVertical(right_corner.left.line)
         constraints.addVertical(right_corner.right.line)
 
-    def draw(self, sketch):
+    def draw(self, sketch, preview=False):
         lines = sketch.sketchCurves.sketchLines
         timeline = self.app.activeProduct.timeline
 
@@ -245,7 +245,7 @@ class FingerManager:
         if self.params.offset and not self.inputs.tab_first:
             self.draw_corner(sketch, lines, extrudes, body, primary, secondary)
 
-        if not self.inputs.parametric:
+        if preview and not self.inputs.parametric:
             self.modifier(self.alias,
                           self.app.activeProduct.allParameters,
                           self.app.activeProduct.userParameters,

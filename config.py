@@ -28,6 +28,7 @@ class Configuration:
 
     DEFAULT_START_WITH_TAB = True
     DEFAULT_DISABLE_PARAMETRIC = False
+    DEFAULT_ENABLE_PREVIEW = True
 
     # Select one of the two following
     DEFAULT_USER_WIDTH_TAB = True
