@@ -24,7 +24,7 @@ class CommandExecutePreviewHandler(CommandEventHandler):
             if self.config.inputs.preview_enabled:
 
                 if self.config.inputs.face_selected:
-                    managers.create(self.config)
+                    managers.create(self.config, preview=True)
                 else:
                     self.ui.messageBox('No face was selected for placing fingers.')
 
