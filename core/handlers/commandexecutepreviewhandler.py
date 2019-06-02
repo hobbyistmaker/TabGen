@@ -21,15 +21,16 @@ class CommandExecutePreviewHandler(CommandEventHandler):
 
         try:
             self.config.inputs = fusion.InputReader(command.commandInputs)
+            if self.config.inputs.preview_enabled:
 
-            if self.config.inputs.face_selected:
-                if self.config.inputs.preview_enabled:
+                if self.config.inputs.face_selected:
                     managers.create(self.config)
-                    args.isValidResult = True
                 else:
-                    args.isValidResult = False
+                    self.ui.messageBox('No face was selected for placing fingers.')
+
+                args.isValidResult = True
             else:
-                self.ui.messageBox('No face was selected for placing fingers.')
+                args.isValidResult = False
 
         except:
 

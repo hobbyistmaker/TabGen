@@ -73,10 +73,10 @@ class CommandCreatedEventHandlerPanel(CommandCreatedEventHandler):
                 cmd.inputChanged.add(changed)
                 self.handlers.append(changed)
 
-                # Add onValidateInputs event handler
-                validate = ValidateInputsHandler(self.app, self.ui)
-                cmd.validateInputs.add(validate)
-                self.handlers.append(validate)
+                # # Add onValidateInputs event handler
+                # validate = ValidateInputsHandler(self.app, self.ui)
+                # cmd.validateInputs.add(validate)
+                # self.handlers.append(validate)
 
                 # Add SelectionEvent handler
                 selection = SelectionEventHandler(self.app, self.ui)
