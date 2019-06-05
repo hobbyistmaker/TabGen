@@ -15,20 +15,28 @@ class CommandExecutePreviewHandler(CommandEventHandler):
         super().__init__()
         self.config = config
         self.ui = self.config.ui
+        self.app = self.config.app
 
     def notify(self, args):
         command = args.firingEvent.sender
 
         try:
-            self.config.inputs = fusion.InputReader(command.commandInputs)
-            if self.config.inputs.preview_enabled:
+            first_inputs = command.commandInputs
+            parent_inputs = first_inputs.command.commandInputs if first_inputs.command else first_inputs
+            inputs = fusion.InputReader(parent_inputs)
+            properties = inputs.create_properties(self.app, self.ui)
 
-                if self.config.inputs.face_selected:
-                    managers.create(self.config, preview=True)
+            if inputs.preview_enabled:
+
+                if inputs.face_selected:
+                    managers.create(inputs, properties, preview=True)
                 else:
                     self.ui.messageBox('No face was selected for placing fingers.')
 
-                args.isValidResult = False
+                if inputs.parametric:
+                    args.isValidResult = True
+                else:
+                    args.isValidResult = False
             else:
                 args.isValidResult = False
 

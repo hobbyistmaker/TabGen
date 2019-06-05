@@ -5,31 +5,33 @@ from adsk.core import ValueInput as vi
 from .properties import Properties
 
 def automatic(inputs):
+    kerf = abs(inputs.kerf.value)
     default_width = abs(inputs.width.value)
-    face_length = abs(inputs.length.value)
+    face_length = abs(inputs.length.value) + kerf
     distance = abs(inputs.distance.value)
-    depth = abs(inputs.depth.value)
+    depth = -abs(inputs.depth.value) + kerf/2
     margin = abs(inputs.margin.value)
 
     adjusted_length = face_length - margin*2
     fingers = (math.ceil(max(3, math.floor(adjusted_length / default_width))/2)*2)-1
 
     finger_length = adjusted_length / fingers
-    finger_distance = finger_length * fingers
+    finger_distance = finger_length * fingers - kerf
+    adjusted_finger_length = finger_length - kerf
 
     if inputs.tab_first:
-        pattern_distance = adjusted_length - finger_length * 3
-        start = margin + finger_length
-        offset = margin
+        pattern_distance = adjusted_length - finger_length * 3 + kerf/2
+        start = margin + finger_length + kerf/2
+        offset = margin - kerf/2
         notches = math.floor(fingers/2)
     else:
-        pattern_distance = adjusted_length - finger_length
-        offset = margin
-        start = margin
+        pattern_distance = adjusted_length - finger_length + kerf/2
+        offset = margin + kerf/2
+        start = margin - kerf/2
         notches = math.ceil(fingers/2)
 
     return Properties(default_width, face_length, distance, depth, margin,
-                      adjusted_length, fingers, finger_length, finger_distance, start, notches,
+                      adjusted_length, fingers, adjusted_finger_length, finger_distance, start, notches,
                       pattern_distance, offset)
 
 
@@ -43,16 +45,25 @@ def automatic_params(alias, all_parameters, user_parameters, inputs,
 
     wall_count = '({} + 2)'.format(inputs.interior.value)
 
+    kerf_param = all_parameters.itemByName(inputs.kerf.expression)
+    if kerf_param:
+        kerf = 'abs({})'.format(kerf_param.name)
+    else:
+        kerf = user_parameters.add('{}_kerf'.format(alias),
+                                   vi.createByString('abs({})'.format(inputs.kerf.expression)),
+                                   inputs.kerf.unitType,
+                                   'TabGen: kerf adjustment for the face').name
+
     depth = set_parameter(inputs.depth,
                           all_parameters, finger_cut.extentOne.distance,
-                          '-abs({})')
+                          '-abs({}) + {}/2'.format('{}', kerf))
 
     face_param = all_parameters.itemByName(inputs.length.expression)
     if face_param:
-        face_length = 'abs({})'.format(face_param.name)
+        face_length = 'abs({}) + {}'.format(face_param.name, kerf)
     else:
         face_length = user_parameters.add('{}_length'.format(alias),
-                                          vi.createByString('abs({})'.format(inputs.length.expression)),
+                                          vi.createByString('abs({}) + {}'.format(inputs.length.expression, kerf)),
                                           inputs.length.unitType,
                                           'TabGen: length of the face').name
 
@@ -89,17 +100,19 @@ def automatic_params(alias, all_parameters, user_parameters, inputs,
     finger_length = '({}/{})'.format(adjusted_length.parameter.name, fingers)
 
     finger_dimension.parameter.expression = finger_length
-    finger_distance.parameter.expression = adjusted_length.parameter.name
+    finger_distance.parameter.expression = '(({}*{}) - {})'.format(finger_length, fingers, kerf)
+    adjusted_finger_length = '({} - {})'.format(finger_length, kerf)
 
     if inputs.tab_first:
-        pattern_distance = '({} - {}*3)'.format(adjusted_length.parameter.name, finger_length)
+        pattern_distance = '(({} - {}*3) + {}/2)'.format(adjusted_length.parameter.name, finger_length, kerf)
         notches = 'floor({}/2)'.format(fingers)
+        start = '(({} + {}) + {}/2)'.format(margin, finger_length, kerf)
+        offset = '({} - {}/2)'.format(margin, kerf)
     else:
-        pattern_distance = '({} - {})'.format(adjusted_length.parameter.name, finger_length)
+        start = '({} - {}/2)'.format(margin, kerf)
+        pattern_distance = '(({} - {}) + {}/2)'.format(adjusted_length.parameter.name, finger_length, kerf)
         notches = 'ceil({}/2)'.format(fingers, margin_truth)
-
-    start = '({} + {})'.format(margin, finger_length)
-    offset = '({})'.format(margin)
+        offset = '({} + {}/2)'.format(margin, kerf)
 
     offset_dimension.parameter.expression = start
 

@@ -12,16 +12,21 @@ parametricInputId = 'parametricInput'
 lengthInputId = 'lengthCommandInput'
 distanceInputId = 'distanceCommandInput'
 marginInputId = 'marginCommandInput'
+edgeMarginInputId = 'edgeMarginValueCommandInput'
 wallCountInputId = 'wallCountValueInput'
 repeatInputId = 'repeatValueInput'
 patternDistanceInputId = 'patternValueInput'
 referenceSelectId = 'referenceSelectInput'
 previewInputId = 'previewCommandInput'
+kerfInputId = 'kerfValueInput'
+
+advancedTabId = 'advancedTabId'
 
 parentPanelId = 'SolidScriptsAddinsPanel'
 
-userDefinedWidthId = 'User-Defined Width'
+userDefinedWidthId = 'Constant Width'
 automaticWidthId = 'Automatic Width'
+constantCountId = 'Constant Count'
 
 singleEdgeId = 'Single Edge'
 dualEdgeId = 'Dual Edge'

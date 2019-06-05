@@ -85,12 +85,17 @@ class CommandCreatedEventHandlerPanel(CommandCreatedEventHandler):
                 self.handlers.append(selection)
 
                 # Set up the inputs
-                inputs = cmd.commandInputs
+                cmd_inputs = cmd.commandInputs
+
+                main_input = cmd_inputs.addTabCommandInput('mainTabInput', 'Main')
+                inputs = main_input.children
 
                 self.add_dropdown(inputs, defs.fingerTypeId, 'Fingers Type', [Item(defs.userDefinedWidthId,
                                                                                    self.config.DEFAULT_USER_WIDTH_TAB),
                                                                               Item(defs.automaticWidthId,
-                                                                                   self.config.DEFAULT_AUTO_WIDTH_TAB)
+                                                                                   self.config.DEFAULT_AUTO_WIDTH_TAB),
+                                                                              Item(defs.constantCountId,
+                                                                                   self.config.DEFAULT_COUNT_TAB)
                                                                               ])
 
                 self.add_dropdown(inputs, defs.fingerPlaceId, 'Placement', [Item(defs.singleEdgeId,
@@ -104,9 +109,6 @@ class CommandCreatedEventHandlerPanel(CommandCreatedEventHandler):
 
                 self.add_selection(inputs, defs.dualEdgeSelectId, 'Secondary Face',
                                    'Opposite face for dual-edge cuts.', 'PlanarFaces', 0, 1)
-
-                inputs.addIntegerSpinnerCommandInput(defs.wallCountInputId, 'Interior Walls',
-                                                     0, 200, 1, self.config.DEFAULT_WALL_COUNT)
 
                 inputs.addFloatSpinnerCommandInput(
                     defs.tabWidthInputId,
@@ -126,17 +128,7 @@ class CommandCreatedEventHandlerPanel(CommandCreatedEventHandler):
                     units_manager.convert(0.1, 'mm', units),
                     units_manager.convert(self.config.DEFAULT_MATERIAL_THICKNESS, 'mm', units)
                     )
-                inputs.addFloatSpinnerCommandInput(
-                    defs.marginInputId,
-                    'Margin from Edge',
-                    units,
-                    units_manager.convert(0, 'mm', units),
-                    units_manager.convert(2500, 'mm', units),
-                    units_manager.convert(0.1, 'mm', units),
-                    units_manager.convert(self.config.DEFAULT_MARGIN_WIDTH, 'mm', units)
-                    )
 
-                # Disable start with tab due to bugs
                 inputs.addBoolValueInput(defs.startWithTabInputId,
                                          'Start with tab',
                                          True,
@@ -173,6 +165,43 @@ class CommandCreatedEventHandlerPanel(CommandCreatedEventHandler):
                                          True,
                                          '',
                                          self.config.DEFAULT_ENABLE_PREVIEW)
+
+                tab_input = cmd_inputs.addTabCommandInput(defs.advancedTabId, 'Advanced')
+                tab_inputs = tab_input.children
+
+                tab_inputs.addIntegerSpinnerCommandInput(defs.wallCountInputId, 'Interior Walls',
+                                                     0, 200, 1, self.config.DEFAULT_WALL_COUNT)
+
+                tab_inputs.addFloatSpinnerCommandInput(
+                    defs.marginInputId,
+                    'Margin from Sides',
+                    units,
+                    units_manager.convert(0, 'mm', units),
+                    units_manager.convert(2500, 'mm', units),
+                    units_manager.convert(0.1, 'mm', units),
+                    units_manager.convert(self.config.DEFAULT_MARGIN_WIDTH, 'mm', units)
+                    )
+
+                tab_inputs.addFloatSpinnerCommandInput(
+                    defs.edgeMarginInputId,
+                    'Margin from Edge',
+                    units,
+                    units_manager.convert(0, 'mm', units),
+                    units_manager.convert(2500, 'mm', units),
+                    units_manager.convert(0.1, 'mm', units),
+                    units_manager.convert(self.config.DEFAULT_MARGIN_WIDTH, 'mm', units)
+                    )
+
+                tab_inputs.addFloatSpinnerCommandInput(
+                    defs.kerfInputId,
+                    'Kerf Adjustment',
+                    units,
+                    units_manager.convert(0, 'mm', units),
+                    units_manager.convert(50.8, 'mm', units),
+                    units_manager.convert(0.1, 'mm', units),
+                    units_manager.convert(self.config.DEFAULT_KERF_WIDTH, 'mm', units)
+                    )
+
         except:
             self.ui.messageBox('{}:\n{}'.format(initializedFailedMsg,
                                                 traceback.format_exc(3)))

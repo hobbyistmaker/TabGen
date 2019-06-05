@@ -6,12 +6,13 @@ from adsk.core import ValueInput as vi
 from adsk.fusion import DimensionOrientations as do
 from adsk.fusion import FeatureOperations
 from adsk.fusion import PatternDistanceType
+from adsk.fusion import PatternComputeOptions as pco
 
 from .. import definitions as defs
 from .. import fusion
 
 from .automatic import automatic, automatic_params
-from .userdefined import user_defined, user_defined_params
+from .constantwidth import user_defined, user_defined_params
 
 CFO = FeatureOperations.CutFeatureOperation
 EDT = PatternDistanceType.ExtentPatternDistanceType
@@ -24,36 +25,23 @@ class PrimaryAxisMissing(Exception): pass
 
 class FingerManager:
 
-    def __init__(self, config, name, alias, border):
-        self.inputs = config.inputs
-        self.face = self.inputs.selected_face
-        self.alias = alias
+    def __init__(self, inputs, properties, border):
+        self.inputs = inputs
+        self.face = properties.face
+        self.alias = properties.alias
         self.border = border
-        self.app = config.app
-        self.ui = config.ui
-        self.name = name
-
-        # We'll create simple numeric fields for use
-        # in creating the sketches and patterns. We'll
-        # replace with parameters before completing.
-        param_finders = {
-            defs.automaticWidthId: automatic,
-            defs.userDefinedWidthId: user_defined
-        }
-
-        param_modifier = {
-            defs.automaticWidthId: automatic_params,
-            defs.userDefinedWidthId: user_defined_params
-        }
-
-        self.params = param_finders[self.inputs.finger_type](self.inputs)
-        self.modifier = param_modifier[self.inputs.finger_type]
+        self.app = properties.app
+        self.ui = properties.ui
+        self.name = properties.name
+        self.properties = properties
 
     def mark_adjusted_distance(self, sketch):
+        AdjustedMarker = namedtuple('AdjustedMarker', ['left', 'right', 'distance', 'fingers',
+                                                       'face_length', 'second_distance', 'default_width'])
         lines = sketch.sketchCurves.sketchLines
         dimensions = sketch.sketchDimensions
 
-        left_start = fusion.next_point(self.border.bottom.left.geometry, self.params.margin,
+        left_start = fusion.next_point(self.border.bottom.left.geometry, self.properties.margin.value,
                                        0, self.border.is_vertical)
         left_end = fusion.next_point(left_start, 0,
                                      self.border.width, self.border.is_vertical)
@@ -61,7 +49,7 @@ class FingerManager:
         left_adjusted = lines.addByTwoPoints(left_start, left_end)
         left_adjusted.isConstruction = True
 
-        right_start = fusion.next_point(left_start, self.params.adjusted_length,
+        right_start = fusion.next_point(left_start, self.properties.adjusted_length.value,
                                         0, self.border.is_vertical)
         right_end = fusion.next_point(right_start, 0,
                                       self.border.width, self.border.is_vertical)
@@ -76,7 +64,75 @@ class FingerManager:
             Point3D.create(left_start.x + .5, left_start.y - .5, 0)
         )
 
-        return left_adjusted, right_adjusted, adjusted_length
+        adjusted_margin = dimensions.addDistanceDimension(
+            self.border.bottom.left.point,
+            left_adjusted.startSketchPoint,
+            HorizontalDimension,
+            Point3D.create(left_start.x + .5, left_start.y - .5, 0)
+        )
+
+        count_start = fusion.next_point(self.border.bottom.left.geometry, 0,
+                                        -self.border.width, self.border.is_vertical)
+        count_end = fusion.next_point(count_start, self.properties.fingers.value,
+                                      0, self.border.is_vertical)
+
+        left_count = lines.addByTwoPoints(count_start, count_end)
+        left_count.isConstruction = True
+
+        finger_count = dimensions.addDistanceDimension(
+            self.border.bottom.left.point,
+            left_count.startSketchPoint,
+            HorizontalDimension,
+            Point3D.create(left_start.x + .5, left_start.y - .5, 0)
+        )
+
+        face_start = fusion.next_point(self.border.top.left.geometry, 0,
+                                       self.border.width, self.border.is_vertical)
+        face_end = fusion.next_point(face_start, self.properties.face_length.value,
+                                      0, self.border.is_vertical)
+
+        face_line = lines.addByTwoPoints(face_start, face_end)
+        face_line.isConstruction = True
+
+        face_length = dimensions.addDistanceDimension(
+            face_line.startSketchPoint,
+            face_line.endSketchPoint,
+            HorizontalDimension,
+            Point3D.create(left_start.x + .5, left_start.y - .5, 0)
+        )
+
+        second_start = fusion.next_point(self.border.top.left.geometry, 0,
+                                         self.border.width*2, self.border.is_vertical)
+        second_end = fusion.next_point(second_start, self.properties.distance.value, 0,
+                                       self.border.is_vertical)
+
+        second_line = lines.addByTwoPoints(second_start, second_end)
+        second_line.isConstruction = True
+
+        second_distance = dimensions.addDistanceDimension(
+            second_line.startSketchPoint,
+            second_line.endSketchPoint,
+            HorizontalDimension,
+            Point3D.create(left_start.x + .5, left_start.y - .5, 0)
+        )
+
+        dwidth_start = fusion.next_point(self.border.top.left.geometry, 0,
+                                         self.border.width*3, self.border.is_vertical)
+        dwidth_end = fusion.next_point(dwidth_start, self.properties.default_width.value, 0,
+                                       self.border.is_vertical)
+
+        dwidth_line = lines.addByTwoPoints(dwidth_start, dwidth_end)
+        dwidth_line.isConstruction = True
+
+        default_width = dimensions.addDistanceDimension(
+            dwidth_line.startSketchPoint,
+            dwidth_line.endSketchPoint,
+            HorizontalDimension,
+            Point3D.create(left_start.x + .5, left_start.y - .5, 0)
+        )
+
+        return AdjustedMarker(adjusted_margin, right_adjusted, adjusted_length,
+                              finger_count, face_length, second_distance, default_width)
 
     def constrain_finger(self, sketch, finger):
         dimensions = sketch.sketchDimensions
@@ -147,11 +203,12 @@ class FingerManager:
         rreference = right_corner.bottom.left.geometry
 
         left_dimension = dimensions.addDistanceDimension(
-            left_corner.bottom.left.point,
+            self.border.bottom.left.point,
             left_corner.bottom.right.point,
             HorizontalDimension,
             Point3D.create(lreference.x + .5, lreference.y - .5, 0)
         )
+
         constraints.addCoincident(
             left_corner.bottom.left.point,
             self.border.bottom.left.point
@@ -167,7 +224,7 @@ class FingerManager:
 
         right_dimension = dimensions.addDistanceDimension(
             right_corner.bottom.left.point,
-            right_corner.bottom.right.point,
+            self.border.bottom.right.point,
             HorizontalDimension,
             Point3D.create(rreference.x + .5, rreference.y - .5, 0)
         )
@@ -198,6 +255,7 @@ class FingerManager:
             HorizontalDimension,
             Point3D.create(lreference.x + .5, lreference.y - .5, 0)
         )
+
         constraints.addCoincident(
             left_corner.bottom.left.point,
             self.border.bottom.left.point
@@ -233,73 +291,73 @@ class FingerManager:
         return left_dimension, right_dimension
 
     def draw(self, sketch):
-        Properties = namedtuple('Properties', ['left_marker', 'right_marker', 'finger_distance',
-                                               'left_pattern', 'right_pattern', 'pattern_offset', 'pattern_distance',
-                                               'left_adjusted', 'right_adjusted', 'adjusted_length',
+        Properties = namedtuple('Properties', ['marker', 'pattern', 'adjusted',
                                                'finger', 'finger_cut', 'finger_pattern',
                                                'finger_dimension', 'offset_dimension',
                                                'left_corner', 'right_corner',
-                                               'corner_cut', 'corner_pattern', 'left_dimension'])
-        lines = sketch.sketchCurves.sketchLines
+                                               'corner_cut', 'corner_pattern',
+                                               'left_dimension', 'right_dimension'])
+        sketch.isComputeDeferred = True
         timeline = self.app.activeProduct.timeline
 
         extrudes = self.inputs.selected_body.parentComponent.features.extrudeFeatures
         body = self.inputs.selected_body
-        points = self.border.reference_points
         primary = self.border.reference_line
-        secondary = fusion.perpendicular_edge_from_vertex(self.inputs.selected_face,
+        secondary = fusion.perpendicular_edge_from_vertex(self.face,
                                                           self.border.top.left.vertex).edge
 
         start_mp = timeline.markerPosition-1
 
-        left_marker, right_marker, finger_distance = self.mark_finger_distance(sketch)
-        left_pattern, right_pattern, pattern_offset, pattern_distance = self.mark_pattern_distance(sketch, left_marker)
-        left_adjusted, right_adjusted, adjusted_length = self.mark_adjusted_distance(sketch)
+        marker = self.mark_finger_distance(sketch)
+        pattern = self.mark_pattern_distance(sketch, marker.left)
+        adjusted = self.mark_adjusted_distance(sketch)
 
         # The finger has to be drawn and extruded first; the operation
         # will fail after the corners are cut, since the edge reference
         # becomes invalid.
         finger, finger_cut, finger_pattern, finger_dimension, offset_dimension = self.draw_finger(sketch, extrudes, body, primary, secondary)
+        adjusted.face_length.parameter.name = self.properties.face_length.name
+        adjusted.second_distance.parameter.name = self.properties.distance.name
+        adjusted.default_width.parameter.name = self.properties.default_width.name
+        marker.kerf.parameter.name = self.properties.kerf.name
+        adjusted.left.parameter.name = self.properties.margin.name
+        offset_dimension.parameter.name = self.properties.start.name
+        finger_cut.extentOne.distance.name = self.properties.depth.name
+        finger_dimension.parameter.name = self.properties.finger_length.name
+        marker.distance.parameter.name = self.properties.finger_distance.name
+        pattern.distance.parameter.name = self.properties.pattern_distance.name
+        adjusted.distance.parameter.name = self.properties.adjusted_length.name
+        adjusted.fingers.parameter.name = self.properties.fingers.name
+        finger_pattern.quantityTwo.name = self.properties.interior.name
+        sketch.isComputeDeferred = False
 
-        if self.params.offset and not self.inputs.tab_first:
-            left_corner, right_corner, corner_cut, corner_pattern, left_dimension = self.draw_corner(sketch, extrudes, body, primary, secondary)
+        if self.properties.offset.value and not self.properties.tab_first:
+            left_corner, right_corner, corner_cut, corner_pattern, left_dimension, right_dimension = self.draw_corner(sketch, extrudes, body, primary, secondary)
+            left_dimension.parameter.name = self.properties.offset.name
         else:
-            left_corner = right_corner = corner_cut = corner_pattern = left_dimension = None
+            left_corner = right_corner = corner_cut = corner_pattern = left_dimension = right_dimension = None
 
         # Create a Timeline group to keep things organized
         end_mp = timeline.markerPosition
         tlgroup = timeline.timelineGroups.add(start_mp, end_mp-1)
         tlgroup.name = '{} Finger Group'.format(self.name)
 
-        return Properties(left_marker, right_marker, finger_distance,
-                          left_pattern, right_pattern, pattern_offset, pattern_distance,
-                          left_adjusted, right_adjusted, adjusted_length,
+        return Properties(marker, pattern, adjusted,
                           finger, finger_cut, finger_pattern, finger_dimension, offset_dimension,
-                          left_corner, right_corner, corner_cut, corner_pattern, left_dimension)
+                          left_corner, right_corner, corner_cut, corner_pattern, left_dimension, right_dimension)
 
     def save(self, properties):
         if not self.inputs.parametric:
-            self.modifier(self.alias,
-                          self.app.activeProduct.allParameters,
-                          self.app.activeProduct.userParameters,
-                          self.inputs,
-                          properties.finger_dimension, properties.offset_dimension,
-                          properties.finger_cut, properties.finger_pattern,
-                          properties.finger_distance, properties.adjusted_length,
-                          properties.pattern_distance,
-                          getattr(properties, 'corner_cut', None),
-                          getattr(properties, 'corner_pattern', None),
-                          getattr(properties, 'left_dimension', None),
-                          getattr(properties, 'right_dimension', None))
+            self.properties.save(properties)
 
     def draw_corner(self, sketch, extrudes, body, primary, secondary):
         left_corner = self.draw_left_corner(sketch)
         right_corner = self.draw_right_corner(sketch)
         corner_cut = self.extrude_corner(body, extrudes, sketch)
-        corner_pattern = self.duplicate_corner(body, primary, secondary)
+        corner_pattern = self.duplicate_corner(body, primary, secondary, corner_cut)
 
         left_dimension, right_dimension = self.constrain_corners(sketch, left_corner, right_corner)
-        return left_corner, right_corner, corner_cut, corner_pattern, left_dimension
+        return left_corner, right_corner, corner_cut, corner_pattern, left_dimension, right_dimension
 
     def constrain_corners(self, sketch, left_corner, right_corner):
         if self.border.is_vertical:
@@ -307,10 +365,10 @@ class FingerManager:
         else:
             return self.constrain_horizontal_corners(sketch, left_corner, right_corner)
 
-    def duplicate_corner(self, body, primary, secondary):
+    def duplicate_corner(self, body, primary, secondary, corner_cut):
         dname = '{} Corner Duplicate Pattern'.format(self.name)
-        return self.duplicate(dname, [self.corner_cut], 1, 0,
-                                             2, primary, secondary, body)
+        return self.duplicate(dname, [corner_cut], 1, 0,
+                              2, primary, secondary, body)
 
     def extrude_corner(self, body, extrudes, sketch):
         name = '{} Corner Cut Extrude'.format(self.name)
@@ -319,27 +377,29 @@ class FingerManager:
 
     def draw_finger(self, sketch, extrudes, body, primary, secondary):
         lines = sketch.sketchCurves.sketchLines
-        start = fusion.next_point(self.border.bottom.left.geometry, self.params.start,
+        start = fusion.next_point(self.border.bottom.left.geometry, self.properties.start.value,
                                   0, self.border.is_vertical)
-        end = fusion.next_point(start, self.params.finger_length,
+        end = fusion.next_point(start, self.properties.finger_length.value,
                                 self.border.width, self.border.is_vertical)
 
         finger = fusion.Rectangle(lines.addTwoPointRectangle(start, end))
         finger_dimension, offset_dimension = self.constrain_finger(sketch, finger)
-        finger_cut = self.exrude_finger(body, extrudes, sketch)
+        sketch.isComputeDeferred = False
+        finger_cut = self.extrude_finger(body, extrudes, sketch)
         finger_pattern = self.duplicate_finger(body, primary, secondary, finger_cut)
+        sketch.isComputeDeferred = True
 
         return finger, finger_cut, finger_pattern, finger_dimension, offset_dimension
 
     def duplicate_finger(self, body, primary, secondary, finger_cut):
-        quantity = self.params.notches
-        distance = self.params.pattern_distance
+        quantity = self.properties.notches.value
+        distance = self.properties.pattern_distance.value
         dname = '{} Finger Duplicate Pattern'.format(self.name)
         return self.duplicate(dname, [finger_cut], quantity, distance,
-                                      self.inputs.interior.value + 2,
-                                      primary, secondary, body)
+                              self.inputs.interior.value + 2,
+                              primary, secondary, body)
 
-    def exrude_finger(self, body, extrudes, sketch):
+    def extrude_finger(self, body, extrudes, sketch):
         profiles = [sketch.profiles.item(0)]
         cname = '{} Finger Cut Extrude'.format(self.name)
         return self.extrude(profiles, body, extrudes, cname)
@@ -347,19 +407,31 @@ class FingerManager:
     def draw_left_corner(self, sketch):
         lines = sketch.sketchCurves.sketchLines
         start = self.border.bottom.left.geometry
-        end = fusion.next_point(start, self.params.offset,
+        end = fusion.next_point(start, self.properties.offset.value,
                                 self.border.width, self.border.is_vertical)
 
         return fusion.Rectangle(lines.addTwoPointRectangle(start, end))
+        # start = fusion.next_point(self.border.bottom.left.geometry,
+        #                           self.properties.offset.value,
+        #                           0,
+        #                           self.border.is_vertical)
+        # end = fusion.next_point(start, 0, self.border.width, self.border.is_vertical)
+        # return lines.addByTwoPoints(start, end)
 
     def draw_right_corner(self, sketch):
         lines = sketch.sketchCurves.sketchLines
         start = fusion.next_point(self.border.bottom.right.geometry,
-                                  -self.params.offset, 0, self.border.is_vertical)
-        end = fusion.next_point(start, self.params.offset,
+                                  -self.properties.offset.value, 0, self.border.is_vertical)
+        end = fusion.next_point(start, self.properties.offset.value,
                                 self.border.width, self.border.is_vertical)
 
         return fusion.Rectangle(lines.addTwoPointRectangle(start, end))
+        # start = fusion.next_point(self.border.bottom.right.geometry,
+        #                           -self.properties.offset.value,
+        #                           0,
+        #                           self.border.is_vertical)
+        # end = fusion.next_point(start, 0, self.border.width, self.border.is_vertical)
+        # return lines.addByTwoPoints(start, end)
 
     def duplicate(self, name, features, quantity, distance,
                   squantity, primary, secondary, body):
@@ -377,6 +449,7 @@ class FingerManager:
         distance = vi.createByReal(distance)
 
         input_ = patterns.createInput(entities, primary, quantity, distance, EDT)
+        input_.patternComputeOption = pco.IdenticalPatternCompute
 
         self.configure_secondary_axis(input_, secondary, squantity)
 
@@ -385,8 +458,9 @@ class FingerManager:
         return pattern
 
     def configure_secondary_axis(self, input_, secondary, squantity):
-        if self.params.distance > 0 and secondary and secondary.isValid:
-            second_distance = vi.createByReal(self.params.distance - self.params.depth)
+        if self.properties.distance.value > 0 and secondary and secondary.isValid:
+            value = abs(self.properties.distance_two.value)
+            second_distance = vi.createByReal(value)
             input_.setDirectionTwo(secondary,
                                    vi.createByReal(squantity),
                                    second_distance)
@@ -397,7 +471,7 @@ class FingerManager:
         for profile in profiles:
             selection.add(profile)
 
-        dist = vi.createByReal(-abs(self.params.depth))
+        dist = vi.createByReal(-self.properties.depth.value)
         cut_input = extrudes.createInput(selection, CFO)
         cut_input.setDistanceExtent(False, dist)
         cut_input.participantBodies = [body]
@@ -408,10 +482,11 @@ class FingerManager:
         return cut
 
     def mark_finger_distance(self, sketch):
+        FingerMarker = namedtuple('FingerMarker', ['left', 'right', 'distance', 'kerf'])
         lines = sketch.sketchCurves.sketchLines
         dimensions = sketch.sketchDimensions
 
-        left_start = fusion.next_point(self.border.bottom.left.geometry, self.params.offset,
+        left_start = fusion.next_point(self.border.bottom.left.geometry, self.properties.offset.value,
                                        0, self.border.is_vertical)
         left_end = fusion.next_point(left_start, 0,
                                      self.border.width, self.border.is_vertical)
@@ -419,7 +494,15 @@ class FingerManager:
         left_marker = lines.addByTwoPoints(left_start, left_end)
         left_marker.isConstruction = True
 
-        right_start = fusion.next_point(left_start, self.params.finger_distance,
+        kerf_start = fusion.next_point(self.border.bottom.left.geometry, self.properties.kerf.value,
+                                       0, self.border.is_vertical)
+        kerf_end = fusion.next_point(left_start, 0,
+                                     self.border.width, self.border.is_vertical)
+
+        kerf_marker = lines.addByTwoPoints(kerf_start, kerf_end)
+        kerf_marker.isConstruction = True
+
+        right_start = fusion.next_point(left_start, self.properties.finger_distance.value,
                                         0, self.border.is_vertical)
         right_end = fusion.next_point(right_start, 0,
                                       self.border.width, self.border.is_vertical)
@@ -434,13 +517,21 @@ class FingerManager:
             Point3D.create(left_start.x + .5, left_start.y - .5, 0)
         )
 
-        return left_marker, right_marker, finger_distance
+        kerf_distance = dimensions.addDistanceDimension(
+            self.border.bottom.left.point,
+            kerf_marker.startSketchPoint,
+            HorizontalDimension,
+            Point3D.create(kerf_start.x + .25, kerf_start.y - .25, 0)
+        )
+
+        return FingerMarker(left_marker, right_marker, finger_distance, kerf_distance)
 
     def mark_pattern_distance(self, sketch, left_marker):
+        PatternMarker = namedtuple('PatternMarker', ['left', 'right', 'distance'])
         lines = sketch.sketchCurves.sketchLines
         dimensions = sketch.sketchDimensions
 
-        width = self.params.finger_length * (2 if self.inputs.tab_first else 1)
+        width = self.properties.finger_length.value * (2 if self.properties.tab_first else 1)
         left_start = fusion.next_point(self.border.bottom.left.geometry, width,
                                        0, self.border.is_vertical)
         left_end = fusion.next_point(left_start, 0,
@@ -449,20 +540,13 @@ class FingerManager:
         left_pattern = lines.addByTwoPoints(left_start, left_end)
         left_pattern.isConstruction = True
 
-        right_start = fusion.next_point(left_start, self.params.pattern_distance,
+        right_start = fusion.next_point(left_start, self.properties.pattern_distance.value,
                                         0, self.border.is_vertical)
         right_end = fusion.next_point(right_start, 0,
                                       self.border.width, self.border.is_vertical)
 
         right_pattern = lines.addByTwoPoints(right_start, right_end)
         right_pattern.isConstruction = True
-
-        pattern_offset = dimensions.addDistanceDimension(
-            left_marker.startSketchPoint,
-            left_pattern.startSketchPoint,
-            HorizontalDimension,
-            Point3D.create(left_start.x + .5, left_start.y - .5, 0)
-        )
 
         pattern_distance = dimensions.addDistanceDimension(
             left_pattern.startSketchPoint,
@@ -471,4 +555,4 @@ class FingerManager:
             Point3D.create(left_start.x + .5, left_start.y - .5, 0)
         )
 
-        return left_pattern, right_pattern, pattern_offset, pattern_distance
+        return PatternMarker(left_pattern, right_pattern, pattern_distance)
