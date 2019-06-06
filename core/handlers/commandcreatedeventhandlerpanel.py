@@ -108,6 +108,12 @@ class CommandCreatedEventHandlerPanel(CommandCreatedEventHandler):
                 self.add_selection(inputs, defs.dualEdgeSelectId, 'Secondary Face',
                                    'Opposite face for dual-edge cuts.', 'PlanarFaces', 0, 1)
 
+                tcinput = inputs.addIntegerSpinnerCommandInput(defs.wallCountInputId, 'Number of Tabs',
+                                                               0, 200, 1, self.config.DEFAULT_TAB_COUNT)
+
+                tcinput.isVisible = False
+                tcinput.isEnabled = False
+
                 inputs.addFloatSpinnerCommandInput(
                     defs.tabWidthInputId,
                     'Tab Width',
