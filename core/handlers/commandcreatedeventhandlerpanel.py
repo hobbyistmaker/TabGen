@@ -93,10 +93,8 @@ class CommandCreatedEventHandlerPanel(CommandCreatedEventHandler):
                 self.add_dropdown(inputs, defs.fingerTypeId, 'Fingers Type', [Item(defs.userDefinedWidthId,
                                                                                    self.config.DEFAULT_USER_WIDTH_TAB),
                                                                               Item(defs.automaticWidthId,
-                                                                                   self.config.DEFAULT_AUTO_WIDTH_TAB),
-                                                                              Item(defs.constantCountId,
-                                                                                   self.config.DEFAULT_COUNT_TAB)
-                                                                              ])
+                                                                                   self.config.DEFAULT_AUTO_WIDTH_TAB)
+                                                                              )
 
                 self.add_dropdown(inputs, defs.fingerPlaceId, 'Placement', [Item(defs.singleEdgeId,
                                                                                  self.config.DEFAULT_SINGLE_EDGE),

@@ -27,7 +27,7 @@ class Configuration:
     DEFAULT_MARGIN_WIDTH = 0
 
     DEFAULT_START_WITH_TAB = True
-    DEFAULT_DISABLE_PARAMETRIC = True
+    DEFAULT_DISABLE_PARAMETRIC = False
     DEFAULT_ENABLE_PREVIEW = True
 
     # Select one of the two following
