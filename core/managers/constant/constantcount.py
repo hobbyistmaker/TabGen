@@ -3,7 +3,7 @@ from math import ceil, floor
 
 from adsk.core import ValueInput as vi
 
-from .. import fusion
+from ... import fusion
 
 Property = namedtuple('Property', ['name', 'value', 'expression', 'comment'])
 
