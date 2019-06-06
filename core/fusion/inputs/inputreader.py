@@ -1,5 +1,13 @@
 from ... import definitions as defs
 
+from ... import managers
+
+create_properties = {
+    defs.automaticWidthId: managers.create_auto_width,
+    defs.userDefinedWidthId: managers.create_constant_width,
+    defs.constantCountId: managers.create_constant_count
+}
+
 class InputReader:
 
     def __init__(self, inputs, preview=False):
@@ -11,7 +19,9 @@ class InputReader:
         self.distance = inputs.itemById(defs.distanceInputId)
         self.depth = inputs.itemById(defs.mtlThickInputId)
         self.margin = inputs.itemById(defs.marginInputId)
+        self.edge_margin = inputs.itemById(defs.edgeMarginInputId)
         self.width = inputs.itemById(defs.tabWidthInputId)
+        self.kerf = inputs.itemById(defs.kerfInputId)
         self.interior = inputs.itemById(defs.wallCountInputId)
         self.tab_first = inputs.itemById(defs.startWithTabInputId).value
         self.finger_type = inputs.itemById(defs.fingerTypeId).selectedItem.name
@@ -78,3 +88,6 @@ class InputReader:
             return face.area == self.selected_edge.area
 
         return True
+
+    def create_properties(self, app, ui):
+        return create_properties[self.finger_type](app, ui, self)

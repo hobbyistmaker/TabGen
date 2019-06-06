@@ -10,13 +10,13 @@ class InvalidFaceSelected(Exception): pass
 class FaceNotExists(Exception): pass
 
 
-def create(config, preview=True):
-    face = config.inputs.selected_face
+def create(inputs, properties, preview=True):
+    face = inputs.selected_face
 
     sketch = initialize_sketch(face)
     border = create_sketch_border(sketch)
 
-    name = config.inputs.name
+    name = inputs.name
     orientation = fusion.face_orientation(face)
     face_id = fusion.add_face(face)
 
@@ -27,7 +27,7 @@ def create(config, preview=True):
 
     sketch.name = '{} Finger Sketch'.format(name)
 
-    manager = FingerManager(config, name, alias, border)
+    manager = FingerManager(inputs, properties, border)
     properties = manager.draw(sketch)
     if not preview:
         manager.save(properties)

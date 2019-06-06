@@ -23,7 +23,9 @@ class InputChangedHandler(InputChangedEventHandler):
     def notify(self, args):
         try:
             cmdInput = args.input
-            inputs = fusion.ChangedInputs(args.inputs)
+            first_inputs = args.inputs
+            parent_inputs = args.inputs.command.commandInputs if args.inputs.command else first_inputs
+            inputs = fusion.ChangedInputs(parent_inputs)
 
             id_ = cmdInput.id
 

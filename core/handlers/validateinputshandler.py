@@ -37,7 +37,9 @@ class ValidateInputsHandler(ValidateInputsEventHandler):
             # Validate that the tabs are being cut on the edge of
             # material and that the face is long enough for at least
             # one tab
-            inputs = fusion.InputReader(args.inputs)
+            first_inputs = args.inputs
+            parent_inputs = args.inputs.command.commandInputs if args.inputs.command else first_inputs
+            inputs = fusion.InputReader(parent_inputs)
             args.areInputsValid = check_all(inputs)
 
         except:
