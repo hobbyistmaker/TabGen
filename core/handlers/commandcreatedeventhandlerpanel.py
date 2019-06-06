@@ -93,7 +93,7 @@ class CommandCreatedEventHandlerPanel(CommandCreatedEventHandler):
                 self.add_dropdown(inputs, defs.fingerTypeId, 'Fingers Type', [Item(defs.userDefinedWidthId,
                                                                                    self.config.DEFAULT_USER_WIDTH_TAB),
                                                                               Item(defs.automaticWidthId,
-                                                                                   self.config.DEFAULT_AUTO_WIDTH_TAB)
+                                                                                   self.config.DEFAULT_AUTO_WIDTH_TAB)]
                                                                               )
 
                 self.add_dropdown(inputs, defs.fingerPlaceId, 'Placement', [Item(defs.singleEdgeId,
@@ -164,8 +164,7 @@ class CommandCreatedEventHandlerPanel(CommandCreatedEventHandler):
                                          '',
                                          self.config.DEFAULT_ENABLE_PREVIEW)
 
-                tab_input = cmd_inputs.addTabCommandInput(defs.advancedTabId, 'Advanced')
-                tab_inputs = tab_input.children
+                tab_inputs = cmd_inputs.addTabCommandInput(defs.advancedTabId, 'Advanced').children
 
                 tab_inputs.addIntegerSpinnerCommandInput(defs.wallCountInputId, 'Interior Walls',
                                                      0, 200, 1, self.config.DEFAULT_WALL_COUNT)
