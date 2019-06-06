@@ -22,6 +22,7 @@ class ConstantWidthFingers:
         self.tab_first = inputs.tab_first
         self.face = inputs.selected_face
         self.alternate = inputs.selected_edge
+        self.preview_enabled = inputs.preview
 
         self.name = inputs.name
         orientation = fusion.face_orientation(self.face)
@@ -219,27 +220,49 @@ class ConstantWidthFingers:
         return Property(alias('offset'), value, expression,
                         'offset point for start of the finger distance')
 
+    @property
+    def ordered(self):
+        return [
+            self.default_width,
+            self.margin,
+            self.face_length,
+            self.edge_margin,
+            self.depth,
+            self.kerf,
+            self.distance,
+            self.adjusted_depth,
+            self.adjusted_length,
+            self.fingers,
+            self.finger_length,
+            self.adjusted_finger_length,
+            self.finger_distance,
+            self.pattern_distance,
+            self.distance_two,
+            self.offset,
+            self.start
+        ]
+
     def save(self, properties):
         properties.sketch.isComputeDeferred = True
-        properties.default_width.parameter.expression = self.default_width.expression
-        properties.face_length.parameter.expression = self.face_length.expression
-        properties.edge_margin.parameter.expression = self.edge_margin.expression
-        properties.second_distance.parameter.expression = self.distance_two.expression
-        properties.finger_dimension.parameter.expression = self.adjusted_finger_length.expression
-        properties.adjusted_finger_length.parameter.expression = self.adjusted_finger_length.expression
-        properties.finger_count.parameter.expression = self.fingers.expression
-        properties.adjusted_length.parameter.expression = self.adjusted_length.expression
-        properties.adjusted_depth.parameter.expression = self.adjusted_depth.expression
+        # properties.default_width.parameter.expression = self.default_width.expression
+        # properties.face_length.parameter.expression = self.face_length.expression
+        # properties.edge_margin.parameter.expression = self.edge_margin.expression
+        # properties.second_distance.parameter.expression = self.distance_two.expression
+        # properties.finger_dimension.parameter.expression = self.adjusted_finger_length.expression
+        # properties.adjusted_finger_length.parameter.expression = self.adjusted_finger_length.expression
+        # properties.finger_count.parameter.expression = self.fingers.expression
+        # properties.adjusted_length.parameter.expression = self.adjusted_length.expression
+        # properties.adjusted_depth.parameter.expression = self.adjusted_depth.expression
         properties.finger_cut.extentOne.distance.expression = '-{}'.format(self.adjusted_depth.name)
 
-        properties.start_dimension.parameter.expression = self.start.expression
-        properties.finger_distance.parameter.expression = self.finger_distance.expression
-        properties.pattern_distance.parameter.expression = self.pattern_distance.expression
+        # properties.start_dimension.parameter.expression = self.start.expression
+        # properties.finger_distance.parameter.expression = self.finger_distance.expression
+        # properties.pattern_distance.parameter.expression = self.pattern_distance.expression
         properties.finger_pattern.distanceOne.expression = self.pattern_distance.name
-        properties.finger_pattern.distanceTwo.expression = self.distance_two.expression
+        properties.finger_pattern.distanceTwo.expression = self.distance_two.name
         properties.finger_pattern.quantityOne.expression = self.notches.expression
         properties.finger_pattern.quantityTwo.expression = '2 + {}'.format(self.interior.value)
-        properties.offset_dimension.parameter.expression = self.offset.expression
+        # properties.offset_dimension.parameter.expression = self.offset.expression
 
         left_dimension = getattr(properties, 'left_dimension', None)
         if left_dimension:

@@ -97,6 +97,8 @@ class FingerManager:
         dimension = dimension.addOffsetDimension(self.border.left.line, line,
                                                  Point3D.create(start.x + .5, start.y - .5, 0))
         dimension.parameter.name = parameter.name
+        if self.properties.parametric and not self.properties.preview_enabled:
+            dimension.parameter.expression = parameter.expression
         return dimension
 
     def create_right_offset_dimension(self, sketch, value):
@@ -402,13 +404,11 @@ class FingerManager:
         return left_dimension, right_dimension
 
     def draw(self, sketch):
-        Properties = namedtuple('Properties', ['finger_distance', 'adjusted_length', 'pattern_distance', 'distance',
-                                               'default_width', 'face_length', 'second_distance',
-                                               'finger_count', 'finger', 'finger_cut', 'finger_pattern',
-                                               'finger_length', 'start_dimension', 'offset_dimension',
-                                               'corner_cut', 'corner_pattern', 'default_depth', 'adjusted_depth',
-                                               'left_dimension', 'right_dimension', 'adjusted_finger_length',
-                                               'finger_dimension', 'margin', 'kerf', 'sketch', 'edge_margin'])
+        Properties = namedtuple('Properties', ['finger', 'finger_cut', 'finger_pattern',
+                                               'start_dimension',
+                                               'corner_cut', 'corner_pattern',
+                                               'left_dimension', 'right_dimension',
+                                               'finger_dimension', 'sketch'])
         sketch.isComputeDeferred = True
         timeline = self.app.activeProduct.timeline
 
@@ -420,37 +420,47 @@ class FingerManager:
 
         start_mp = timeline.markerPosition-1
 
-        margin = self.create_left_offset_dimension(sketch, self.properties.margin)
-        edge_margin = self.create_left_offset_dimension(sketch, self.properties.edge_margin)
-        kerf = self.create_left_offset_dimension(sketch, self.properties.kerf)
-        default_depth = self.create_left_offset_dimension(sketch, self.properties.depth)
-        adjusted_length = self.create_left_offset_dimension(sketch, self.properties.adjusted_length)
-        adjusted_depth = self.create_left_offset_dimension(sketch, self.properties.adjusted_depth)
-        adjusted_finger_length = self.create_left_offset_dimension(sketch, self.properties.adjusted_finger_length)
-        finger_count = self.create_left_offset_dimension(sketch, self.properties.fingers)
-        finger_length = self.create_left_offset_dimension(sketch, self.properties.finger_length)
-        face_length = self.create_left_offset_dimension(sketch, self.properties.face_length)
-        distance = self.create_left_offset_dimension(sketch, self.properties.distance)
-        second_distance = self.create_left_offset_dimension(sketch, self.properties.distance_two)
-        default_width = self.create_left_offset_dimension(sketch, self.properties.default_width)
-        offset_dimension = self.create_left_offset_dimension(sketch, self.properties.offset)
-        finger_distance = self.create_left_offset_dimension(sketch, self.properties.finger_distance)
-        pattern_distance = self.create_left_offset_dimension(sketch, self.properties.pattern_distance)
+        for item in self.properties.ordered:
+            try:
+                self.create_left_offset_dimension(sketch, item)
+            except:
+                self.ui.messageBox('Error configuring parameter: {} -- {}'.format(item.name, item.expression))
+
+        # default_width = self.create_left_offset_dimension(sketch, self.properties.default_width)
+        # margin = self.create_left_offset_dimension(sketch, self.properties.margin)
+        # face_length = self.create_left_offset_dimension(sketch, self.properties.face_length)
+        # edge_margin = self.create_left_offset_dimension(sketch, self.properties.edge_margin)
+        # default_depth = self.create_left_offset_dimension(sketch, self.properties.depth)
+        # kerf = self.create_left_offset_dimension(sketch, self.properties.kerf)
+        # distance = self.create_left_offset_dimension(sketch, self.properties.distance)
+        #
+        # adjusted_depth = self.create_left_offset_dimension(sketch, self.properties.adjusted_depth)
+        # adjusted_length = self.create_left_offset_dimension(sketch, self.properties.adjusted_length)
+        # finger_count = self.create_left_offset_dimension(sketch, self.properties.fingers)
+        # finger_length = self.create_left_offset_dimension(sketch, self.properties.finger_length)
+        # pattern_distance = self.create_left_offset_dimension(sketch, self.properties.pattern_distance)
+        # finger_distance = self.create_left_offset_dimension(sketch, self.properties.finger_distance)
+        # adjusted_finger_length = self.create_left_offset_dimension(sketch, self.properties.adjusted_finger_length)
+        # second_distance = self.create_left_offset_dimension(sketch, self.properties.distance_two)
+        # offset_dimension = self.create_left_offset_dimension(sketch, self.properties.offset)
 
         # The finger has to be drawn and extruded first; the operation
         # will fail after the corners are cut, since the edge reference
         # becomes invalid.
-        finger, finger_cut, finger_pattern, finger_dimension, start_dimension = self.draw_finger(sketch, extrudes, body, primary, secondary)
+        finger, finger_cut, finger_pattern, finger_dimension, start_dimension = self.draw_finger(sketch, extrudes,
+                                                                                                 body, primary,
+                                                                                                 secondary)
 
-        start_dimension.parameter.name = self.properties.start.name
+        start_dimension.parameter.expression = self.properties.start.name
         finger_dimension.parameter.expression = self.properties.adjusted_finger_length.name
         finger_pattern.quantityTwo.name = self.properties.interior.name
 
         sketch.isComputeDeferred = False
 
         if self.properties.offset.value and not self.properties.tab_first:
-            corner_cut, corner_pattern, left_dimension, right_dimension = self.draw_corner(sketch, extrudes, body, primary, secondary)
-            left_dimension.parameter.name = self.properties.offset.name
+            corner_cut, corner_pattern, left_dimension, right_dimension = self.draw_corner(sketch, extrudes, body,
+                                                                                           primary, secondary)
+            left_dimension.parameter.expression = self.properties.offset.name
         else:
             corner_cut = corner_pattern = left_dimension = right_dimension = None
 
@@ -459,12 +469,10 @@ class FingerManager:
         tlgroup = timeline.timelineGroups.add(start_mp, end_mp-1)
         tlgroup.name = '{} Finger Group'.format(self.name)
 
-        return Properties(finger_distance, adjusted_length, pattern_distance, distance,
-                          default_width, face_length, second_distance, finger_count,
-                          finger, finger_cut, finger_pattern, finger_length, start_dimension,
-                          offset_dimension, corner_cut, corner_pattern, default_depth, adjusted_depth,
-                          left_dimension, right_dimension, adjusted_finger_length,
-                          finger_dimension, margin, kerf, sketch, edge_margin)
+        return Properties(finger, finger_cut, finger_pattern, start_dimension,
+                          corner_cut, corner_pattern,
+                          left_dimension, right_dimension,
+                          finger_dimension, sketch)
 
     def save(self, properties):
         if not self.inputs.parametric:
@@ -491,9 +499,10 @@ class FingerManager:
                               2, primary, secondary, body)
 
     def extrude_corner(self, body, extrudes, sketch):
+        edge_offset = self.properties.edge_margin.value
         name = '{} Corner Cut Extrude'.format(self.name)
         profiles = [sketch.profiles.item(1), sketch.profiles.item(2)]
-        return self.extrude(profiles, body, extrudes, name)
+        return self.extrude(profiles, body, extrudes, name, edge_offset)
 
     def draw_finger(self, sketch, extrudes, body, primary, secondary):
         lines = sketch.sketchCurves.sketchLines
