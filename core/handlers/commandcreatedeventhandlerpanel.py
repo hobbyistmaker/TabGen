@@ -108,7 +108,7 @@ class CommandCreatedEventHandlerPanel(CommandCreatedEventHandler):
                 self.add_selection(inputs, defs.dualEdgeSelectId, 'Secondary Face',
                                    'Opposite face for dual-edge cuts.', 'PlanarFaces', 0, 1)
 
-                tcinput = inputs.addIntegerSpinnerCommandInput(defs.wallCountInputId, 'Number of Tabs',
+                tcinput = inputs.addIntegerSpinnerCommandInput(defs.tabCountInputId, 'Number of Tabs',
                                                                0, 200, 1, self.config.DEFAULT_TAB_COUNT)
 
                 tcinput.isVisible = False
@@ -173,7 +173,7 @@ class CommandCreatedEventHandlerPanel(CommandCreatedEventHandler):
                 tab_inputs = cmd_inputs.addTabCommandInput(defs.advancedTabId, 'Advanced').children
 
                 tab_inputs.addIntegerSpinnerCommandInput(defs.wallCountInputId, 'Interior Walls',
-                                                     0, 200, 1, self.config.DEFAULT_WALL_COUNT)
+                                                         0, 200, 1, self.config.DEFAULT_WALL_COUNT)
 
                 tab_inputs.addFloatSpinnerCommandInput(
                     defs.marginInputId,

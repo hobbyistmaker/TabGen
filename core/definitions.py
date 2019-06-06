@@ -19,6 +19,7 @@ patternDistanceInputId = 'patternValueInput'
 referenceSelectId = 'referenceSelectInput'
 previewInputId = 'previewCommandInput'
 kerfInputId = 'kerfValueInput'
+tabCountInputId = 'tabCountValueInput'
 
 advancedTabId = 'advancedTabId'
 
