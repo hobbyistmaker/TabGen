@@ -23,6 +23,7 @@ class InputReader:
         self.width = inputs.itemById(defs.tabWidthInputId)
         self.kerf = inputs.itemById(defs.kerfInputId)
         self.interior = inputs.itemById(defs.wallCountInputId)
+        self.finger_count = inputs.itemById(defs.tabCountInputId)
         self.tab_first = inputs.itemById(defs.startWithTabInputId).value
         self.finger_type = inputs.itemById(defs.fingerTypeId).selectedItem.name
         self.parametric = inputs.itemById(defs.parametricInputId).value
