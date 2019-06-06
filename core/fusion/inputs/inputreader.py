@@ -19,6 +19,7 @@ class InputReader:
         self.distance = inputs.itemById(defs.distanceInputId)
         self.depth = inputs.itemById(defs.mtlThickInputId)
         self.margin = inputs.itemById(defs.marginInputId)
+        self.edge_margin = inputs.itemById(defs.edgeMarginInputId)
         self.width = inputs.itemById(defs.tabWidthInputId)
         self.kerf = inputs.itemById(defs.kerfInputId)
         self.interior = inputs.itemById(defs.wallCountInputId)
