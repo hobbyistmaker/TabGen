@@ -48,7 +48,7 @@ The options available on the Main Tab so far are:
 
 On the Advanced Tab:
 
-![Image of the Advanced Tab](resources/Advanced%20tab.png)
+![Image of the Advanced Tab](resources/Advanced%20Tab.png)
 
 **Interior Walls**: This will place notches equally across the **Duplicate Distance**, for situations where you want to have other walls finger jointed in the interior of the body.
 
