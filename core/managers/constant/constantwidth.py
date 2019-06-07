@@ -23,6 +23,7 @@ class ConstantWidthFingers:
         self.face = inputs.selected_face
         self.alternate = inputs.selected_edge
         self.preview_enabled = inputs.preview
+        self.units = self.app.activeProduct.unitsManager
 
         self.name = inputs.name
         orientation = fusion.face_orientation(self.face)
@@ -47,8 +48,8 @@ class ConstantWidthFingers:
         self.fingers = self._get_fingers(self._name, self.adjusted_length, self.default_width)
         self.finger_length = self._get_finger_length(self._name, self.default_width, self.kerf)
         self.adjusted_finger_length = self._get_adjusted_finger_length(self._name, self.finger_length, self.kerf)
-        self.finger_distance = self._get_finger_distance(self._name, self.default_width, self.fingers)
-        self.notches = self._get_notches(self._name, self.fingers, self.tab_first)
+        self.finger_distance = self._get_finger_distance(self._name, self.default_width, self.fingers, self.units)
+        self.notches = self._get_notches(self._name, self.fingers, self.tab_first, self.units)
         self.pattern_distance = self._get_pattern_distance(self._name, self.finger_distance, self.default_width,
                                                            self.tab_first)
         self.distance_two = self._get_distance_two(self._name, self.distance, self.adjusted_depth,
@@ -155,19 +156,19 @@ class ConstantWidthFingers:
                         'nominal length of each finger')
 
     @staticmethod
-    def _get_finger_distance(alias, default_width, fingers):
+    def _get_finger_distance(alias, default_width, fingers, units):
         return Property(alias('finger_distance'), default_width.value * fingers.value,
-                        '({}*{}/1mm)'.format(default_width.name, fingers.name),
+                        '({}*{}/1{})'.format(default_width.name, fingers.name, units.defaultLengthUnits),
                         'full distance of notch placement')
 
     @staticmethod
-    def _get_notches(alias, fingers, tab_first):
+    def _get_notches(alias, fingers, tab_first, units):
         if tab_first:
             value = floor(fingers.value/2)
-            expression = 'floor(({}/1mm)/2)'.format(fingers.name)
+            expression = 'floor(({}/1{})/2)'.format(fingers.name, units.defaultLengthUnits)
         else:
             value = ceil(fingers.value/2)
-            expression = 'ceil(({}/1mm)/2)'.format(fingers.name)
+            expression = 'ceil(({}/1{})/2)'.format(fingers.name, units.defaultLengthUnits)
 
         return Property(alias('notches'), value, expression,
                         'number of notches to cut in face')
