@@ -5,7 +5,7 @@ from adsk.core import ValueInput as vi
 
 from ... import fusion
 
-Property = namedtuple('Property', ['name', 'value', 'expression', 'comment'])
+Property = namedtuple('Property', ['name', 'value', 'expression', 'comment', 'unit_type'])
 
 
 def create_constant_width(app, ui, inputs):
@@ -23,6 +23,7 @@ class ConstantWidthFingers:
         self.face = inputs.selected_face
         self.alternate = inputs.selected_edge
         self.preview_enabled = inputs.preview
+        self.units = self.app.activeProduct.unitsManager
 
         self.name = inputs.name
         orientation = fusion.face_orientation(self.face)
@@ -42,19 +43,22 @@ class ConstantWidthFingers:
         self.interior = self._get_interior(inputs.interior)
         self.edge_margin = self._get_edge_margin(inputs.edge_margin)
 
-        self.adjusted_length = self._get_adjusted_length(self._name, self.face_length, self.margin)
-        self.adjusted_depth = self._get_adjusted_depth(self._name, self.depth, self.kerf)
-        self.fingers = self._get_fingers(self._name, self.adjusted_length, self.default_width)
-        self.finger_length = self._get_finger_length(self._name, self.default_width, self.kerf)
-        self.adjusted_finger_length = self._get_adjusted_finger_length(self._name, self.finger_length, self.kerf)
-        self.finger_distance = self._get_finger_distance(self._name, self.default_width, self.fingers)
-        self.notches = self._get_notches(self._name, self.fingers, self.tab_first)
+        self.adjusted_length = self._get_adjusted_length(self._name, self.face_length, self.margin, self.units)
+        self.adjusted_depth = self._get_adjusted_depth(self._name, self.depth, self.kerf, self.units)
+        self.fingers = self._get_fingers(self._name, self.adjusted_length, self.default_width, self.units)
+        self.finger_length = self._get_finger_length(self._name, self.default_width, self.kerf, self.units)
+        self.adjusted_finger_length = self._get_adjusted_finger_length(self._name, self.finger_length,
+                                                                       self.kerf, self.units)
+        self.finger_distance = self._get_finger_distance(self._name, self.default_width, self.fingers, self.units)
+        self.notches = self._get_notches(self._name, self.fingers, self.tab_first, self.units)
         self.pattern_distance = self._get_pattern_distance(self._name, self.finger_distance, self.default_width,
-                                                           self.tab_first)
+                                                           self.tab_first, self.units)
         self.distance_two = self._get_distance_two(self._name, self.distance, self.adjusted_depth,
-                                                   self.edge_margin)
-        self.offset = self._get_offset(self._name, self.face_length, self.finger_distance, self.kerf, self.tab_first)
-        self.start = self._get_start(self._name, self.offset, self.default_width, self.kerf, self.tab_first)
+                                                   self.edge_margin, self.units)
+        self.offset = self._get_offset(self._name, self.face_length, self.finger_distance,
+                                       self.kerf, self.tab_first, self.units)
+        self.start = self._get_start(self._name, self.offset, self.default_width,
+                                     self.kerf, self.tab_first, self.units)
 
     def _name(self, name):
         return '{}_{}'.format(self.alias, name)
@@ -81,7 +85,7 @@ class ConstantWidthFingers:
             else:
                 expression = formula.format(getattr(input_, 'expression', self._name(name)))
 
-        return Property(self._name(name), value, expression, comment)
+        return Property(self._name(name), value, expression, comment, getattr(input_, 'unitType', ''))
 
     def _get_kerf(self, input_):
         return self._get_param(input_, 'kerf',
@@ -124,101 +128,147 @@ class ConstantWidthFingers:
                                save=False)
 
     @staticmethod
-    def _get_adjusted_depth(alias, depth, kerf):
-        return Property(alias('adjusted_depth'), abs(depth.value) - abs(kerf.value)/2,
-                        '(abs({}) - abs({})/2)'.format(depth.name, kerf.name),
-                        'kerf adjusted depth of notch')
+    def _get_adjusted_depth(alias, depth, kerf, units):
+        str_format = '(abs({}) - abs({})/2)'
+        return Property(alias('adjusted_depth'),
+                        # abs(depth.value) - abs(kerf.value)/2,
+                        units.evaluateExpression(str_format.format(depth.value, kerf.value), 'cm'),
+                        str_format.format(depth.name, kerf.name),
+                        'kerf adjusted depth of notch',
+                        units.defaultLengthUnits)
 
     @staticmethod
-    def _get_adjusted_length(alias, face_length, margin):
-        return Property(alias('adjusted_length'), face_length.value - margin.value * 2,
-                        '({}) - ({})*2'.format(face_length.name, margin.name),
-                        'adjusted length of the face without margins')
+    def _get_adjusted_length(alias, face_length, margin, units):
+        str_format = '({}) - ({})*2'
+        return Property(alias('adjusted_length'),
+                        # face_length.value - margin.value * 2,
+                        units.evaluateExpression(str_format.format(face_length.value, margin.value), 'cm'),
+                        str_format.format(face_length.name, margin.name),
+                        'adjusted length of the face without margins',
+                        units.defaultLengthUnits)
 
     @staticmethod
-    def _get_adjusted_finger_length(alias, finger_length, kerf):
-        return Property(alias('adjusted_finger_length'), (abs(finger_length.value) - abs(kerf.value)),
-                        '(abs({}) - abs({}))'.format(finger_length.name, kerf.name),
-                        'kerf adjusted length of notches that are cut')
+    def _get_adjusted_finger_length(alias, finger_length, kerf, units):
+        str_format = '(abs({}) - abs({}))'
+        return Property(alias('adjusted_finger_length'),
+                        # (abs(finger_length.value) - abs(kerf.value)),
+                        units.evaluateExpression(str_format.format(finger_length.value, kerf.value), 'cm'),
+                        str_format.format(finger_length.name, kerf.name),
+                        'kerf adjusted length of notches that are cut',
+                        units.defaultLengthUnits)
 
     @staticmethod
-    def _get_fingers(alias, adjusted_length, default_width):
-        return Property(alias('fingers'), (ceil(max(3, floor(adjusted_length.value / default_width.value))/2)*2)-1,
-                        '((ceil(max(3; floor({} / {}))/2)*2)-1)'.format(adjusted_length.name,
-                                                                        default_width.name),
-                        'total number of fingers across the jointed faces')
+    def _get_fingers(alias, adjusted_length, default_width, units):
+        str_format = '((ceil(max(3; floor({} / {}))/2)*2)-1)'
+        return Property(alias('fingers'),
+                        (ceil(max(3, floor(adjusted_length.value / default_width.value))/2)*2)-1,
+                        str_format.format(adjusted_length.name, default_width.name),
+                        'total number of fingers across the jointed faces',
+                        units.defaultLengthUnits)
 
     @staticmethod
-    def _get_finger_length(alias, default_width, kerf):
-        return Property(alias('finger_length'), default_width.value - kerf.value,
-                        '({} - {})'.format(default_width.name, kerf.name),
-                        'nominal length of each finger')
+    def _get_finger_length(alias, default_width, kerf, units):
+        str_format = '({} - {})'
+        return Property(alias('finger_length'),
+                        # default_width.value - kerf.value,
+                        units.evaluateExpression(str_format.format(default_width.value, kerf.value), 'cm'),
+                        str_format.format(default_width.name, kerf.name),
+                        'nominal length of each finger',
+                        units.defaultLengthUnits)
 
     @staticmethod
-    def _get_finger_distance(alias, default_width, fingers):
-        return Property(alias('finger_distance'), default_width.value * fingers.value,
-                        '({}*{}/1mm)'.format(default_width.name, fingers.name),
-                        'full distance of notch placement')
+    def _get_finger_distance(alias, default_width, fingers, units):
+        str_format = '({} * {})'
+        return Property(alias('finger_distance'),
+                        # default_width.value * fingers.value,
+                        units.evaluateExpression(str_format.format(default_width.value, fingers.value), 'cm'),
+                        str_format.format(default_width.name, '{}/1{}'.format(fingers.name,
+                                          units.defaultLengthUnits)),
+                        'full distance of notch placement',
+                        units.defaultLengthUnits)
 
     @staticmethod
-    def _get_notches(alias, fingers, tab_first):
+    def _get_notches(alias, fingers, tab_first, units):
         if tab_first:
+            str_format = 'floor(({}/1{})/2)'
             value = floor(fingers.value/2)
-            expression = 'floor(({}/1mm)/2)'.format(fingers.name)
+            expression = str_format.format(fingers.name, units.defaultLengthUnits)
         else:
+            str_format = 'ceil(({}/1{})/2)'
             value = ceil(fingers.value/2)
-            expression = 'ceil(({}/1mm)/2)'.format(fingers.name)
+            expression = str_format.format(fingers.name, units.defaultLengthUnits)
 
         return Property(alias('notches'), value, expression,
-                        'number of notches to cut in face')
+                        'number of notches to cut in face',
+                        units.defaultLengthUnits)
 
     @staticmethod
-    def _get_pattern_distance(alias, finger_distance, default_width, tab_first):
+    def _get_pattern_distance(alias, finger_distance, default_width, tab_first, units):
         if tab_first:
+            str_format = '(({} - {}*3))'
             value = finger_distance.value - default_width.value*3
-            expression = '(({} - {}*3))'.format(finger_distance.name, default_width.name)
+            # value = units.evaluateExpression(str_format.format(finger_distance.value, default_width.value), 'cm'),
+            expression = str_format.format(finger_distance.name, default_width.name)
         else:
+            str_format = '({} - {})'
             value = finger_distance.value - default_width.value
-            expression = '({} - {})'.format(finger_distance.name, default_width.name)
+            # value = units.evaluateExpression(str_format.format(finger_distance.value, default_width.value), 'cm'),
+            expression = str_format.format(finger_distance.name, default_width.name)
 
         return Property(alias('pattern_distance'), value, expression,
-                        'distance over which to place the rectangular pattern.')
+                        'distance over which to place the rectangular pattern.',
+                        units.defaultLengthUnits)
 
     @staticmethod
-    def _get_distance_two(alias, distance, depth, edge_margin):
+    def _get_distance_two(alias, distance, depth, edge_margin, units):
         if distance.value:
+            str_format = '({} - {} - abs({}*2))'
             value = distance.value - depth.value - abs(edge_margin.value*2)
-            expression = '({} - {} - abs({}*2))'.format(distance.name, depth.name, edge_margin.name)
+            # value = units.evaluateExpression(str_format.format(distance.value, depth.value, edge_margin.value), 'cm'),
+            expression = str_format.format(distance.name, depth.name, edge_margin.name)
         else:
             value = 0
             expression = '0'
 
         return Property(alias('second_distance'), value, expression,
-                        'distance to second face.')
+                        'distance to second face.',
+                        units.defaultLengthUnits)
 
     @staticmethod
-    def _get_start(alias, offset, finger_length, kerf, tab_first):
+    def _get_start(alias, offset, default_width, kerf, tab_first, units):
         if tab_first:
-            value = offset.value + finger_length.value + kerf.value/2
-            expression = '({} + {} + {})'.format(offset.name, finger_length.name, kerf.name)
+            str_format = '{} + {} + {}'
+            # value = offset.value + default_width.value + kerf.value
+            value = units.evaluateExpression(str_format.format(offset.value, default_width.value, kerf.value), 'cm')
+            expression = str_format.format(offset.name, default_width.name, kerf.name)
         else:
-            value = offset.value
-            expression = '({})'.format(offset.name, kerf.name)
+            str_format = '{}'
+            # value = offset.value
+            value = units.evaluateExpression(str_format.format(offset.value, kerf.value), 'cm'),
+            expression = str_format.format(offset.name, kerf.name)
 
         return Property(alias('start'), value, expression,
-                        'start point for first notch')
+                        'start point for first notch',
+                        units.defaultLengthUnits)
 
     @staticmethod
-    def _get_offset(alias, face_length, finger_distance, kerf, tab_first):
+    def _get_offset(alias, face_length, finger_distance, kerf, tab_first, units):
         if tab_first:
+            str_format = '({} - {})/2 - {}/2'
             value = (face_length.value - finger_distance.value)/2 - kerf.value/2
-            expression = '({} - {})/2 - {}/2'.format(face_length.name, finger_distance.name, kerf.name)
+            # value = units.evaluateExpression(str_format.format(face_length.value, finger_distance.value, kerf.value),
+            #                                  'cm'),
+            expression = str_format.format(face_length.name, finger_distance.name, kerf.name)
         else:
+            str_format = '({} - {})/2 + {}/2'
             value = (face_length.value - finger_distance.value)/2 + kerf.value/2
-            expression = '({} - {})/2 + {}/2'.format(face_length.name, finger_distance.name, kerf.name)
+            # value = units.evaluateExpression(str_format.format(face_length.value, finger_distance.value, kerf.value),
+            #                                  'cm'),
+            expression = str_format.format(face_length.name, finger_distance.name, kerf.name)
 
         return Property(alias('offset'), value, expression,
-                        'offset point for start of the finger distance')
+                        'offset point for start of the finger distance',
+                        units.defaultLengthUnits)
 
     @property
     def ordered(self):

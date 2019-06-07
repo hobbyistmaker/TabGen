@@ -426,24 +426,6 @@ class FingerManager:
             except:
                 self.ui.messageBox('Error configuring parameter: {} -- {}'.format(item.name, item.expression))
 
-        # default_width = self.create_left_offset_dimension(sketch, self.properties.default_width)
-        # margin = self.create_left_offset_dimension(sketch, self.properties.margin)
-        # face_length = self.create_left_offset_dimension(sketch, self.properties.face_length)
-        # edge_margin = self.create_left_offset_dimension(sketch, self.properties.edge_margin)
-        # default_depth = self.create_left_offset_dimension(sketch, self.properties.depth)
-        # kerf = self.create_left_offset_dimension(sketch, self.properties.kerf)
-        # distance = self.create_left_offset_dimension(sketch, self.properties.distance)
-        #
-        # adjusted_depth = self.create_left_offset_dimension(sketch, self.properties.adjusted_depth)
-        # adjusted_length = self.create_left_offset_dimension(sketch, self.properties.adjusted_length)
-        # finger_count = self.create_left_offset_dimension(sketch, self.properties.fingers)
-        # finger_length = self.create_left_offset_dimension(sketch, self.properties.finger_length)
-        # pattern_distance = self.create_left_offset_dimension(sketch, self.properties.pattern_distance)
-        # finger_distance = self.create_left_offset_dimension(sketch, self.properties.finger_distance)
-        # adjusted_finger_length = self.create_left_offset_dimension(sketch, self.properties.adjusted_finger_length)
-        # second_distance = self.create_left_offset_dimension(sketch, self.properties.distance_two)
-        # offset_dimension = self.create_left_offset_dimension(sketch, self.properties.offset)
-
         # The finger has to be drawn and extruded first; the operation
         # will fail after the corners are cut, since the edge reference
         # becomes invalid.

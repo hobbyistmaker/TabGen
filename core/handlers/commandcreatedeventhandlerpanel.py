@@ -51,6 +51,11 @@ class CommandCreatedEventHandlerPanel(CommandCreatedEventHandler):
             units_manager = design.unitsManager
             units = units_manager.defaultLengthUnits
 
+            if design.fusionUnitsManager.distanceDisplayUnits < 3:
+                metric = True
+            else:
+                metric = False
+
             if document.isSaved is not True:
                 self.ui.messageBox('Please save your document before continuing.')
 
@@ -118,19 +123,21 @@ class CommandCreatedEventHandlerPanel(CommandCreatedEventHandler):
                     defs.tabWidthInputId,
                     'Tab Width',
                     units,
-                    units_manager.convert(2.0, 'mm', units),
-                    units_manager.convert(20.0, 'mm', units),
-                    units_manager.convert(0.1, 'mm', units),
-                    units_manager.convert(self.config.DEFAULT_TAB_WIDTH, 'mm', units)
+                    units_manager.convert(2.0, 'mm', units) if metric else units_manager.convert(.0625, 'in', units),
+                    units_manager.convert(2500.0, 'mm', units) if metric else units_manager.convert(24, 'in', units),
+                    units_manager.convert(0.1, 'mm', units) if metric else units_manager.convert(.125, 'in', units),
+                    units_manager.convert(self.config.DEFAULT_TAB_WIDTH,
+                                          'mm', units) if metric else units_manager.convert(.125, 'in', units)
                     )
                 inputs.addFloatSpinnerCommandInput(
                     defs.mtlThickInputId,
                     'Tab Depth',
                     units,
-                    units_manager.convert(0.5, 'mm', units),
-                    units_manager.convert(6.0, 'mm', units),
-                    units_manager.convert(0.1, 'mm', units),
-                    units_manager.convert(self.config.DEFAULT_MATERIAL_THICKNESS, 'mm', units)
+                    units_manager.convert(0.5, 'mm', units) if metric else units_manager.convert(.005, 'in', units),
+                    units_manager.convert(102.0, 'mm', units) if metric else units_manager.convert(4, 'in', units),
+                    units_manager.convert(0.1, 'mm', units) if metric else units_manager.convert(.125, 'in', units),
+                    units_manager.convert(self.config.DEFAULT_MATERIAL_THICKNESS,
+                                          'mm', units) if metric else units_manager.convert(.125, 'in', units)
                     )
 
                 inputs.addBoolValueInput(defs.startWithTabInputId,
