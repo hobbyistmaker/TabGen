@@ -25,14 +25,14 @@ class ConstantWidthFingers:
         self.preview_enabled = inputs.preview
         self.units = self.app.activeProduct.unitsManager
 
-        self.name = inputs.name
+        name = inputs.name
         orientation = fusion.face_orientation(self.face)
         face_id = fusion.add_face(self.face)
 
-        name = '{name} {orientation}{face_num}'.format(name=self.name,
-                                                       orientation=orientation,
-                                                       face_num=face_id)
-        self.alias = fusion.clean_string(name)
+        self.name = '{name} {orientation}{face_num}'.format(name=name,
+                                                            orientation=orientation,
+                                                            face_num=face_id)
+        self.alias = fusion.clean_string(self.name)
 
         self.kerf = self._get_kerf(inputs.kerf)
         self.default_width = self._get_default_width(inputs.width)
@@ -238,13 +238,11 @@ class ConstantWidthFingers:
     def _get_start(alias, offset, default_width, kerf, tab_first, units):
         if tab_first:
             str_format = '{} + {} + {}'
-            # value = offset.value + default_width.value + kerf.value
             value = units.evaluateExpression(str_format.format(offset.value, default_width.value, kerf.value), 'cm')
             expression = str_format.format(offset.name, default_width.name, kerf.name)
         else:
             str_format = '{}'
-            # value = offset.value
-            value = units.evaluateExpression(str_format.format(offset.value, kerf.value), 'cm'),
+            value = offset.value
             expression = str_format.format(offset.name, kerf.name)
 
         return Property(alias('start'), value, expression,
