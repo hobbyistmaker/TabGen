@@ -16,17 +16,6 @@ def create(inputs, properties, preview=True):
     sketch = initialize_sketch(face)
     border = create_sketch_border(sketch)
 
-    name = inputs.name
-    orientation = fusion.face_orientation(face)
-    face_id = fusion.add_face(face)
-
-    name = '{name} {orientation}{face_num}'.format(name=name,
-                                                   orientation=orientation,
-                                                   face_num=face_id)
-    alias = fusion.clean_string(name)
-
-    sketch.name = '{} Finger Sketch'.format(name)
-
     manager = FingerManager(inputs, properties, border)
     properties = manager.draw(sketch)
     if not preview:
