@@ -12,6 +12,8 @@ class ChangedInputs(InputReader):
             plane = self.selected_face.geometry
             body = self.selected_face.body
             for alternate in body.faces:
+                if alternate == self.selected_face:
+                    continue
                 alternate_plane = alternate.geometry
                 if alternate_plane.isParallelToPlane(plane):
                     if round(alternate.area, 3) == round(self.selected_face.area, 3):
