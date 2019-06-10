@@ -32,7 +32,7 @@ def distance_between_faces(brepface, brepedge):
         primary_centroid = brepface.centroid
         second_centroid = brepedge.centroid
 
-        return min(trim_zeros(point_distance([primary_centroid],
-                                             [second_centroid])))
+        values = trim_zeros(point_distance([primary_centroid], [second_centroid]))
+        return min(values) if values else 0
     else:
         return 0
