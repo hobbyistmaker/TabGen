@@ -1,3 +1,5 @@
+from adsk.core import MeasureManager
+
 from ..util import trim_zeros
 
 from .vertexdistance import vertex_distance
@@ -21,7 +23,7 @@ def distance_between(brepface, brepedge):
         return 0
 
 
-def distance_between_faces(brepface, brepedge):
+def distance_between_faces(app, brepface, brepedge):
     """ For the brepedge selected by the user, find the
         minimum distance between the brepedge and this
         brepface. This minimum distance will be used
@@ -29,10 +31,12 @@ def distance_between_faces(brepface, brepedge):
         to cut the fingers on the secondary brepface.
         """
     if brepface.geometry.isParallelToPlane(brepedge.geometry):
-        primary_centroid = brepface.centroid
-        second_centroid = brepedge.centroid
+        # primary_centroid = brepface.centroid
+        # second_centroid = brepedge.centroid
+        #
+        # values = trim_zeros(point_distance([primary_centroid], [second_centroid]))
+        # return min(values) if values else 0
 
-        values = trim_zeros(point_distance([primary_centroid], [second_centroid]))
-        return min(values) if values else 0
+        return app.measureManager.measureMinimumDistance(brepface.geometry, brepedge.geometry).value
     else:
         return 0
