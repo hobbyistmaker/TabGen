@@ -1,3 +1,5 @@
+import traceback
+
 from collections import namedtuple
 
 from adsk.core import ObjectCollection
@@ -244,6 +246,8 @@ class FingerManager:
                                                'left_dimension', 'right_dimension',
                                                'finger_dimension', 'sketch'])
         sketch.isComputeDeferred = True
+        sketch.name = '{} Finger Sketch'.format(self.name)
+
         timeline = self.app.activeProduct.timeline
 
         extrudes = self.inputs.selected_body.parentComponent.features.extrudeFeatures
@@ -259,6 +263,7 @@ class FingerManager:
                 self.create_left_offset_dimension(sketch, item)
             except:
                 self.ui.messageBox('Error configuring parameter: {} -- {}'.format(item.name, item.expression))
+                self.ui.messageBox(traceback.format_exc(3))
 
         # The finger has to be drawn and extruded first; the operation
         # will fail after the corners are cut, since the edge reference
