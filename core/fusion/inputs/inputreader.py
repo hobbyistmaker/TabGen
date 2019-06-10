@@ -55,7 +55,8 @@ class InputReader:
         if not self.face_selected:
             return True
 
-        return edge not in self.selected_face.edges
+        # return edge not in self.selected_face.edges
+        return edge in self.selected_face.body.faces
 
     def alternate_face(self, face):
         if not self.edge_selected:
