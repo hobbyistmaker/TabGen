@@ -1,12 +1,10 @@
 import traceback
 
-from adsk.core import Application
-from adsk.core import SelectionCommandInput
-from adsk.core import SelectionEventArgs
 from adsk.core import SelectionEventHandler
 
 from .. import fusion
 from .. import definitions as defs
+
 
 class SelectionValidationError(Exception): pass
 
@@ -34,7 +32,6 @@ class SelectionEventHandler(SelectionEventHandler):
         if entity.objectType == 'Sketch':
             return False
 
-        # return inputs.opposite_face(entity)
         return True
 
     def check_selection(self, entity, selection, inputs):

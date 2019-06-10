@@ -14,9 +14,6 @@ from adsk.fusion import PatternComputeOptions as pco
 from .. import definitions as defs
 from .. import fusion
 
-from .automatic import automatic, automatic_params
-from .constantwidth import user_defined, user_defined_params
-
 CFO = FeatureOperations.CutFeatureOperation
 EDT = PatternDistanceType.ExtentPatternDistanceType
 HorizontalDimension = do.HorizontalDimensionOrientation

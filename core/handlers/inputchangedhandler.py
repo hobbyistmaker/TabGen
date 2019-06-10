@@ -1,6 +1,5 @@
 import traceback
 
-from adsk.core import Application
 from adsk.core import InputChangedEventHandler
 
 from .. import fusion
@@ -9,6 +8,7 @@ from .. import definitions as defs
 # Constants
 
 eventFailedMsg = 'TabGen input changed event failed: {}'
+
 
 class InputChangeValidationError(Exception): pass
 
