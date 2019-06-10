@@ -4,26 +4,99 @@ from collections import namedtuple
 
 from adsk.core import CommandCreatedEventHandler
 from adsk.core import DropDownStyles as dds
+from adsk.core import CommandEventHandler
 
 from .. import definitions as defs
-from .commandexecutehandler import CommandExecuteHandler
-from .commandexecutepreviewhandler import CommandExecutePreviewHandler
-from .inputchangedhandler import InputChangedHandler
-from .selectioneventhandler import SelectionEventHandler
-from .validateinputshandler import ValidateInputsHandler
+from .. import fusion
 
 Item = namedtuple('Item', ['id_', 'enabled'])
 
 initializedFailedMsg = 'TabGen initialization failed: {}'
 
 
-class CommandCreatedEventHandlerPanel(CommandCreatedEventHandler):
+class ExecuteHandler(CommandEventHandler):
 
-    def __init__(self, config):
+    def __init__(self, app, ui):
         super().__init__()
-        self.app = config.app
-        self.ui = config.ui
-        self.config = config
+        self.app = app
+        self.ui = ui
+
+    def notify(self, args):
+        command = args.firingEvent.sender
+
+        try:
+            first_inputs = command.commandInputs
+            parent_inputs = first_inputs.command.commandInputs if first_inputs.command else first_inputs
+
+            face = parent_inputs.itemById(defs.selectedFaceInputId).selection(0).entity
+            if not face:
+                self.ui.messageBox('No face found.')
+
+            sketch = face.body.parentComponent.sketches.add(face)
+            # Let's project the face outside edges into the sketch.
+            # This makes it easier to find the axes for duplicating
+            # fingers across opposing sides of the body
+
+            # coordinates = []
+            # for edge in face.edges:
+            #     # line = sketch.project(edge)
+            #     line.isConstruction = True
+                # start = edge.startVertex.geometry
+                # end = edge.endVertex.geometry
+                # coordinates.append('Start: {}. {}. {}\nEnd: {}, {}, {}'.format(round(start.x, 2), round(start.y, 2), round(start.z, 2),
+                #                                                                round(end.x, 2), round(end.y, 2), round(end.z, 2)))
+
+
+            # self.ui.messageBox('\n'.join(coordinates))
+            self.ui.messageBox('Testing')
+            lines = sketch.sketchCurves.sketchLines
+            border = fusion.Rectangle(lines[0:4])
+            # for line in lines:
+            #     start = line.startSketchPoint.geometry
+            #     end = line.endSketchPoint.geometry
+            #     startw = line.startSketchPoint.worldGeometry
+            #     endw = line.endSketchPoint.worldGeometry
+            #
+                # coordinates.append('S: {}, {}, {} -- E: {}, {}, {} -- SW: {}, {}, {} -- EW: {}, {}, {}'.format(
+                #     round(start.x, 2), round(start.y, 2), round(start.z, 2),
+                #     round(end.x, 2), round(end.y, 2), round(end.z, 2),
+                #     round(startw.x, 2), round(startw.y, 2), round(startw.z, 2),
+                #     round(endw.x, 2), round(endw.y, 2), round(endw.z, 2)
+                # ))
+
+            start = fusion.next_point(start=border.bottom.left.geometry,
+                                      length=1,
+                                      width=0,
+                                      vertical=border.is_vertical,
+                                      ui=self.ui)
+            end = fusion.next_point(start=start,
+                                    length=.8,
+                                    width=.2,
+                                    vertical=border.is_vertical,
+                                    ui=self.ui)
+            finger = lines.addTwoPointRectangle(start, end)
+            # line.isConstruction = False
+            self.ui.messageBox('Border Vertical: {}'.format(str(border.is_vertical)))
+            self.ui.messageBox('Bottom Vertical: {}'.format(str(border.bottom.is_vertical)))
+            self.ui.messageBox('Bottom Reversed: {}'.format(str(border.bottom.reversed)))
+            be = border.bottom.line.endSketchPoint.geometry
+            bs = border.bottom.line.startSketchPoint.geometry
+            self.ui.messageBox('Bottom: {}, {}, {} -- {}, {}, {}'.format(bs.x, bs.y, bs.z,
+                                                                         be.x, be.y, be.z))
+
+            # self.ui.messageBox('\n'.join(coordinates))
+
+        except:
+
+            self.ui.messageBox(initializedFailedMsg.format(traceback.format_exc()))
+
+
+class SketchPanel(CommandCreatedEventHandler):
+
+    def __init__(self, app, ui):
+        super().__init__()
+        self.app = app
+        self.ui = ui
         self.handlers = []
 
     def add_dropdown(self, inputs, id_, name, items):
@@ -48,169 +121,26 @@ class CommandCreatedEventHandlerPanel(CommandCreatedEventHandler):
         try:
             document = self.app.activeDocument
             design = self.app.activeProduct
-            units_manager = design.unitsManager
-            units = units_manager.defaultLengthUnits
-
-            if design.fusionUnitsManager.distanceDisplayUnits < 3:
-                metric = True
-            else:
-                metric = False
 
             if document.isSaved is not True:
                 self.ui.messageBox('Please save your document before continuing.')
 
             else:
                 cmd = args.command
-                # cmd.helpFile = 'resources/help.html'
-                cmd.helpFile = self.config.help_file
-
-                # Add onExecute event handler
-                execute = CommandExecuteHandler(self.config)
-                cmd.execute.add(execute)
-                self.handlers.append(execute)
-
-                # Add onExecute event handler
-                execute_preview = CommandExecutePreviewHandler(self.config)
-                cmd.executePreview.add(execute_preview)
-                self.handlers.append(execute_preview)
-
-                # Add onInputChanged handler
-                changed = InputChangedHandler(self.app, self.ui)
-                cmd.inputChanged.add(changed)
-                self.handlers.append(changed)
-
-                # # Add onValidateInputs event handler
-                # validate = ValidateInputsHandler(self.app, self.ui)
-                # cmd.validateInputs.add(validate)
-                # self.handlers.append(validate)
-
-                # Add SelectionEvent handler
-                selection = SelectionEventHandler(self.app, self.ui)
-                cmd.selectionEvent.add(selection)
-                self.handlers.append(selection)
 
                 # Set up the inputs
                 cmd_inputs = cmd.commandInputs
 
+                # Add onExecute event handler
+                execute = ExecuteHandler(self.app, self.ui)
+                cmd.execute.add(execute)
+                self.handlers.append(execute)
+
                 main_input = cmd_inputs.addTabCommandInput('mainTabInput', 'Main')
                 inputs = main_input.children
 
-                self.add_dropdown(inputs, defs.fingerTypeId, 'Fingers Type', [Item(defs.userDefinedWidthId,
-                                                                                   self.config.DEFAULT_USER_WIDTH_TAB),
-                                                                              Item(defs.automaticWidthId,
-                                                                                   self.config.DEFAULT_AUTO_WIDTH_TAB)]
-                                                                              )
-
-                self.add_dropdown(inputs, defs.fingerPlaceId, 'Placement', [Item(defs.singleEdgeId,
-                                                                                 self.config.DEFAULT_SINGLE_EDGE),
-                                                                            Item(defs.dualEdgeId,
-                                                                                 self.config.DEFAULT_DUAL_EDGE)
-                                                                            ])
-
                 self.add_selection(inputs, defs.selectedFaceInputId, 'Face', 'Faces where tabs will be cut.',
                                    'PlanarFaces', 1, 1)
-
-                self.add_selection(inputs, defs.dualEdgeSelectId, 'Secondary Face',
-                                   'Opposite face for dual-edge cuts.', 'PlanarFaces', 0, 1)
-
-                tcinput = inputs.addIntegerSpinnerCommandInput(defs.tabCountInputId, 'Number of Tabs',
-                                                               0, 200, 1, self.config.DEFAULT_TAB_COUNT)
-
-                tcinput.isVisible = False
-                tcinput.isEnabled = False
-
-                inputs.addFloatSpinnerCommandInput(
-                    defs.tabWidthInputId,
-                    'Tab Width',
-                    units,
-                    units_manager.convert(2.0, 'mm', units) if metric else units_manager.convert(.0625, 'in', units),
-                    units_manager.convert(2500.0, 'mm', units) if metric else units_manager.convert(24, 'in', units),
-                    units_manager.convert(0.1, 'mm', units) if metric else units_manager.convert(.125, 'in', units),
-                    units_manager.convert(self.config.DEFAULT_TAB_WIDTH,
-                                          'mm', units) if metric else units_manager.convert(.125, 'in', units)
-                    )
-                inputs.addFloatSpinnerCommandInput(
-                    defs.mtlThickInputId,
-                    'Tab Depth',
-                    units,
-                    units_manager.convert(0.5, 'mm', units) if metric else units_manager.convert(.005, 'in', units),
-                    units_manager.convert(102.0, 'mm', units) if metric else units_manager.convert(4, 'in', units),
-                    units_manager.convert(0.1, 'mm', units) if metric else units_manager.convert(.125, 'in', units),
-                    units_manager.convert(self.config.DEFAULT_MATERIAL_THICKNESS,
-                                          'mm', units) if metric else units_manager.convert(.125, 'in', units)
-                    )
-
-                inputs.addBoolValueInput(defs.startWithTabInputId,
-                                         'Start with tab',
-                                         True,
-                                         '',
-                                         self.config.DEFAULT_START_WITH_TAB)
-                inputs.addFloatSpinnerCommandInput(defs.lengthInputId,
-                                                   'Face Length',
-                                                   units,
-                                                   units_manager.convert(0, 'mm', units),
-                                                   units_manager.convert(2500.0, 'mm', units),
-                                                   units_manager.convert(0.1, 'mm', units),
-                                                   units_manager.convert(0.0, 'mm', units))
-                inputs.addFloatSpinnerCommandInput(defs.distanceInputId,
-                                                   'Duplicate Distance',
-                                                   units,
-                                                   units_manager.convert(0, 'mm', units),
-                                                   units_manager.convert(2500.0, 'mm', units),
-                                                   units_manager.convert(0.1, 'mm', units),
-                                                   units_manager.convert(0.0, 'mm', units))
-
-                inputs.addTextBoxCommandInput(defs.ERROR_MSG_INPUT_ID,
-                                              '',
-                                              '',
-                                              2,
-                                              True)
-
-                inputs.addBoolValueInput(defs.parametricInputId,
-                                         'Disable Parametric',
-                                         True,
-                                         '',
-                                         self.config.DEFAULT_DISABLE_PARAMETRIC)
-                inputs.addBoolValueInput(defs.previewInputId,
-                                         'Enable Preview',
-                                         True,
-                                         '',
-                                         self.config.DEFAULT_ENABLE_PREVIEW)
-
-                tab_inputs = cmd_inputs.addTabCommandInput(defs.advancedTabId, 'Advanced').children
-
-                tab_inputs.addIntegerSpinnerCommandInput(defs.wallCountInputId, 'Interior Walls',
-                                                         0, 200, 1, self.config.DEFAULT_WALL_COUNT)
-
-                tab_inputs.addFloatSpinnerCommandInput(
-                    defs.marginInputId,
-                    'Margin from Sides',
-                    units,
-                    units_manager.convert(0, 'mm', units),
-                    units_manager.convert(2500, 'mm', units),
-                    units_manager.convert(0.1, 'mm', units),
-                    units_manager.convert(self.config.DEFAULT_MARGIN_WIDTH, 'mm', units)
-                    )
-
-                tab_inputs.addFloatSpinnerCommandInput(
-                    defs.edgeMarginInputId,
-                    'Margin from Edge',
-                    units,
-                    units_manager.convert(0, 'mm', units),
-                    units_manager.convert(2500, 'mm', units),
-                    units_manager.convert(0.1, 'mm', units),
-                    units_manager.convert(self.config.DEFAULT_MARGIN_WIDTH, 'mm', units)
-                    )
-
-                tab_inputs.addFloatSpinnerCommandInput(
-                    defs.kerfInputId,
-                    'Kerf Adjustment',
-                    units,
-                    units_manager.convert(0, 'mm', units),
-                    units_manager.convert(50.8, 'mm', units),
-                    units_manager.convert(0.1, 'mm', units),
-                    units_manager.convert(self.config.DEFAULT_KERF_WIDTH, 'mm', units)
-                    )
 
         except:
             self.ui.messageBox('{}:\n{}'.format(initializedFailedMsg,
