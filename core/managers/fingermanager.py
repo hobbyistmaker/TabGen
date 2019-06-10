@@ -258,6 +258,12 @@ class FingerManager:
 
         start_mp = timeline.markerPosition-1
 
+        if not secondary:
+            start = self.border.bottom.left.geometry
+            end = Point3D.create(start.x, start.y, start.z - 10)
+            secondary = sketch.sketchCurves.sketchLines.addByTwoPoints(start, end)
+            secondary.isConstruction = True
+
         for item in self.properties.ordered:
             try:
                 self.create_left_offset_dimension(sketch, item)
