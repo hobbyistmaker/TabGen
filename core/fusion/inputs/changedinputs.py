@@ -57,5 +57,6 @@ class ChangedInputs(InputReader):
         if not self.face_selected or not self.edge_selected:
             return 0
 
-        return distance_between_faces(self.selected_face,
+        return distance_between_faces(self.app,
+                                      self.selected_face,
                                       self.selected_edge)

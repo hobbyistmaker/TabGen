@@ -23,7 +23,7 @@ class CommandExecutePreviewHandler(CommandEventHandler):
         try:
             first_inputs = command.commandInputs
             parent_inputs = first_inputs.command.commandInputs if first_inputs.command else first_inputs
-            inputs = fusion.InputReader(parent_inputs)
+            inputs = fusion.InputReader(self.app, parent_inputs)
             properties = inputs.create_properties(self.app, self.ui)
 
             if inputs.preview_enabled:

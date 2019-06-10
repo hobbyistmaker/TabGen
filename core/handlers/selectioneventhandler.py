@@ -57,7 +57,7 @@ class SelectionEventHandler(SelectionEventHandler):
             entity = args.selection.entity
             firingEvent = args.firingEvent
             selection = firingEvent.activeInput
-            inputs = fusion.InputReader(firingEvent.sender.commandInputs)
+            inputs = fusion.InputReader(self.app, firingEvent.sender.commandInputs)
 
             args.isSelectable = self.check_selection(entity, selection, inputs)
         except:

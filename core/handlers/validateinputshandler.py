@@ -39,7 +39,7 @@ class ValidateInputsHandler(ValidateInputsEventHandler):
             # one tab
             first_inputs = args.inputs
             parent_inputs = args.inputs.command.commandInputs if args.inputs.command else first_inputs
-            inputs = fusion.InputReader(parent_inputs)
+            inputs = fusion.InputReader(self.app, parent_inputs)
             args.areInputsValid = check_all(inputs)
 
         except:

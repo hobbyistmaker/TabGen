@@ -8,9 +8,11 @@ create_properties = {
     defs.constantCountId: managers.create_constant_count
 }
 
+
 class InputReader:
 
-    def __init__(self, inputs, preview=False):
+    def __init__(self, app, inputs, preview=False):
+        self.app = app
         self.placement = inputs.itemById(defs.fingerPlaceId).selectedItem.name
         self.face = inputs.itemById(defs.selectedFaceInputId)
         self.edge = inputs.itemById(defs.dualEdgeSelectId)

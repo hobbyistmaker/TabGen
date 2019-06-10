@@ -25,7 +25,7 @@ class InputChangedHandler(InputChangedEventHandler):
             cmd_input = args.input
             first_inputs = args.inputs
             parent_inputs = args.inputs.command.commandInputs if args.inputs.command else first_inputs
-            inputs = fusion.ChangedInputs(parent_inputs)
+            inputs = fusion.ChangedInputs(self.app, parent_inputs)
 
             id_ = cmd_input.id
 
