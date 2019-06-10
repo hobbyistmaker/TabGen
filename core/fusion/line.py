@@ -97,7 +97,7 @@ class Line:
         if self.is_vertical:
             return (eg.y <= sg.y)
         else:
-            return (0 < sg.x > eg.x) or (0 > eg.x < sg.x < 0)
+            return sg.x > eg.x
 
 
 class Top(Line):
