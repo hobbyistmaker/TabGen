@@ -14,7 +14,7 @@ class ChangedInputs(InputReader):
             for alternate in body.faces:
                 alternate_plane = alternate.geometry
                 if alternate_plane.isParallelToPlane(plane):
-                    if alternate.area == self.selected_face.area:
+                    if round(alternate.area, 3) == round(self.selected_face.area, 3):
                         if self.edge.addSelection(alternate):
                             self.edge_selected = self.edge.selectionCount > 0
                             self.selected_edge = self.edge.selection(0).entity if self.edge_selected else None
