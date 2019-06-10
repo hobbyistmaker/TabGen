@@ -387,11 +387,16 @@ class FingerManager:
         distance = vi.createByReal(distance)
 
         input_ = patterns.createInput(entities, primary, quantity, distance, EDT)
-        input_.patternComputeOption = pco.IdenticalPatternCompute
+        # input_.patternComputeOption = pco.IdenticalPatternCompute
+        input_.patternComputeOption = pco.AdjustPatternCompute
 
         self.configure_secondary_axis(input_, secondary, squantity)
 
         pattern = patterns.add(input_)
+
+        if pattern.healthState > 0:
+            pattern.patternComputeOption = pco.AdjustPatternCompute
+
         pattern.name = name
         return pattern
 
