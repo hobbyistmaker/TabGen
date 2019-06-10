@@ -31,12 +31,6 @@ def distance_between_faces(app, brepface, brepedge):
         to cut the fingers on the secondary brepface.
         """
     if brepface.geometry.isParallelToPlane(brepedge.geometry):
-        # primary_centroid = brepface.centroid
-        # second_centroid = brepedge.centroid
-        #
-        # values = trim_zeros(point_distance([primary_centroid], [second_centroid]))
-        # return min(values) if values else 0
-
         return app.measureManager.measureMinimumDistance(brepface.geometry, brepedge.geometry).value
     else:
         return 0
