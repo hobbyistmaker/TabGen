@@ -34,16 +34,21 @@ class SelectionEventHandler(SelectionEventHandler):
         if entity.objectType == 'Sketch':
             return False
 
-        return inputs.opposite_face(entity)
+        # return inputs.opposite_face(entity)
+        return True
 
     def check_selection(self, entity, selection, inputs):
         if not self.valid_selection(selection):
             return True
 
         try:
-            if selection.id in [defs.selectedFaceInputId,
-                                defs.dualEdgeSelectId]:
-                return self.check_face_selection(entity, inputs)
+            if self.check_face_selection(entity, inputs):
+                if selection.id == defs.dualEdgeSelectId:
+                    return self.check_edge_selection(entity, inputs)
+                else:
+                    return True
+            else:
+                return False
         except:
             raise SelectionValidationError
 
