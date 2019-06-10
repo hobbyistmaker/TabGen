@@ -79,14 +79,17 @@ class InputReader:
         if self.edge_selected and self.face_selected:
             return False
 
+        if not self.selected_face:
+            return True
+
         if self.face_selected:
             if (self.selected_face == face) or (not face.geometry.isParallelToPlane(self.selected_face.geometry)):
                 return False
-            return face.area == self.selected_face.area
+            return round(face.area, 3) == round(self.selected_face.area, 3)
         elif self.edge_selected:
             if (self.selected_edge == face) or (not face.geometry.isParallelToPlane(self.selected_edge.geometry)):
                 return False
-            return face.area == self.selected_edge.area
+            return round(face.area, 3) == round(self.selected_edge.area, 3)
 
         return True
 
