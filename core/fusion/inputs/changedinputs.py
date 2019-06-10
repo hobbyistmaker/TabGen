@@ -1,5 +1,4 @@
 from ..face import dimensions
-from ..face import distance_between
 from ..face import distance_between_faces
 
 from .inputreader import InputReader
