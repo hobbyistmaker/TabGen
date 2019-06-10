@@ -28,10 +28,10 @@ class CommandExecutePreviewHandler(CommandEventHandler):
 
             if inputs.preview_enabled:
 
-                if inputs.face_selected:
+                if inputs.dual_edge_selected and inputs.face_selected and inputs.edge_selected:
                     managers.create(inputs, properties, preview=True)
-                else:
-                    self.ui.messageBox('No face was selected for placing fingers.')
+                elif inputs.single_edge_selected and inputs.face_selected:
+                    managers.create(inputs, properties, preview=True)
 
                 if inputs.parametric:
                     args.isValidResult = True
