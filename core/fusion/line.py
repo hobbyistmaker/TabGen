@@ -40,7 +40,8 @@ class Line:
     def __init__(self, line):
         self.line = line
 
-        self.is_vertical = self.line.startSketchPoint.geometry.y != self.line.endSketchPoint.geometry.y
+        self.is_vertical = (round(self.line.startSketchPoint.geometry.x, 5) ==
+                            round(self.line.endSketchPoint.geometry.x, 5))
         self.length = self.line.length
 
         if self.line.isReference:
@@ -60,8 +61,8 @@ class Line:
             self.start_vertex = None
             self.end_vertex = None
 
-        self.start_point = self.line.startSketchPoint if self.reversed else self.line.endSketchPoint
-        self.end_point = self.line.endSketchPoint if self.reversed else self.line.startSketchPoint
+        self.start_point = self.line.startSketchPoint if not self.reversed else self.line.endSketchPoint
+        self.end_point = self.line.endSketchPoint if not self.reversed else self.line.startSketchPoint
 
         self.end = Point(self.end_point,
                          self.end_vertex,
@@ -94,9 +95,9 @@ class Line:
         eg = self.line.endSketchPoint.geometry
 
         if self.is_vertical:
-            return (eg.y >= sg.y)
+            return (eg.y <= sg.y)
         else:
-            return (eg.x >= sg.x)
+            return (0 < sg.x > eg.x) or (0 > eg.x < sg.x < 0)
 
 
 class Top(Line):
