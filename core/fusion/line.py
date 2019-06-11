@@ -65,11 +65,11 @@ class Line:
         self.end_point = self.line.endSketchPoint if not self.reversed else self.line.startSketchPoint
 
         self.end = Point(self.end_point,
-                         self.end_vertex,
+                         self.end_vertex if not self.reversed else self.start_vertex,
                          self.end_point.geometry)
 
         self.start = Point(self.start_point,
-                           self.start_vertex,
+                           self.start_vertex  if not self.reversed else self.end_vertex,
                            self.start_point.geometry)
 
     def find_reference(self, line, face):
@@ -95,7 +95,7 @@ class Line:
         eg = self.line.endSketchPoint.geometry
 
         if self.is_vertical:
-            return (eg.y <= sg.y)
+            return eg.y < sg.y
         else:
             return sg.x > eg.x
 
@@ -110,6 +110,15 @@ class Top(Line):
     def right(self):
         return self.end
 
+    @property
+    def reversed(self):
+        sg = self.line.startSketchPoint.geometry
+        eg = self.line.endSketchPoint.geometry
+
+        if self.is_vertical:
+            return eg.y < sg.y
+        else:
+            return eg.x < sg.x
 
 class Bottom(Line):
 
@@ -121,6 +130,15 @@ class Bottom(Line):
     def right(self):
         return self.end
 
+    @property
+    def reversed(self):
+        sg = self.line.startSketchPoint.geometry
+        eg = self.line.endSketchPoint.geometry
+
+        if self.is_vertical:
+            return eg.y < sg.y
+        else:
+            return eg.x < sg.x
 
 class Left(Bottom):
     pass

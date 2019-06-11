@@ -61,25 +61,25 @@ class FingerManager:
             constraints.addHorizontal(finger.right.line)
 
             finger_dimension = dimensions.addDistanceDimension(
-                finger.bottom.left.point,
+                finger.top.right.point,
                 finger.top.left.point,
                 VerticalDimension,
                 Point3D.create(reference.x - .5, reference.y + .5, 0)
             )
             offset_dimension = dimensions.addDistanceDimension(
-                finger.bottom.left.point,
+                finger.top.left.point,
                 self.border.bottom.left.point,
                 VerticalDimension,
                 Point3D.create(reference.x - .5, reference.y + .5, 0)
             )
 
             constraints.addCoincident(
-                finger.bottom.right.point,
-                self.border.right.line
+                finger.top.right.point,
+                self.border.left.line
             )
             constraints.addCoincident(
-                finger.top.left.point,
-                self.border.left.line
+                finger.bottom.left.point,
+                self.border.right.line
             )
         else:
             constraints.addHorizontal(finger.bottom.line)
@@ -220,16 +220,18 @@ class FingerManager:
 
         if self.border.is_vertical:
             constraints.addCoincident(
-                start,
-                self.border.left.line
+                line.startSketchPoint,
+                self.border.right.line
             )
             constraints.addCoincident(
-                end,
-                self.border.right.line
+                line.endSketchPoint,
+                self.border.left.line
             )
             constraints.addParallel(
                 line, self.border.bottom.line
             )
+            dimension = dimension.addOffsetDimension(self.border.bottom.line, line,
+                                                     Point3D.create(start.x + .5, start.y - .5, 0))
         else:
             constraints.addCoincident(
                 line.startSketchPoint,
@@ -243,8 +245,8 @@ class FingerManager:
                 line, self.border.left.line
             )
 
-        dimension = dimension.addOffsetDimension(self.border.left.line, line,
-                                                 Point3D.create(start.x + .5, start.y - .5, 0))
+            dimension = dimension.addOffsetDimension(self.border.left.line, line,
+                                                     Point3D.create(start.x + .5, start.y - .5, 0))
         dimension.parameter.name = parameter.name
         if self.properties.parametric and not self.properties.preview_enabled:
             dimension.parameter.expression = parameter.expression
@@ -421,10 +423,15 @@ class FingerManager:
         return self.extrude(profiles, body, extrudes, cname, edge_offset)
 
     def get_secondary_axis(self, sketch):
+        if self.border.is_vertical:
+            start = self.border.bottom.left
+        else:
+            start = self.border.top.left
+
         secondary = fusion.perpendicular_edge_from_vertex(self.face,
-                                                          self.border.top.left.vertex).edge
+                                                          start.vertex).edge
         if not secondary:
-            start = self.border.bottom.left.geometry
+            start = start.geometry
             end = Point3D.create(start.x, start.y, start.z - 10)
             secondary = sketch.sketchCurves.sketchLines.addByTwoPoints(start, end)
             secondary.isConstruction = True
