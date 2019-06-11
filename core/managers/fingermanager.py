@@ -264,16 +264,9 @@ class FingerManager:
         extrudes = self.inputs.selected_body.parentComponent.features.extrudeFeatures
         body = self.inputs.selected_body
         primary = self.border.reference_line
-        secondary = fusion.perpendicular_edge_from_vertex(self.face,
-                                                          self.border.top.left.vertex).edge
+        secondary = self.get_secondary_axis(sketch)
 
         start_mp = timeline.markerPosition-1
-
-        if not secondary:
-            start = self.border.bottom.left.geometry
-            end = Point3D.create(start.x, start.y, start.z - 10)
-            secondary = sketch.sketchCurves.sketchLines.addByTwoPoints(start, end)
-            secondary.isConstruction = True
 
         for item in self.properties.ordered:
             try:
@@ -426,6 +419,16 @@ class FingerManager:
         profiles = [sketch.profiles.item(0)]
         cname = '{} Finger Cut Extrude'.format(self.name)
         return self.extrude(profiles, body, extrudes, cname, edge_offset)
+
+    def get_secondary_axis(self, sketch):
+        secondary = fusion.perpendicular_edge_from_vertex(self.face,
+                                                          self.border.top.left.vertex).edge
+        if not secondary:
+            start = self.border.bottom.left.geometry
+            end = Point3D.create(start.x, start.y, start.z - 10)
+            secondary = sketch.sketchCurves.sketchLines.addByTwoPoints(start, end)
+            secondary.isConstruction = True
+        return secondary
 
     def save(self, properties):
         if not self.inputs.parametric:
