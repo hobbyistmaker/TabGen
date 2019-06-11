@@ -98,7 +98,9 @@ class CommandCreatedEventHandlerPanel(CommandCreatedEventHandler):
                 self.add_dropdown(inputs, defs.fingerTypeId, 'Fingers Type', [Item(defs.userDefinedWidthId,
                                                                                    self.config.DEFAULT_USER_WIDTH_TAB),
                                                                               Item(defs.automaticWidthId,
-                                                                                   self.config.DEFAULT_AUTO_WIDTH_TAB)]
+                                                                                   self.config.DEFAULT_AUTO_WIDTH_TAB),
+                                                                              Item(defs.constantCountId,
+                                                                                   self.config.DEFAULT_COUNT_TAB)]
                                                                               )
 
                 self.add_dropdown(inputs, defs.fingerPlaceId, 'Placement', [Item(defs.singleEdgeId,
@@ -114,7 +116,7 @@ class CommandCreatedEventHandlerPanel(CommandCreatedEventHandler):
                                    'Opposite face for dual-edge cuts.', 'PlanarFaces', 0, 1)
 
                 tcinput = inputs.addIntegerSpinnerCommandInput(defs.tabCountInputId, 'Number of Tabs',
-                                                               0, 200, 1, self.config.DEFAULT_TAB_COUNT)
+                                                               2, 200, 1, self.config.DEFAULT_TAB_COUNT)
 
                 tcinput.isVisible = False
                 tcinput.isEnabled = False

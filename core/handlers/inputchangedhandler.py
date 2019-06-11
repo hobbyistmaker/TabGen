@@ -29,6 +29,9 @@ class InputChangedHandler(InputChangedEventHandler):
 
             id_ = cmd_input.id
 
+            if id_ == defs.fingerTypeId:
+                inputs.update_finger_type()
+
             if id_ == defs.fingerPlaceId:
                 inputs.finger_placement()
 

@@ -1,3 +1,4 @@
+from ... import definitions as defs
 from ..face import dimensions
 from ..face import distance_between_faces
 
@@ -5,6 +6,22 @@ from .inputreader import InputReader
 
 
 class ChangedInputs(InputReader):
+
+    def update_finger_type(self):
+        if self.finger_type == defs.constantCountId:
+            self.width.isVisible = False
+            self.width.isEnabled = False
+            self.width.value = 0
+            self.finger_count.value = 3
+            self.finger_count.isEnabled = True
+            self.finger_count.isVisible = True
+        else:
+            self.finger_count.isVisible = False
+            self.finger_count.isEnabled = False
+            self.finger_count.value = 3
+            self.width.value = 1
+            self.width.isEnabled = True
+            self.width.isVisible = True
 
     def find_opposite(self):
         if self.face_selected and not self.single_edge_selected:
