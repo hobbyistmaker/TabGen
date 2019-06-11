@@ -115,17 +115,3 @@ class Rectangle:
     def make_construction(self):
         for line in self.lines:
             line.isConstruction = True
-
-    def offset_start(length):
-        start = self.bottom.right.geometry if self.is_vertical else self.bottom.left.geometry
-        return self.next_point(start, length, self.width)
-
-    def next_point(start, length, width):
-        if self.is_vertical:
-            nextx = width
-            nexty = length
-        else:
-            nextx = length
-            nexty = width
-
-        return Point3D.create(start.x + nextx, start.y + nexty, start.z)
