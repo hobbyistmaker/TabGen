@@ -31,7 +31,7 @@ class ChangedInputs(InputReader):
                 if alternate == self.selected_face:
                     continue
                 alternate_plane = alternate.geometry
-                if alternate_plane.isParallelToPlane(plane):
+                if alternate_plane.surfaceType == 0 and alternate_plane.isParallelToPlane(plane):
                     if round(alternate.area, 3) == round(self.selected_face.area, 3):
                         if self.edge.addSelection(alternate):
                             self.edge_selected = self.edge.selectionCount > 0
