@@ -1,3 +1,5 @@
+# NOTE: I have stopped working on this plugin. Checkout the new plugin that I am developing [here](https://github.com/hobbyistmaker/silvanus).
+
 # TabGen
 Fusion 360 add-in for generating finger-joint tabs
 
